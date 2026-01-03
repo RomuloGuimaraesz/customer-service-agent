@@ -86,10 +86,16 @@ describe('AdminContext', () => {
       expect(result.current.loading).toEqual({
         pedidos: false,
         agendamentos: false,
+        conversations: false,
+        messages: false,
+        sendMessage: false,
       })
       expect(result.current.error).toEqual({
         pedidos: null,
         agendamentos: null,
+        conversations: null,
+        messages: null,
+        sendMessage: null,
       })
       expect(result.current.activeTab).toBe('pedidos')
     })
