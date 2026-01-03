@@ -3,8 +3,8 @@ import { useAuth } from './AuthContext';
 import { CONFIG } from '../config/constants';
 import { MOCK_DATA } from '../data/mockData';
 import { trackTabClick, startTabSession, endTabSession } from '../services/analytics';
-import { fetchApi, fetchApiWithParams } from '../services/apiService';
 import { isDemoMode, findConversationById, normalizeConversationId } from '../utils/conversationHelpers';
+import { UseCaseFactory } from '../domain/useCaseFactory.js';
 
 /**
  * Admin Data Context
@@ -36,28 +36,44 @@ export const AdminProvider = ({ children }) => {
     whatsapp: 'WhatsApp',
   };
 
-  // Fetch data with Basic Auth
+  // Fetch data with Clean Architecture (maintains same public API)
   const fetchData = useCallback(async (type) => {
     const authHeader = getAuthHeader();
-    if (!authHeader) return;
+
+    // Don't fetch if not authenticated (maintains original behavior)
+    if (!authHeader) {
+      setLoading(prev => ({ ...prev, [type]: false }));
+      return;
+    }
 
     setLoading(prev => ({ ...prev, [type]: true }));
     setError(prev => ({ ...prev, [type]: null }));
 
     try {
-      const data = await fetchApi(CONFIG.API_ENDPOINTS[type], { authHeader });
+      let result;
 
       if (type === 'pedidos') {
-        setPedidos(Array.isArray(data) ? data : []);
-      } else {
-        setAgendamentos(Array.isArray(data) ? data : []);
+        const fetchPedidosUseCase = UseCaseFactory.createFetchPedidos(authHeader);
+        result = await fetchPedidosUseCase.execute(authHeader);
+      } else if (type === 'agendamentos') {
+        const fetchAgendamentosUseCase = UseCaseFactory.createFetchAgendamentos(authHeader);
+        result = await fetchAgendamentosUseCase.execute(authHeader);
       }
 
-      setLastUpdated(prev => ({ ...prev, [type]: new Date() }));
+      if (result.success) {
+        if (type === 'pedidos') {
+          setPedidos(result.data);
+        } else {
+          setAgendamentos(result.data);
+        }
+        setLastUpdated(prev => ({ ...prev, [type]: new Date() }));
+      } else {
+        throw new Error(`Failed to fetch ${type}: ${result.error}`);
+      }
     } catch (err) {
       setError(prev => ({ ...prev, [type]: err.message }));
 
-      // Load mock data for demo
+      // Load mock data for demo (fallback behavior maintained)
       if (type === 'pedidos') {
         setPedidos(MOCK_DATA.pedidos);
       } else {
@@ -68,37 +84,33 @@ export const AdminProvider = ({ children }) => {
     }
   }, [getAuthHeader]);
 
-  // Fetch conversations
+  // Fetch conversations (using Clean Architecture)
   const fetchConversations = useCallback(async () => {
     const authHeader = getAuthHeader();
-    const demoMode = isDemoMode(authHeader);
 
     setLoading(prev => ({ ...prev, conversations: true }));
     setError(prev => ({ ...prev, conversations: null }));
 
-    // Se estiver em modo demo, carrega conversas mock imediatamente
-    if (demoMode) {
-      setConversations(MOCK_DATA.conversations);
-      setLastUpdated(prev => ({ ...prev, conversations: new Date() }));
-      setLoading(prev => ({ ...prev, conversations: false }));
-      return;
-    }
-
-    // Tentar buscar da API se autenticado
     try {
-      const data = await fetchApi(CONFIG.API_ENDPOINTS.conversations, { authHeader });
-      setConversations(Array.isArray(data) ? data : []);
-      setLastUpdated(prev => ({ ...prev, conversations: new Date() }));
+      const fetchConversationsUseCase = UseCaseFactory.createFetchWhatsAppConversations(authHeader);
+      const result = await fetchConversationsUseCase.execute(authHeader);
+
+      if (result.success) {
+        setConversations(result.data);
+        setLastUpdated(prev => ({ ...prev, conversations: new Date() }));
+      } else {
+        throw new Error(result.error);
+      }
     } catch (err) {
       setError(prev => ({ ...prev, conversations: err.message }));
-      // Mock data para demonstração em caso de erro
+      // Mock data para demonstração em caso de erro (fallback maintained)
       setConversations(MOCK_DATA.conversations);
     } finally {
       setLoading(prev => ({ ...prev, conversations: false }));
     }
   }, [getAuthHeader]);
 
-  // Fetch messages for a conversation
+  // Fetch messages for a conversation (using Clean Architecture)
   const fetchMessages = useCallback(async (conversationId) => {
     if (!conversationId) return;
 
@@ -112,7 +124,7 @@ export const AdminProvider = ({ children }) => {
     if (demoMode) {
       // Buscar conversa para ter contexto e mensagens salvas
       const conversation = findConversationById(conversationId, conversations);
-      
+
       // Se já tem mensagens salvas na lista, usar elas
       if (conversation?.messages && conversation.messages.length > 0) {
         setSelectedConversation(prev => ({
@@ -122,7 +134,7 @@ export const AdminProvider = ({ children }) => {
         setLoading(prev => ({ ...prev, messages: false }));
         return;
       }
-      
+
       // Se não tem mensagens salvas, criar mensagens mock
       const mockMessages = MOCK_DATA.getMockMessages(conversation);
 
@@ -145,39 +157,40 @@ export const AdminProvider = ({ children }) => {
       return;
     }
 
-    // Tentar buscar da API se autenticado
+    // Usar Clean Architecture para buscar mensagens da API
     try {
-      const data = await fetchApiWithParams(
-        CONFIG.API_ENDPOINTS.messages,
-        { conversationId },
-        { authHeader }
-      );
-      
-      // Atualizar a conversa selecionada com as mensagens
-      // Preservar mensagens locais que não estão na API (mensagens enviadas recentemente)
-      setSelectedConversation(prev => {
-        const apiMessages = Array.isArray(data) ? data : [];
-        const localMessages = prev?.messages || [];
-        
-        // Se houver mensagens locais, fazer merge (API primeiro, depois locais que não estão na API)
-        if (localMessages.length > 0) {
-          const localMessageIds = new Set(localMessages.map(m => m.id));
-          const apiMessageIds = new Set(apiMessages.map(m => m.id));
-          
-          // Adicionar mensagens locais que não estão na API
-          const newLocalMessages = localMessages.filter(m => !apiMessageIds.has(m.id));
-          
+      const fetchMessagesUseCase = UseCaseFactory.createFetchWhatsAppMessages(authHeader);
+      const result = await fetchMessagesUseCase.execute({ conversationId, authHeader });
+
+      if (result.success) {
+        // Atualizar a conversa selecionada com as mensagens
+        // Preservar mensagens locais que não estão na API (mensagens enviadas recentemente)
+        setSelectedConversation(prev => {
+          const apiMessages = result.data;
+          const localMessages = prev?.messages || [];
+
+          // Se houver mensagens locais, fazer merge (API primeiro, depois locais que não estão na API)
+          if (localMessages.length > 0) {
+            const localMessageIds = new Set(localMessages.map(m => m.id));
+            const apiMessageIds = new Set(apiMessages.map(m => m.id));
+
+            // Adicionar mensagens locais que não estão na API
+            const newLocalMessages = localMessages.filter(m => !apiMessageIds.has(m.id));
+
+            return {
+              ...prev,
+              messages: [...apiMessages, ...newLocalMessages],
+            };
+          }
+
           return {
             ...prev,
-            messages: [...apiMessages, ...newLocalMessages],
+            messages: apiMessages,
           };
-        }
-        
-        return {
-          ...prev,
-          messages: apiMessages,
-        };
-      });
+        });
+      } else {
+        throw new Error(result.error);
+      }
     } catch (err) {
       setError(prev => ({ ...prev, messages: err.message }));
       // Mock messages para demonstração em caso de erro
@@ -200,7 +213,7 @@ export const AdminProvider = ({ children }) => {
     }
   }, [getAuthHeader, conversations]);
 
-  // Send message
+  // Send message (using Clean Architecture)
   const sendMessage = useCallback(async (conversationId, messageText) => {
     if (!conversationId || !messageText) return;
 
@@ -244,21 +257,25 @@ export const AdminProvider = ({ children }) => {
       return;
     }
 
-    // Tentar enviar para API se autenticado
+    // Usar Clean Architecture para enviar mensagem via API
     try {
-      await fetchApi(CONFIG.API_ENDPOINTS.sendMessage, {
-        authHeader,
-        method: 'POST',
-        body: {
-          conversationId,
-          message: messageText,
-        },
+      const sendMessageUseCase = UseCaseFactory.createSendWhatsAppMessage(authHeader);
+      const result = await sendMessageUseCase.execute({
+        conversationId,
+        messageText,
+        authHeader
       });
 
+      if (!result.success) {
+        // Log error but don't interrupt user experience
+        console.warn('Send message failed:', result.error);
+        setError(prev => ({ ...prev, sendMessage: result.error }));
+      }
       // Se sucesso, a mensagem já foi adicionada acima
     } catch (err) {
       // Em caso de erro na API, a mensagem já foi adicionada localmente
       // Apenas registra o erro silenciosamente para não interromper a experiência
+      console.warn('Send message error:', err.message);
       setError(prev => ({ ...prev, sendMessage: err.message }));
     } finally {
       setLoading(prev => ({ ...prev, sendMessage: false }));

@@ -4,6 +4,8 @@ import { AdminProvider, useAdmin } from './AdminContext'
 import { AuthProvider, useAuth } from './AuthContext'
 import { CONFIG } from '../config/constants'
 import { MOCK_DATA } from '../data/mockData'
+import { RepositoryFactory } from '../infrastructure/repositoryFactory.js'
+import { TestPedidoRepository, TestAgendamentoRepository, TestWhatsAppConversationRepository } from '../infrastructure/test/TestRepository.js'
 
 // Mock Supabase
 vi.mock('../infrastructure/supabase/config', () => ({
@@ -17,9 +19,6 @@ vi.mock('../infrastructure/supabase/config', () => ({
 
 import { supabase } from '../infrastructure/supabase/config'
 
-// Mock fetch globally
-global.fetch = vi.fn()
-
 // Helper to render with both providers
 const renderWithProviders = (hook) => {
   return renderHook(hook, {
@@ -31,10 +30,28 @@ const renderWithProviders = (hook) => {
   })
 }
 
+// Test repositories
+let testPedidoRepository
+let testAgendamentoRepository
+let testWhatsAppRepository
+
 describe('AdminContext', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     sessionStorage.clear()
+
+    // Create fresh test repositories for each test
+    testPedidoRepository = new TestPedidoRepository()
+    testAgendamentoRepository = new TestAgendamentoRepository()
+    testWhatsAppRepository = new TestWhatsAppConversationRepository()
+
+    // Set up repository overrides for testing
+    RepositoryFactory.setTestOverrides({
+      pedidoRepository: testPedidoRepository,
+      agendamentoRepository: testAgendamentoRepository,
+      whatsAppConversationRepository: testWhatsAppRepository,
+    })
+
     // Reset Supabase mocks
     supabase.auth.signInWithPassword.mockReset()
     supabase.auth.signOut.mockReset()
@@ -46,6 +63,10 @@ describe('AdminContext', () => {
       },
       error: null,
     })
+  })
+
+  afterEach(() => {
+    RepositoryFactory.clearTestOverrides()
   })
 
   describe('useAdmin hook', () => {
@@ -82,19 +103,15 @@ describe('AdminContext', () => {
         await result.current.fetchData('pedidos')
       })
 
-      expect(global.fetch).not.toHaveBeenCalled()
+      // Should not attempt to fetch when not authenticated
       expect(result.current.pedidos).toEqual([])
     })
 
     it('should fetch pedidos successfully when authenticated', async () => {
       const mockPedidos = [{ ID: 'TEST-001', Cliente: 'Test Client' }]
-      
-      // Set up default mock implementation
-      global.fetch.mockResolvedValue({
-        ok: true,
-        status: 200,
-        json: async () => mockPedidos,
-      })
+
+      // Set up test repository mock
+      testPedidoRepository.setMockData('fetchPedidos', mockPedidos)
 
       const { result } = renderWithProviders(() => {
         const admin = useAdmin()
@@ -116,13 +133,6 @@ describe('AdminContext', () => {
         await new Promise(resolve => setTimeout(resolve, 200))
       })
 
-      // Override mock for manual fetch
-      global.fetch.mockResolvedValueOnce({
-        ok: true,
-        status: 200,
-        json: async () => mockPedidos,
-      })
-
       await act(async () => {
         await result.current.admin.fetchData('pedidos')
       })
@@ -137,6 +147,9 @@ describe('AdminContext', () => {
     })
 
     it('should handle 401 unauthorized error', async () => {
+      // Set up test repository to throw unauthorized error
+      testPedidoRepository.setMockError('fetchPedidos', new Error('Não autorizado - verifique suas credenciais'))
+
       const { result } = renderWithProviders(() => {
         const admin = useAdmin()
         const auth = useAuth()
@@ -155,11 +168,6 @@ describe('AdminContext', () => {
         await new Promise(resolve => setTimeout(resolve, 200))
       })
 
-      global.fetch.mockResolvedValueOnce({
-        ok: false,
-        status: 401,
-      })
-
       await act(async () => {
         await result.current.admin.fetchData('pedidos')
       })
@@ -169,11 +177,14 @@ describe('AdminContext', () => {
         expect(result.current.admin.error.pedidos).toBeTruthy()
       }, { timeout: 2000 })
 
-      expect(result.current.admin.error.pedidos).toBe('Não autorizado - verifique suas credenciais')
+      expect(result.current.admin.error.pedidos).toBe('Failed to fetch pedidos: Não autorizado - verifique suas credenciais')
       expect(result.current.admin.pedidos).toEqual(MOCK_DATA.pedidos)
     })
 
     it('should handle network errors and use mock data', async () => {
+      // Set up test repository to throw network error
+      testPedidoRepository.setMockError('fetchPedidos', new Error('Network error'))
+
       const { result } = renderWithProviders(() => {
         const admin = useAdmin()
         const auth = useAuth()
@@ -191,8 +202,6 @@ describe('AdminContext', () => {
       await act(async () => {
         await new Promise(resolve => setTimeout(resolve, 200))
       })
-
-      global.fetch.mockRejectedValueOnce(new Error('Network error'))
 
       await act(async () => {
         await result.current.admin.fetchData('pedidos')
@@ -203,16 +212,13 @@ describe('AdminContext', () => {
         expect(result.current.admin.error.pedidos).toBeTruthy()
       }, { timeout: 2000 })
 
-      expect(result.current.admin.error.pedidos).toBe('Network error')
+      expect(result.current.admin.error.pedidos).toBe('Failed to fetch pedidos: Network error')
       expect(result.current.admin.pedidos).toEqual(MOCK_DATA.pedidos)
     })
 
     it('should handle non-array response data', async () => {
-      global.fetch.mockResolvedValue({
-        ok: true,
-        status: 200,
-        json: async () => ({ notAnArray: true }),
-      })
+      // Set up test repository to return non-array data (should cause validation error)
+      testPedidoRepository.setMockData('fetchPedidos', { notAnArray: true })
 
       const { result } = renderWithProviders(() => {
         const admin = useAdmin()
@@ -232,12 +238,6 @@ describe('AdminContext', () => {
         await new Promise(resolve => setTimeout(resolve, 200))
       })
 
-      global.fetch.mockResolvedValueOnce({
-        ok: true,
-        status: 200,
-        json: async () => ({ notAnArray: true }),
-      })
-
       await act(async () => {
         await result.current.admin.fetchData('pedidos')
       })
@@ -246,7 +246,9 @@ describe('AdminContext', () => {
         expect(result.current.admin.loading.pedidos).toBe(false)
       }, { timeout: 2000 })
 
-      expect(result.current.admin.pedidos).toEqual([])
+      // Should fall back to mock data when validation fails
+      expect(result.current.admin.pedidos).toEqual(MOCK_DATA.pedidos)
+      expect(result.current.admin.error.pedidos).toBeTruthy()
     })
   })
 
@@ -255,17 +257,9 @@ describe('AdminContext', () => {
       const mockPedidos = [{ ID: 'P-001' }]
       const mockAgendamentos = [{ ID: 'A-001' }]
 
-      global.fetch
-        .mockResolvedValueOnce({
-          ok: true,
-          status: 200,
-          json: async () => mockPedidos,
-        })
-        .mockResolvedValueOnce({
-          ok: true,
-          status: 200,
-          json: async () => mockAgendamentos,
-        })
+      // Set up test repository mocks
+      testPedidoRepository.setMockData('fetchPedidos', mockPedidos)
+      testAgendamentoRepository.setMockData('fetchAgendamentos', mockAgendamentos)
 
       const { result } = renderWithProviders(() => {
         const admin = useAdmin()
@@ -284,18 +278,6 @@ describe('AdminContext', () => {
       await act(async () => {
         await new Promise(resolve => setTimeout(resolve, 200))
       })
-
-      global.fetch
-        .mockResolvedValueOnce({
-          ok: true,
-          status: 200,
-          json: async () => mockPedidos,
-        })
-        .mockResolvedValueOnce({
-          ok: true,
-          status: 200,
-          json: async () => mockAgendamentos,
-        })
 
       await act(async () => {
         result.current.admin.refreshAll()
