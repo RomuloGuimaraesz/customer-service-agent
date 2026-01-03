@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useAdmin } from '../../contexts/AdminContext';
+import { useWhatsAppConversations } from '../../contexts/WhatsAppConversationsContext';
 import { WhatsAppChatList } from './WhatsAppChatList';
 import { WhatsAppChat } from './WhatsAppChat';
 import styled from 'styled-components';
@@ -111,7 +111,7 @@ export const WhatsAppView = () => {
     selectConversation,
     fetchMessages,
     sendMessage,
-  } = useAdmin();
+  } = useWhatsAppConversations();
 
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [toastVisible, setToastVisible] = useState(false);

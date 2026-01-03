@@ -1,8 +1,10 @@
 import React from 'react';
-import { Outlet } from 'react-router-dom';
-import { useAdmin } from '../contexts/AdminContext';
+import { Outlet, Navigate } from 'react-router-dom';
+import { usePedidos } from '../contexts/PedidosContext';
+import { useAgendamentos } from '../contexts/AgendamentosContext';
 import { DataDisplay } from './DataDisplay';
 import { WhatsAppView } from './whatsapp/WhatsAppView';
+import { DEFAULT_TAB_ID } from '../config/dashboardTabs';
 
 /**
  * Dashboard Routes Component - Renders child routes with context data
@@ -16,7 +18,7 @@ export const DashboardRoutes = () => {
  * Pedidos Route Component - Accesses context and renders DataDisplay
  */
 export const PedidosRoute = () => {
-  const { pedidos } = useAdmin();
+  const { pedidos } = usePedidos();
   return <DataDisplay data={pedidos} type="pedidos" />;
 };
 
@@ -24,7 +26,7 @@ export const PedidosRoute = () => {
  * Agendamentos Route Component - Accesses context and renders DataDisplay
  */
 export const AgendamentosRoute = () => {
-  const { agendamentos } = useAdmin();
+  const { agendamentos } = useAgendamentos();
   return <DataDisplay data={agendamentos} type="agendamentos" />;
 };
 
@@ -36,10 +38,9 @@ export const WhatsAppRoute = () => {
 };
 
 /**
- * Dashboard Default Route - Redirects to pedidos
+ * Dashboard Default Route - Redirects to default tab
  */
 export const DashboardDefaultRoute = () => {
-  const { pedidos } = useAdmin();
-  return <DataDisplay data={pedidos} type="pedidos" />;
+  return <Navigate to={DEFAULT_TAB_ID} replace />;
 };
 

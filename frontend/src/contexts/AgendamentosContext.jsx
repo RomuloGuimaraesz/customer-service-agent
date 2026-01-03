@@ -1,7 +1,8 @@
-import React, { createContext, useContext, useState, useCallback } from 'react';
+import React, { createContext, useContext, useReducer, useCallback } from 'react';
 import { useAuth } from './AuthContext';
 import { MOCK_DATA } from '../data/mockData';
 import { UseCaseFactory } from '../domain/useCaseFactory.js';
+import { agendamentosReducer, initialAgendamentosState, AGENDAMENTOS_ACTIONS } from '../reducers/agendamentosReducer';
 
 /**
  * Agendamentos Context - Focused context for agendamentos state management
@@ -18,10 +19,7 @@ export const useAgendamentos = () => {
 
 export const AgendamentosProvider = ({ children }) => {
   const { getAuthHeader } = useAuth();
-  const [agendamentos, setAgendamentos] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [lastUpdated, setLastUpdated] = useState(null);
+  const [state, dispatch] = useReducer(agendamentosReducer, initialAgendamentosState);
 
   // Fetch agendamentos using Clean Architecture
   const fetchAgendamentos = useCallback(async () => {
@@ -29,29 +27,24 @@ export const AgendamentosProvider = ({ children }) => {
 
     // Don't fetch if not authenticated
     if (!authHeader) {
-      setLoading(false);
       return;
     }
 
-    setLoading(true);
-    setError(null);
+    dispatch({ type: AGENDAMENTOS_ACTIONS.FETCH_START });
 
     try {
       const fetchAgendamentosUseCase = UseCaseFactory.createFetchAgendamentos(authHeader);
       const result = await fetchAgendamentosUseCase.execute(authHeader);
 
       if (result.success) {
-        setAgendamentos(result.data);
-        setLastUpdated(new Date());
+        dispatch({ type: AGENDAMENTOS_ACTIONS.FETCH_SUCCESS, payload: result.data });
       } else {
         throw new Error(`Failed to fetch agendamentos: ${result.error}`);
       }
     } catch (err) {
-      setError(err.message);
+      dispatch({ type: AGENDAMENTOS_ACTIONS.FETCH_ERROR, payload: err.message });
       // Load mock data for demo (fallback behavior)
-      setAgendamentos(MOCK_DATA.agendamentos);
-    } finally {
-      setLoading(false);
+      dispatch({ type: AGENDAMENTOS_ACTIONS.FETCH_SUCCESS, payload: MOCK_DATA.agendamentos });
     }
   }, [getAuthHeader]);
 
@@ -61,10 +54,10 @@ export const AgendamentosProvider = ({ children }) => {
   }, [fetchAgendamentos]);
 
   const value = {
-    agendamentos,
-    loading,
-    error,
-    lastUpdated,
+    agendamentos: state.agendamentos,
+    loading: state.loading,
+    error: state.error,
+    lastUpdated: state.lastUpdated,
     fetchAgendamentos,
     refreshAgendamentos,
   };

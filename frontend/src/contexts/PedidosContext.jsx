@@ -1,7 +1,8 @@
-import React, { createContext, useContext, useState, useCallback } from 'react';
+import React, { createContext, useContext, useReducer, useCallback } from 'react';
 import { useAuth } from './AuthContext';
 import { MOCK_DATA } from '../data/mockData';
 import { UseCaseFactory } from '../domain/useCaseFactory.js';
+import { pedidosReducer, initialPedidosState, PEDIDOS_ACTIONS } from '../reducers/pedidosReducer';
 
 /**
  * Pedidos Context - Focused context for pedidos state management
@@ -18,10 +19,7 @@ export const usePedidos = () => {
 
 export const PedidosProvider = ({ children }) => {
   const { getAuthHeader } = useAuth();
-  const [pedidos, setPedidos] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [lastUpdated, setLastUpdated] = useState(null);
+  const [state, dispatch] = useReducer(pedidosReducer, initialPedidosState);
 
   // Fetch pedidos using Clean Architecture
   const fetchPedidos = useCallback(async () => {
@@ -29,29 +27,24 @@ export const PedidosProvider = ({ children }) => {
 
     // Don't fetch if not authenticated
     if (!authHeader) {
-      setLoading(false);
       return;
     }
 
-    setLoading(true);
-    setError(null);
+    dispatch({ type: PEDIDOS_ACTIONS.FETCH_START });
 
     try {
       const fetchPedidosUseCase = UseCaseFactory.createFetchPedidos(authHeader);
       const result = await fetchPedidosUseCase.execute(authHeader);
 
       if (result.success) {
-        setPedidos(result.data);
-        setLastUpdated(new Date());
+        dispatch({ type: PEDIDOS_ACTIONS.FETCH_SUCCESS, payload: result.data });
       } else {
         throw new Error(`Failed to fetch pedidos: ${result.error}`);
       }
     } catch (err) {
-      setError(err.message);
+      dispatch({ type: PEDIDOS_ACTIONS.FETCH_ERROR, payload: err.message });
       // Load mock data for demo (fallback behavior)
-      setPedidos(MOCK_DATA.pedidos);
-    } finally {
-      setLoading(false);
+      dispatch({ type: PEDIDOS_ACTIONS.FETCH_SUCCESS, payload: MOCK_DATA.pedidos });
     }
   }, [getAuthHeader]);
 
@@ -61,10 +54,10 @@ export const PedidosProvider = ({ children }) => {
   }, [fetchPedidos]);
 
   const value = {
-    pedidos,
-    loading,
-    error,
-    lastUpdated,
+    pedidos: state.pedidos,
+    loading: state.loading,
+    error: state.error,
+    lastUpdated: state.lastUpdated,
     fetchPedidos,
     refreshPedidos,
   };

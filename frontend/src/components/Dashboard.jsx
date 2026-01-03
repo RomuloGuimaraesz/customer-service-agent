@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { useAdmin } from '../contexts/AdminContext';
+import { usePedidos } from '../contexts/PedidosContext';
+import { useAgendamentos } from '../contexts/AgendamentosContext';
+import { useWhatsAppConversations } from '../contexts/WhatsAppConversationsContext';
 import { useDashboardStats } from '../hooks/useDashboardStats';
 import { PROFILE_ICON } from '../config/icons';
 import { DASHBOARD_TABS, VALID_TAB_IDS, DEFAULT_TAB_ID } from '../config/dashboardTabs';
@@ -63,16 +65,11 @@ export const Dashboard = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { credentials, isAuthenticated } = useAuth();
-  const {
-    pedidos,
-    agendamentos,
-    loading,
-    error,
-    lastUpdated,
-    activeTab,
-    setActiveTab,
-    refreshAll,
-  } = useAdmin();
+
+  // Use focused contexts directly
+  const pedidosContext = usePedidos();
+  const agendamentosContext = useAgendamentos();
+  const whatsappContext = useWhatsAppConversations();
 
   const [toastVisible, setToastVisible] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
@@ -80,13 +77,6 @@ export const Dashboard = () => {
 
   // Get current tab from route
   const currentTab = location.pathname.split('/').pop() || DEFAULT_TAB_ID;
-  
-  // Sync AdminContext activeTab with route for backward compatibility
-  useEffect(() => {
-    if (currentTab !== activeTab && VALID_TAB_IDS.includes(currentTab)) {
-      setActiveTab(currentTab);
-    }
-  }, [currentTab, activeTab, setActiveTab]);
 
   // Handle tab navigation
   const handleTabClick = (tabId) => {
@@ -96,10 +86,10 @@ export const Dashboard = () => {
   // Prepare tabs data with dynamic counts
   const tabs = DASHBOARD_TABS.map(tab => {
     if (tab.id === 'agendamentos') {
-      return { ...tab, count: agendamentos.length };
+      return { ...tab, count: agendamentosContext.agendamentos.length };
     }
     if (tab.id === 'pedidos') {
-      return { ...tab, count: pedidos.length };
+      return { ...tab, count: pedidosContext.pedidos.length };
     }
     return { ...tab, count: null };
   });
@@ -108,15 +98,24 @@ export const Dashboard = () => {
   const handleLogout = async () => {
     // Clear session storage immediately to prevent any state from persisting
     sessionStorage.removeItem(CONFIG.AUTH_STORAGE_KEY);
-    
+
     // Sign out from Supabase (fire and forget - don't wait)
     supabase.auth.signOut().catch(() => {
       // Ignore errors during logout
     });
-    
+
     // Use hard navigation to immediately redirect, bypassing React's render cycle
     // This prevents any intermediate renders showing empty dashboard state
     window.location.replace(ROUTES.AUTH.LOGIN);
+  };
+
+  // Refresh all data
+  const refreshAll = () => {
+    if (isAuthenticated) {
+      pedidosContext.refreshPedidos();
+      agendamentosContext.refreshAgendamentos();
+      whatsappContext.refreshConversations();
+    }
   };
 
   useEffect(() => {
@@ -130,17 +129,17 @@ export const Dashboard = () => {
 
   // Show toast when error appears
   useEffect(() => {
-    if (error.pedidos || error.agendamentos) {
+    if (pedidosContext.error || agendamentosContext.error) {
       setToastVisible(true);
     }
-  }, [error.pedidos, error.agendamentos]);
+  }, [pedidosContext.error, agendamentosContext.error]);
 
   const handleCloseToast = () => {
     setToastVisible(false);
   };
 
   // Calculate stats using custom hook
-  const { stats } = useDashboardStats(pedidos, agendamentos);
+  const { stats } = useDashboardStats(pedidosContext.pedidos, agendamentosContext.agendamentos);
 
   return (
     <StyledDashboard className="dashboard">
@@ -149,7 +148,7 @@ export const Dashboard = () => {
         left={<Logo />}
         right={
           <>
-            <LastUpdated timestamp={lastUpdated.pedidos} />
+            <LastUpdated timestamp={pedidosContext.lastUpdated} />
             <HeaderButton
               onClick={() => setShowAnalytics(true)}
               title={DASHBOARD_TOOLTIPS.STATISTICS}
@@ -159,7 +158,7 @@ export const Dashboard = () => {
             </HeaderButton>
             <HeaderButton
               onClick={refreshAll}
-              disabled={loading.pedidos || loading.agendamentos}
+              disabled={pedidosContext.loading || agendamentosContext.loading}
             >
               {DASHBOARD_LABELS.HEADER_BUTTONS.REFRESH}
             </HeaderButton>
@@ -202,8 +201,8 @@ export const Dashboard = () => {
 
         {/* Toast Notification */}
         <Toast
-          message={`${DASHBOARD_MESSAGES.TOAST.DEMO_MODE} ${error.pedidos || error.agendamentos}`}
-          visible={(error.pedidos || error.agendamentos) && toastVisible}
+          message={`${DASHBOARD_MESSAGES.TOAST.DEMO_MODE} ${pedidosContext.error || agendamentosContext.error}`}
+          visible={(pedidosContext.error || agendamentosContext.error) && toastVisible}
           onClose={handleCloseToast}
           isMobile={isMobile}
         />
