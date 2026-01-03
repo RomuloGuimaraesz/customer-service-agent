@@ -5,6 +5,18 @@ import { AuthProvider, useAuth } from './AuthContext'
 import { CONFIG } from '../config/constants'
 import { MOCK_DATA } from '../data/mockData'
 
+// Mock Supabase
+vi.mock('../infrastructure/supabase/config', () => ({
+  supabase: {
+    auth: {
+      signInWithPassword: vi.fn(),
+      signOut: vi.fn(),
+    },
+  },
+}))
+
+import { supabase } from '../infrastructure/supabase/config'
+
 // Mock fetch globally
 global.fetch = vi.fn()
 
@@ -21,8 +33,19 @@ const renderWithProviders = (hook) => {
 
 describe('AdminContext', () => {
   beforeEach(() => {
-    vi.resetAllMocks()
+    vi.clearAllMocks()
     sessionStorage.clear()
+    // Reset Supabase mocks
+    supabase.auth.signInWithPassword.mockReset()
+    supabase.auth.signOut.mockReset()
+    // Setup default Supabase login mock for authenticated tests
+    supabase.auth.signInWithPassword.mockResolvedValue({
+      data: {
+        user: { email: 'user@example.com' },
+        session: { access_token: 'mock-token' }
+      },
+      error: null,
+    })
   })
 
   describe('useAdmin hook', () => {
@@ -85,7 +108,7 @@ describe('AdminContext', () => {
 
       // Login
       await act(async () => {
-        await result.current.auth.login('user', 'pass')
+        await result.current.auth.login('user@example.com', 'pass')
       })
 
       // Wait for any auto-refresh to settle
@@ -125,7 +148,7 @@ describe('AdminContext', () => {
       })
 
       await act(async () => {
-        await result.current.auth.login('user', 'pass')
+        await result.current.auth.login('user@example.com', 'pass')
       })
 
       await act(async () => {
@@ -162,7 +185,7 @@ describe('AdminContext', () => {
       })
 
       await act(async () => {
-        await result.current.auth.login('user', 'pass')
+        await result.current.auth.login('user@example.com', 'pass')
       })
 
       await act(async () => {
@@ -202,7 +225,7 @@ describe('AdminContext', () => {
       })
 
       await act(async () => {
-        await result.current.auth.login('user', 'pass')
+        await result.current.auth.login('user@example.com', 'pass')
       })
 
       await act(async () => {
@@ -255,7 +278,7 @@ describe('AdminContext', () => {
       })
 
       await act(async () => {
-        await result.current.auth.login('user', 'pass')
+        await result.current.auth.login('user@example.com', 'pass')
       })
 
       await act(async () => {

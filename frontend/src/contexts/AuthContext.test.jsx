@@ -3,13 +3,25 @@ import { renderHook, act, waitFor } from '@testing-library/react'
 import { AuthProvider, useAuth } from './AuthContext'
 import { CONFIG } from '../config/constants'
 
-// Mock fetch globally
-global.fetch = vi.fn()
+// Mock Supabase
+vi.mock('../infrastructure/supabase/config', () => ({
+  supabase: {
+    auth: {
+      signInWithPassword: vi.fn(),
+      signOut: vi.fn(),
+    },
+  },
+}))
+
+import { supabase } from '../infrastructure/supabase/config'
 
 describe('AuthContext', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     sessionStorage.clear()
+    // Reset Supabase mocks
+    supabase.auth.signInWithPassword.mockReset()
+    supabase.auth.signOut.mockReset()
   })
 
   describe('useAuth hook', () => {
@@ -68,10 +80,13 @@ describe('AuthContext', () => {
   })
 
   describe('login', () => {
-    it('should login successfully with valid credentials', async () => {
-      global.fetch.mockResolvedValueOnce({
-        ok: true,
-        status: 200,
+    it('should login successfully with valid email credentials', async () => {
+      supabase.auth.signInWithPassword.mockResolvedValueOnce({
+        data: {
+          user: { email: 'test@example.com' },
+          session: { access_token: 'mock-token' }
+        },
+        error: null,
       })
 
       const { result } = renderHook(() => useAuth(), {
@@ -84,32 +99,22 @@ describe('AuthContext', () => {
 
       let loginResult
       await act(async () => {
-        loginResult = await result.current.login('testuser', 'testpass')
+        loginResult = await result.current.login('test@example.com', 'testpass')
       })
 
       expect(loginResult.success).toBe(true)
       expect(result.current.isAuthenticated).toBe(true)
       expect(result.current.credentials).toEqual({
-        username: 'testuser',
+        username: 'test@example.com',
         password: 'testpass',
       })
-      expect(global.fetch).toHaveBeenCalledWith(
-        CONFIG.API_ENDPOINTS.pedidos,
-        expect.objectContaining({
-          method: 'GET',
-          headers: expect.objectContaining({
-            Authorization: expect.stringContaining('Basic'),
-          }),
-        })
-      )
+      expect(supabase.auth.signInWithPassword).toHaveBeenCalledWith({
+        email: 'test@example.com',
+        password: 'testpass',
+      })
     })
 
-    it('should reject login with invalid credentials', async () => {
-      global.fetch.mockResolvedValueOnce({
-        ok: false,
-        status: 401,
-      })
-
+    it('should reject login with invalid email format', async () => {
       const { result } = renderHook(() => useAuth(), {
         wrapper: AuthProvider,
       })
@@ -120,18 +125,18 @@ describe('AuthContext', () => {
 
       let loginResult
       await act(async () => {
-        loginResult = await result.current.login('wrong', 'credentials')
+        loginResult = await result.current.login('not-an-email', 'password')
       })
 
       expect(loginResult.success).toBe(false)
-      expect(loginResult.error).toBe('Usuário ou senha inválidos')
+      expect(loginResult.error).toBe('Por favor, use seu email para fazer login')
       expect(result.current.isAuthenticated).toBe(false)
     })
 
-    it('should handle server errors', async () => {
-      global.fetch.mockResolvedValueOnce({
-        ok: false,
-        status: 500,
+    it('should reject login with invalid Supabase credentials', async () => {
+      supabase.auth.signInWithPassword.mockResolvedValueOnce({
+        data: { user: null, session: null },
+        error: { message: 'Invalid login credentials' },
       })
 
       const { result } = renderHook(() => useAuth(), {
@@ -144,15 +149,18 @@ describe('AuthContext', () => {
 
       let loginResult
       await act(async () => {
-        loginResult = await result.current.login('user', 'pass')
+        loginResult = await result.current.login('test@example.com', 'wrongpass')
       })
 
       expect(loginResult.success).toBe(false)
-      expect(loginResult.error).toBe('Erro do servidor: 500')
+      expect(loginResult.error).toBe('Email ou senha inválidos')
+      expect(result.current.isAuthenticated).toBe(false)
     })
 
-    it('should allow login in demo mode on network error', async () => {
-      global.fetch.mockRejectedValueOnce(new Error('Network error'))
+    it('should handle Supabase server errors', async () => {
+      supabase.auth.signInWithPassword.mockRejectedValueOnce(
+        new Error('Network error')
+      )
 
       const { result } = renderHook(() => useAuth(), {
         wrapper: AuthProvider,
@@ -164,19 +172,24 @@ describe('AuthContext', () => {
 
       let loginResult
       await act(async () => {
-        loginResult = await result.current.login('user', 'pass')
+        loginResult = await result.current.login('test@example.com', 'password')
       })
 
-      expect(loginResult.success).toBe(true)
-      expect(loginResult.warning).toBe('API indisponível - modo demonstração')
-      expect(result.current.isAuthenticated).toBe(true)
+      expect(loginResult.success).toBe(false)
+      expect(loginResult.error).toBe('Network error')
     })
+
   })
 
   describe('logout', () => {
     it('should clear authentication state and sessionStorage', async () => {
-      const savedCreds = { username: 'testuser', password: 'testpass' }
-      sessionStorage.setItem(CONFIG.AUTH_STORAGE_KEY, JSON.stringify(savedCreds))
+      supabase.auth.signInWithPassword.mockResolvedValueOnce({
+        data: {
+          user: { email: 'test@example.com' },
+          session: { access_token: 'mock-token' }
+        },
+        error: null,
+      })
 
       const { result } = renderHook(() => useAuth(), {
         wrapper: AuthProvider,
@@ -186,15 +199,24 @@ describe('AuthContext', () => {
         expect(result.current.isLoading).toBe(false)
       })
 
+      // Login first
+      await act(async () => {
+        await result.current.login('test@example.com', 'testpass')
+      })
+
       expect(result.current.isAuthenticated).toBe(true)
 
-      act(() => {
-        result.current.logout()
+      // Mock signOut
+      supabase.auth.signOut.mockResolvedValueOnce({ error: null })
+
+      await act(async () => {
+        await result.current.logout()
       })
 
       expect(result.current.isAuthenticated).toBe(false)
       expect(result.current.credentials).toEqual({ username: '', password: '' })
       expect(sessionStorage.getItem(CONFIG.AUTH_STORAGE_KEY)).toBeNull()
+      expect(supabase.auth.signOut).toHaveBeenCalled()
     })
   })
 
@@ -208,9 +230,12 @@ describe('AuthContext', () => {
     })
 
     it('should return Basic auth header when authenticated', async () => {
-      global.fetch.mockResolvedValueOnce({
-        ok: true,
-        status: 200,
+      supabase.auth.signInWithPassword.mockResolvedValueOnce({
+        data: {
+          user: { email: 'user@example.com' },
+          session: { access_token: 'mock-token' }
+        },
+        error: null,
       })
 
       const { result } = renderHook(() => useAuth(), {
@@ -222,7 +247,7 @@ describe('AuthContext', () => {
       })
 
       await act(async () => {
-        await result.current.login('user', 'pass')
+        await result.current.login('user@example.com', 'pass')
       })
 
       const header = result.current.getAuthHeader()
@@ -231,9 +256,12 @@ describe('AuthContext', () => {
     })
 
     it('should generate correct Basic auth header', async () => {
-      global.fetch.mockResolvedValueOnce({
-        ok: true,
-        status: 200,
+      supabase.auth.signInWithPassword.mockResolvedValueOnce({
+        data: {
+          user: { email: 'testuser@example.com' },
+          session: { access_token: 'mock-token' }
+        },
+        error: null,
       })
 
       const { result } = renderHook(() => useAuth(), {
@@ -245,13 +273,13 @@ describe('AuthContext', () => {
       })
 
       await act(async () => {
-        await result.current.login('testuser', 'testpass')
+        await result.current.login('testuser@example.com', 'testpass')
       })
 
       const header = result.current.getAuthHeader()
       const base64 = header.replace('Basic ', '')
       const decoded = atob(base64)
-      expect(decoded).toBe('testuser:testpass')
+      expect(decoded).toBe('testuser@example.com:testpass')
     })
   })
 })
