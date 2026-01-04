@@ -59,3 +59,4 @@ export const useTabAnalytics = (activeTab) => {
   // Return empty object for now - can be extended with analytics methods if needed
   return {};
 };
+
