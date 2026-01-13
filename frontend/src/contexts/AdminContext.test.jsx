@@ -1,11 +1,13 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { renderHook, act, waitFor } from '@testing-library/react'
+import { MemoryRouter } from 'react-router-dom'
 import { AdminProvider, useAdmin } from './AdminContext'
 import { AuthProvider, useAuth } from './AuthContext'
 import { CONFIG } from '../config/constants'
 import { MOCK_DATA } from '../data/mockData'
 import { RepositoryFactory } from '../infrastructure/repositoryFactory.js'
 import { TestPedidoRepository, TestAgendamentoRepository, TestWhatsAppConversationRepository } from '../infrastructure/test/TestRepository.js'
+import { ROUTES } from '../config/routes'
 
 // Mock Supabase
 vi.mock('../infrastructure/supabase/config', () => ({
@@ -19,13 +21,15 @@ vi.mock('../infrastructure/supabase/config', () => ({
 
 import { supabase } from '../infrastructure/supabase/config'
 
-// Helper to render with both providers
-const renderWithProviders = (hook) => {
+// Helper to render with both providers and router
+const renderWithProviders = (hook, initialEntries = [ROUTES.DASHBOARD.PEDIDOS]) => {
   return renderHook(hook, {
     wrapper: ({ children }) => (
-      <AuthProvider>
-        <AdminProvider>{children}</AdminProvider>
-      </AuthProvider>
+      <MemoryRouter initialEntries={initialEntries}>
+        <AuthProvider>
+          <AdminProvider>{children}</AdminProvider>
+        </AuthProvider>
+      </MemoryRouter>
     ),
   })
 }

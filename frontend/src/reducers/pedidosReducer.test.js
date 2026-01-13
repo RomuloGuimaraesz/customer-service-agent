@@ -58,3 +58,9 @@ describe('pedidosReducer', () => {
     expect(result).toEqual(initialPedidosState);
   });
 });
+
+
+
+
+
+

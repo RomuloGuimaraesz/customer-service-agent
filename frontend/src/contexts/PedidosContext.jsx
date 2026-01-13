@@ -44,7 +44,8 @@ export const PedidosProvider = ({ children }) => {
     } catch (err) {
       dispatch({ type: PEDIDOS_ACTIONS.FETCH_ERROR, payload: err.message });
       // Load mock data for demo (fallback behavior)
-      dispatch({ type: PEDIDOS_ACTIONS.FETCH_SUCCESS, payload: MOCK_DATA.pedidos });
+      // Preserve error to show that we're in demo mode
+      dispatch({ type: PEDIDOS_ACTIONS.FETCH_SUCCESS, payload: MOCK_DATA.pedidos, preserveError: true });
     }
   }, [getAuthHeader]);
 

@@ -58,3 +58,9 @@ describe('agendamentosReducer', () => {
     expect(result).toEqual(initialAgendamentosState);
   });
 });
+
+
+
+
+
+

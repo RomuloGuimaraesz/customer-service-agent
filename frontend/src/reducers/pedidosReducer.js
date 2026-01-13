@@ -41,7 +41,8 @@ export const pedidosReducer = (state, action) => {
         loading: false,
         pedidos: action.payload,
         lastUpdated: new Date(),
-        error: null,
+        // Preserve error if this is a fallback scenario (preserveError flag is set)
+        error: action.preserveError ? state.error : null,
       };
 
     case PEDIDOS_ACTIONS.FETCH_ERROR:

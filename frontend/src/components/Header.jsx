@@ -5,14 +5,14 @@ import styled from 'styled-components';
  * Header Container - BEM: header
  */
 const StyledHeader = styled.header`
-  padding: ${props => props.theme.spacing.lg} ${props => props.theme.spacing.xl};
+  padding: ${props => props.theme.spacing.md} ${props => props.theme.spacing.lg};
   border-bottom: 1px solid ${props => props.theme.colors.border.primary};
   display: flex;
   justify-content: space-between;
   align-items: center;
   background-color: ${props => props.theme.colors.background.secondary};
   flex-wrap: wrap;
-  gap: ${props => props.theme.spacing.lg};
+  gap: ${props => props.theme.spacing.md};
 `;
 
 /**
@@ -47,7 +47,7 @@ const StyledLastUpdated = styled.span`
  */
 const StyledHeaderButton = styled.button`
   padding: ${props => props.theme.spacing.sm} ${props => props.theme.spacing.lg};
-  font-size: ${props => props.theme.fontSize.md};
+  font-size: ${props => props.theme.fontSize.sm};
   font-weight: ${props => props.theme.fontWeight.medium};
   border: 1px solid ${props => props.theme.colors.border.primary};
   border-radius: ${props => props.theme.borderRadius.md};
@@ -56,7 +56,7 @@ const StyledHeaderButton = styled.button`
   cursor: pointer;
   display: flex;
   align-items: center;
-  gap: ${props => props.theme.spacing.xs};
+  gap: ${props => props.theme.spacing.sm};
   opacity: ${props => props.disabled ? 0.7 : 1};
 
   &:hover:not(:disabled) {
@@ -70,10 +70,8 @@ const StyledHeaderButton = styled.button`
 const StyledUserInfo = styled.div`
   display: flex;
   align-items: center;
-  gap: ${props => props.theme.spacing.md};
-  padding: ${props => props.theme.spacing.xs} ${props => props.theme.spacing.md};
-  background-color: ${props => props.theme.colors.background.tertiary};
-  border-radius: ${props => props.theme.borderRadius.md};
+  gap: ${props => props.theme.spacing.sm};
+  padding: ${props => props.theme.spacing.sm} ${props => props.theme.spacing.lg};
 `;
 
 /**
@@ -85,23 +83,25 @@ const StyledProfileIcon = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
+  background-color: ${props => props.theme.colors.background.tertiary};
+  border-radius: ${props => props.theme.borderRadius['2xl']};
 `;
 
 /**
  * Logout Button - BEM: header__logout-button
  */
 const StyledLogoutButton = styled.button`
-  padding: ${props => props.theme.spacing.xs} ${props => props.theme.spacing.sm};
+  padding: ${props => props.theme.spacing.sm} ${props => props.theme.spacing.lg};
   font-size: ${props => props.theme.fontSize.sm};
   font-weight: ${props => props.theme.fontWeight.medium};
-  border: 1px solid ${props => props.theme.colors.status.error};
-  border-radius: ${props => props.theme.borderRadius.xs};
+  border: 1px solid ${props => props.theme.colors.status.infoText};
+  border-radius: ${props => props.theme.borderRadius.md};
   background-color: transparent;
-  color: ${props => props.theme.colors.status.error};
+  color: ${props => props.theme.colors.status.infoText};
   cursor: pointer;
 
   &:hover {
-    background-color: ${props => props.theme.colors.status.errorBg};
+    background-color: ${props => props.theme.colors.status.infoBg};
   }
 `;
 

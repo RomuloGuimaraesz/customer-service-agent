@@ -95,3 +95,9 @@ export class WhatsAppConversationRepository {
     throw new Error('markConversationAsRead() must be implemented by concrete repository');
   }
 }
+
+
+
+
+
+

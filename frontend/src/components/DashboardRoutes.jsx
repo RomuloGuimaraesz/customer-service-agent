@@ -5,6 +5,7 @@ import { useAgendamentos } from '../contexts/AgendamentosContext';
 import { DataDisplay } from './DataDisplay';
 import { WhatsAppView } from './whatsapp/WhatsAppView';
 import { DEFAULT_TAB_ID } from '../config/dashboardTabs';
+import { getDashboardRoute } from '../config/routes';
 
 /**
  * Dashboard Routes Component - Renders child routes with context data
@@ -41,6 +42,6 @@ export const WhatsAppRoute = () => {
  * Dashboard Default Route - Redirects to default tab
  */
 export const DashboardDefaultRoute = () => {
-  return <Navigate to={DEFAULT_TAB_ID} replace />;
+  return <Navigate to={getDashboardRoute(DEFAULT_TAB_ID)} replace />;
 };
 

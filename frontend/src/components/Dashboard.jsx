@@ -1,9 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Outlet, useNavigate, useLocation } from 'react-router-dom';
+import { Outlet } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { usePedidos } from '../contexts/PedidosContext';
-import { useAgendamentos } from '../contexts/AgendamentosContext';
-import { useWhatsAppConversations } from '../contexts/WhatsAppConversationsContext';
+import { useAdmin } from '../contexts/AdminContext';
 import { useDashboardStats } from '../hooks/useDashboardStats';
 import { PROFILE_ICON } from '../config/icons';
 import { DASHBOARD_TABS, VALID_TAB_IDS, DEFAULT_TAB_ID } from '../config/dashboardTabs';
@@ -62,34 +60,28 @@ const StyledDashboardTitle = styled.h1`
  * Dashboard Component
  */
 export const Dashboard = () => {
-  const navigate = useNavigate();
-  const location = useLocation();
   const { credentials, isAuthenticated } = useAuth();
-
-  // Use focused contexts directly
-  const pedidosContext = usePedidos();
-  const agendamentosContext = useAgendamentos();
-  const whatsappContext = useWhatsAppConversations();
+  const adminContext = useAdmin();
 
   const [toastVisible, setToastVisible] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [showAnalytics, setShowAnalytics] = useState(false);
 
-  // Get current tab from route
-  const currentTab = location.pathname.split('/').pop() || DEFAULT_TAB_ID;
+  // Use activeTab from AdminContext instead of deriving from URL
+  const currentTab = adminContext.activeTab;
 
   // Handle tab navigation
   const handleTabClick = (tabId) => {
-    navigate(getDashboardRoute(tabId));
+    adminContext.navigateTab(tabId);
   };
 
   // Prepare tabs data with dynamic counts
   const tabs = DASHBOARD_TABS.map(tab => {
     if (tab.id === 'agendamentos') {
-      return { ...tab, count: agendamentosContext.agendamentos.length };
+      return { ...tab, count: adminContext.agendamentos.length };
     }
     if (tab.id === 'pedidos') {
-      return { ...tab, count: pedidosContext.pedidos.length };
+      return { ...tab, count: adminContext.pedidos.length };
     }
     return { ...tab, count: null };
   });
@@ -112,9 +104,7 @@ export const Dashboard = () => {
   // Refresh all data
   const refreshAll = () => {
     if (isAuthenticated) {
-      pedidosContext.refreshPedidos();
-      agendamentosContext.refreshAgendamentos();
-      whatsappContext.refreshConversations();
+      adminContext.refreshAll();
     }
   };
 
@@ -129,17 +119,17 @@ export const Dashboard = () => {
 
   // Show toast when error appears
   useEffect(() => {
-    if (pedidosContext.error || agendamentosContext.error) {
+    if (adminContext.error.pedidos || adminContext.error.agendamentos) {
       setToastVisible(true);
     }
-  }, [pedidosContext.error, agendamentosContext.error]);
+  }, [adminContext.error.pedidos, adminContext.error.agendamentos]);
 
   const handleCloseToast = () => {
     setToastVisible(false);
   };
 
   // Calculate stats using custom hook
-  const { stats } = useDashboardStats(pedidosContext.pedidos, agendamentosContext.agendamentos);
+  const { stats } = useDashboardStats(adminContext.pedidos, adminContext.agendamentos);
 
   return (
     <StyledDashboard className="dashboard">
@@ -148,7 +138,7 @@ export const Dashboard = () => {
         left={<Logo />}
         right={
           <>
-            <LastUpdated timestamp={pedidosContext.lastUpdated} />
+            <LastUpdated timestamp={adminContext.lastUpdated.pedidos} />
             <HeaderButton
               onClick={() => setShowAnalytics(true)}
               title={DASHBOARD_TOOLTIPS.STATISTICS}
@@ -158,7 +148,7 @@ export const Dashboard = () => {
             </HeaderButton>
             <HeaderButton
               onClick={refreshAll}
-              disabled={pedidosContext.loading || agendamentosContext.loading}
+              disabled={adminContext.loading.pedidos || adminContext.loading.agendamentos}
             >
               {DASHBOARD_LABELS.HEADER_BUTTONS.REFRESH}
             </HeaderButton>
@@ -201,8 +191,8 @@ export const Dashboard = () => {
 
         {/* Toast Notification */}
         <Toast
-          message={`${DASHBOARD_MESSAGES.TOAST.DEMO_MODE} ${pedidosContext.error || agendamentosContext.error}`}
-          visible={(pedidosContext.error || agendamentosContext.error) && toastVisible}
+          message={`${DASHBOARD_MESSAGES.TOAST.DEMO_MODE} ${adminContext.error.pedidos || adminContext.error.agendamentos}`}
+          visible={(adminContext.error.pedidos || adminContext.error.agendamentos) && toastVisible}
           onClose={handleCloseToast}
           isMobile={isMobile}
         />

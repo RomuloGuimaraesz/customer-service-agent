@@ -66,6 +66,8 @@ export const theme = {
     lg: '10px',
     xl: '12px',
     '2xl': '16px',
+    '3xl': '24px',
+    '4xl': '32px',
   },
   fontSize: {
     xs: '11px',
