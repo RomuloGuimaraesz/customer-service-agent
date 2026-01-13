@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React from 'react';
 import styled from 'styled-components';
 
 /**
@@ -29,39 +29,7 @@ const StyledChatListTitle = styled.h2`
   font-size: ${props => props.theme.fontSize['3xl']};
   font-weight: ${props => props.theme.fontWeight.semibold};
   color: ${props => props.theme.colors.text.primary};
-  margin: 0 0 ${props => props.theme.spacing.md} 0;
-`;
-
-/**
- * Search Container - BEM: whatsapp-chat-list__search-container
- */
-const StyledSearchContainer = styled.div`
-  position: relative;
-`;
-
-/**
- * Search Icon - BEM: whatsapp-chat-list__search-icon
- */
-const StyledSearchIcon = styled.div`
-  position: absolute;
-  left: ${props => props.theme.spacing.md};
-  top: 50%;
-  transform: translateY(-50%);
-  pointer-events: none;
-`;
-
-/**
- * Search Input - BEM: whatsapp-chat-list__search-input
- */
-const StyledSearchInput = styled.input`
-  width: 100%;
-  padding: ${props => props.theme.spacing.base} ${props => props.theme.spacing.md} 
-           ${props => props.theme.spacing.base} 40px;
-  font-size: ${props => props.theme.fontSize.base};
-  border: 1px solid ${props => props.theme.colors.border.primary};
-  border-radius: ${props => props.theme.borderRadius.md};
-  background-color: ${props => props.theme.colors.background.tertiary};
-  outline: none;
+  margin: 0;
 `;
 
 /**
@@ -193,20 +161,9 @@ const StyledUnreadBadge = styled.div`
 
 /**
  * WhatsApp Chat List Component - Lista de conversas do WhatsApp
+ * Receives filtered conversations as prop (filtering handled by parent)
  */
 export const WhatsAppChatList = ({ conversations, onSelectConversation, selectedId }) => {
-  const [searchFilter, setSearchFilter] = useState('');
-
-  const filteredConversations = useMemo(() => {
-    return conversations.filter(conv =>
-      (conv.name || conv.phone || '').toLowerCase().includes(searchFilter.toLowerCase())
-    );
-  }, [conversations, searchFilter]);
-
-  const searchIcon = `<svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
-<path d="M12.875 12.875L8.87507 8.875M10.2083 5.54167C10.2083 8.119 8.119 10.2083 5.54167 10.2083C2.96434 10.2083 0.875 8.119 0.875 5.54167C0.875 2.96434 2.96434 0.875 5.54167 0.875C8.119 0.875 10.2083 2.96434 10.2083 5.54167Z" stroke="#9ca3af" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/>
-</svg>`;
-
   return (
     <StyledChatListContainer className="whatsapp-chat-list">
       {/* Header */}
@@ -214,31 +171,16 @@ export const WhatsAppChatList = ({ conversations, onSelectConversation, selected
         <StyledChatListTitle className="whatsapp-chat-list__title">
           Conversas
         </StyledChatListTitle>
-        
-        {/* Search */}
-        <StyledSearchContainer className="whatsapp-chat-list__search-container">
-          <StyledSearchIcon 
-            className="whatsapp-chat-list__search-icon"
-            dangerouslySetInnerHTML={{ __html: searchIcon }} 
-          />
-          <StyledSearchInput
-            type="text"
-            placeholder="Pesquisar conversas..."
-            value={searchFilter}
-            onChange={(e) => setSearchFilter(e.target.value)}
-            className="whatsapp-chat-list__search-input"
-          />
-        </StyledSearchContainer>
       </StyledChatListHeader>
 
       {/* Conversations List */}
       <StyledConversationsList className="whatsapp-chat-list__conversations">
-        {filteredConversations.length === 0 ? (
+        {conversations.length === 0 ? (
           <StyledEmptyState className="whatsapp-chat-list__empty">
             Nenhuma conversa encontrada
           </StyledEmptyState>
         ) : (
-          filteredConversations.map((conversation) => {
+          conversations.map((conversation) => {
             const isSelected = selectedId === (conversation.id || conversation.phone);
             return (
               <StyledConversationItem

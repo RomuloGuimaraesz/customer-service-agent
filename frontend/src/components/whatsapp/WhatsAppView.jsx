@@ -1,7 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { useWhatsAppConversations } from '../../contexts/WhatsAppConversationsContext';
 import { WhatsAppChatList } from './WhatsAppChatList';
 import { WhatsAppChat } from './WhatsAppChat';
+import { SearchableLayout } from '../SearchableLayout';
 import styled from 'styled-components';
 
 /**
@@ -9,6 +10,7 @@ import styled from 'styled-components';
  */
 const StyledWhatsAppView = styled.div`
   display: flex;
+  flex-direction: column;
   height: calc(100vh - 200px);
   background-color: ${props => props.theme.colors.background.secondary};
   border-radius: ${props => props.theme.borderRadius.xl};
@@ -16,6 +18,15 @@ const StyledWhatsAppView = styled.div`
   overflow: hidden;
   box-shadow: ${props => props.theme.shadows.sm};
   position: relative;
+`;
+
+/**
+ * WhatsApp Content Container - BEM: whatsapp-view__content
+ */
+const StyledWhatsAppContent = styled.div`
+  display: flex;
+  flex: 1;
+  overflow: hidden;
 `;
 
 /**
@@ -115,6 +126,7 @@ export const WhatsAppView = () => {
 
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [toastVisible, setToastVisible] = useState(false);
+  const [searchFilter, setSearchFilter] = useState('');
 
   useEffect(() => {
     const handleResize = () => {
@@ -159,6 +171,13 @@ export const WhatsAppView = () => {
     selectConversation(null);
   };
 
+  // Filter conversations based on search
+  const filteredConversations = useMemo(() => {
+    return conversations.filter(conv =>
+      (conv.name || conv.phone || '').toLowerCase().includes(searchFilter.toLowerCase())
+    );
+  }, [conversations, searchFilter]);
+
   return (
     <StyledWhatsAppView className="whatsapp-view">
       {/* Toast Notification */}
@@ -178,33 +197,41 @@ export const WhatsAppView = () => {
         </StyledToast>
       )}
 
-      {/* Conversation List */}
-      <StyledListContainer
-        $show={showList}
-        $isMobile={isMobile}
-        $hasSelection={!!selectedConversation}
-        className="whatsapp-view__list-container"
+      <SearchableLayout
+        placeholder="Pesquisar conversas..."
+        onSearchChange={setSearchFilter}
+        initialSearchValue={searchFilter}
       >
-        <WhatsAppChatList
-          conversations={conversations}
-          onSelectConversation={selectConversation}
-          selectedId={selectedConversation?.id || selectedConversation?.phone}
-        />
-      </StyledListContainer>
+        <StyledWhatsAppContent className="whatsapp-view__content">
+          {/* Conversation List */}
+          <StyledListContainer
+            $show={showList}
+            $isMobile={isMobile}
+            $hasSelection={!!selectedConversation}
+            className="whatsapp-view__list-container"
+          >
+            <WhatsAppChatList
+              conversations={filteredConversations}
+              onSelectConversation={selectConversation}
+              selectedId={selectedConversation?.id || selectedConversation?.phone}
+            />
+          </StyledListContainer>
 
-      {/* Chat Area */}
-      <StyledChatContainer
-        $show={showChat}
-        $isMobile={isMobile}
-        className="whatsapp-view__chat-container"
-      >
-        <WhatsAppChat
-          conversation={selectedConversation}
-          onSendMessage={sendMessage}
-          loading={loading.sendMessage}
-          onBack={isMobile ? handleBackToList : null}
-        />
-      </StyledChatContainer>
+          {/* Chat Area */}
+          <StyledChatContainer
+            $show={showChat}
+            $isMobile={isMobile}
+            className="whatsapp-view__chat-container"
+          >
+            <WhatsAppChat
+              conversation={selectedConversation}
+              onSendMessage={sendMessage}
+              loading={loading.sendMessage}
+              onBack={isMobile ? handleBackToList : null}
+            />
+          </StyledChatContainer>
+        </StyledWhatsAppContent>
+      </SearchableLayout>
     </StyledWhatsAppView>
   );
 };
