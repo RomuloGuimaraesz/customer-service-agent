@@ -2,10 +2,23 @@ import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 
 /**
+ * Searchable Layout Container - BEM: searchable-layout
+ */
+const StyledSearchableLayout = styled.div`
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  padding: ${props => props.theme.spacing.lg};
+`;
+
+/**
  * Search Container - BEM: searchable-layout__search-container
  */
 const StyledSearchContainer = styled.div`
   margin-bottom: ${props => props.theme.spacing.lg};
+  flex-shrink: 0;
 `;
 
 /**
@@ -53,6 +66,10 @@ const StyledSearchInput = styled.input`
  */
 const StyledContentContainer = styled.div`
   width: 100%;
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
 `;
 
 /**
@@ -104,7 +121,7 @@ export const SearchableLayout = ({
   };
 
   return (
-    <div className="searchable-layout">
+    <StyledSearchableLayout className="searchable-layout">
       {showSearch && (
         <StyledSearchContainer className="searchable-layout__search-container">
           <StyledSearchWrapper className="searchable-layout__search-wrapper">
@@ -126,7 +143,7 @@ export const SearchableLayout = ({
       <StyledContentContainer className="searchable-layout__content">
         {children}
       </StyledContentContainer>
-    </div>
+    </StyledSearchableLayout>
   );
 };
 
