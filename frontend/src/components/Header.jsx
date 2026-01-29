@@ -2,9 +2,20 @@ import React from 'react';
 import styled from 'styled-components';
 import { Dropdown } from './Dropdown';
 
-/**
- * Header Container - BEM: header
- */
+// ============================================================================
+// CONFIGURATION - Easy to find and change
+// ============================================================================
+const CONFIG = {
+  logoText: 'Acme Co', // 👈 Change logo name here!
+  profileEditLabel: 'Editar Perfil',
+  logoutLabel: 'Sair',
+};
+
+// ============================================================================
+// STYLED COMPONENTS - Grouped by section
+// ============================================================================
+
+// Header Layout
 const StyledHeader = styled.header`
   padding: ${props => props.theme.spacing.xs} ${props => props.theme.spacing.md};
   border-bottom: 1px solid ${props => props.theme.colors.border.primary};
@@ -16,18 +27,12 @@ const StyledHeader = styled.header`
   gap: ${props => props.theme.spacing.md};
 `;
 
-/**
- * Header Left Section - BEM: header__left
- */
 const StyledHeaderLeft = styled.div`
   display: flex;
   align-items: center;
   gap: ${props => props.theme.spacing.md};
 `;
 
-/**
- * Header Right Section - BEM: header__right
- */
 const StyledHeaderRight = styled.div`
   display: flex;
   align-items: center;
@@ -35,10 +40,7 @@ const StyledHeaderRight = styled.div`
   flex-wrap: wrap;
 `;
 
-
-/**
- * Header Button - BEM: header__button
- */
+// Buttons
 const StyledHeaderButton = styled.button`
   padding: ${props => props.theme.spacing.sm} ${props => props.theme.spacing.lg};
   font-size: ${props => props.theme.fontSize.sm};
@@ -58,9 +60,7 @@ const StyledHeaderButton = styled.button`
   }
 `;
 
-/**
- * User Info Container - BEM: header__user-info
- */
+// User Info
 const StyledUserInfo = styled.div`
   display: flex;
   align-items: center;
@@ -75,9 +75,6 @@ const StyledUserInfo = styled.div`
   }
 `;
 
-/**
- * Profile Icon Container - BEM: header__profile-icon
- */
 const StyledProfileIcon = styled.div`
   width: 32px;
   height: 32px;
@@ -88,26 +85,17 @@ const StyledProfileIcon = styled.div`
   border-radius: ${props => props.theme.borderRadius['2xl']};
 `;
 
-/**
- * User Email Text - BEM: header__user-email
- * Hidden in trigger, shown in dropdown header
- */
 const StyledUserEmail = styled.span`
   display: none;
 `;
 
-/**
- * Dropdown Header Email - BEM: header__user-info-dropdown-header-email
- */
+// Dropdown
 const StyledDropdownHeaderEmail = styled.span`
   font-size: ${props => props.theme.fontSize.sm};
   color: ${props => props.theme.colors.text.primary};
   font-weight: ${props => props.theme.fontWeight.normal};
 `;
 
-/**
- * Dropdown Header Icon - BEM: header__user-info-dropdown-header-icon
- */
 const StyledDropdownHeaderIcon = styled.div`
   width: 32px;
   height: 32px;
@@ -118,18 +106,12 @@ const StyledDropdownHeaderIcon = styled.div`
   border-radius: ${props => props.theme.borderRadius['2xl']};
 `;
 
-/**
- * Dropdown Content Container - BEM: header__dropdown-content
- */
 const StyledDropdownContent = styled.div`
   display: flex;
   flex-direction: column;
   gap: ${props => props.theme.spacing.xs};
 `;
 
-/**
- * Profile Edit Button - BEM: header__profile-edit-button
- */
 const StyledProfileEditButton = styled.button`
   width: 100%;
   padding: ${props => props.theme.spacing.sm} ${props => props.theme.spacing.md};
@@ -150,10 +132,6 @@ const StyledProfileEditButton = styled.button`
   }
 `;
 
-/**
- * Logout Button - BEM: header__logout-button
- * Now used inside dropdown, so styling is adjusted
- */
 const StyledLogoutButton = styled.button`
   width: 100%;
   padding: ${props => props.theme.spacing.sm} ${props => props.theme.spacing.md};
@@ -171,23 +149,22 @@ const StyledLogoutButton = styled.button`
   }
 `;
 
-/**
- * Logo Text - BEM: header__logo
- */
+// Logo
 const StyledLogo = styled.div`
   font-size: ${props => props.theme.fontSize['2xl']};
   font-weight: ${props => props.theme.fontWeight.bold};
   color: ${props => props.theme.colors.text.primary};
 `;
 
-
-/**
- * Last Updated Text - BEM: header__last-updated
- */
+// Last Updated
 const StyledLastUpdated = styled.span`
   font-size: ${props => props.theme.fontSize.sm};
   color: ${props => props.theme.colors.text.secondary};
 `;
+
+// ============================================================================
+// COMPONENTS
+// ============================================================================
 
 /**
  * Header Component
@@ -215,7 +192,6 @@ export const Header = ({ left, right, isAuthenticated = false }) => {
     </StyledHeader>
   );
 };
-
 
 /**
  * HeaderButton Component
@@ -252,7 +228,6 @@ export const HeaderButton = ({ children, onClick, disabled, title }) => {
  * @param {string} [props.iconSvg] - Profile icon SVG (for dropdown header)
  */
 export const UserInfo = ({ children, onEditProfile, onLogout, email, iconSvg }) => {
-  // Build dropdown header
   const dropdownHeader = (email || iconSvg) ? (
     <>
       {iconSvg && (
@@ -269,7 +244,6 @@ export const UserInfo = ({ children, onEditProfile, onLogout, email, iconSvg }) 
     </>
   ) : null;
 
-  // Build dropdown content with both buttons
   const dropdownContent = (onEditProfile || onLogout) ? (
     <StyledDropdownContent className="header__dropdown-content">
       {onEditProfile && (
@@ -337,7 +311,7 @@ export const UserEmail = ({ email }) => {
  * @param {Function} props.onClick - Click handler for profile edit
  * @param {string} [props.label] - Button label (default: 'Editar Perfil')
  */
-export const ProfileEditButton = ({ onClick, label = 'Editar Perfil' }) => {
+export const ProfileEditButton = ({ onClick, label = CONFIG.profileEditLabel }) => {
   return (
     <StyledProfileEditButton
       onClick={onClick}
@@ -357,7 +331,7 @@ export const ProfileEditButton = ({ onClick, label = 'Editar Perfil' }) => {
  * @param {Function} props.onClick - Click handler for logout
  * @param {string} [props.label] - Button label (default: 'Sair')
  */
-export const LogoutButton = ({ onClick, label = 'Sair' }) => {
+export const LogoutButton = ({ onClick, label = CONFIG.logoutLabel }) => {
   return (
     <StyledLogoutButton
       onClick={onClick}
@@ -373,16 +347,15 @@ export const LogoutButton = ({ onClick, label = 'Sair' }) => {
  * Displays the application logo text
  * 
  * @param {Object} props
- * @param {string} [props.text] - Logo text (default: 'Rapidy Informática')
+ * @param {string} [props.text] - Logo text (default: from CONFIG)
  */
-export const Logo = ({ text = 'All Good Informatics' }) => {
+export const Logo = ({ text = CONFIG.logoText }) => {
   return (
     <StyledLogo className="header__logo">
       {text}
     </StyledLogo>
   );
 };
-
 
 /**
  * TODO: Move this component to the stats-grid component, change its naming accordingly to the block component naming.
