@@ -1,11 +1,12 @@
 import React from 'react';
 import styled from 'styled-components';
+import { Dropdown } from './Dropdown';
 
 /**
  * Header Container - BEM: header
  */
 const StyledHeader = styled.header`
-  padding: ${props => props.theme.spacing.md} ${props => props.theme.spacing.lg};
+  padding: ${props => props.theme.spacing.xs} ${props => props.theme.spacing.md};
   border-bottom: 1px solid ${props => props.theme.colors.border.primary};
   display: flex;
   justify-content: space-between;
@@ -30,17 +31,10 @@ const StyledHeaderLeft = styled.div`
 const StyledHeaderRight = styled.div`
   display: flex;
   align-items: center;
-  gap: ${props => props.theme.spacing.md};
+  gap: ${props => props.theme.spacing.sm};
   flex-wrap: wrap;
 `;
 
-/**
- * Last Updated Text - BEM: header__last-updated
- */
-const StyledLastUpdated = styled.span`
-  font-size: ${props => props.theme.fontSize.sm};
-  color: ${props => props.theme.colors.text.secondary};
-`;
 
 /**
  * Header Button - BEM: header__button
@@ -72,6 +66,13 @@ const StyledUserInfo = styled.div`
   align-items: center;
   gap: ${props => props.theme.spacing.sm};
   padding: ${props => props.theme.spacing.sm} ${props => props.theme.spacing.lg};
+  cursor: pointer;
+  border-radius: ${props => props.theme.borderRadius.md};
+  transition: background-color ${props => props.theme.transitions.fast} ease;
+
+  &:hover {
+    background-color: ${props => props.theme.colors.background.tertiary};
+  }
 `;
 
 /**
@@ -88,17 +89,82 @@ const StyledProfileIcon = styled.div`
 `;
 
 /**
- * Logout Button - BEM: header__logout-button
+ * User Email Text - BEM: header__user-email
+ * Hidden in trigger, shown in dropdown header
  */
-const StyledLogoutButton = styled.button`
-  padding: ${props => props.theme.spacing.sm} ${props => props.theme.spacing.lg};
+const StyledUserEmail = styled.span`
+  display: none;
+`;
+
+/**
+ * Dropdown Header Email - BEM: header__user-info-dropdown-header-email
+ */
+const StyledDropdownHeaderEmail = styled.span`
+  font-size: ${props => props.theme.fontSize.sm};
+  color: ${props => props.theme.colors.text.primary};
+  font-weight: ${props => props.theme.fontWeight.normal};
+`;
+
+/**
+ * Dropdown Header Icon - BEM: header__user-info-dropdown-header-icon
+ */
+const StyledDropdownHeaderIcon = styled.div`
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: ${props => props.theme.colors.background.tertiary};
+  border-radius: ${props => props.theme.borderRadius['2xl']};
+`;
+
+/**
+ * Dropdown Content Container - BEM: header__dropdown-content
+ */
+const StyledDropdownContent = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: ${props => props.theme.spacing.xs};
+`;
+
+/**
+ * Profile Edit Button - BEM: header__profile-edit-button
+ */
+const StyledProfileEditButton = styled.button`
+  width: 100%;
+  padding: ${props => props.theme.spacing.sm} ${props => props.theme.spacing.md};
   font-size: ${props => props.theme.fontSize.sm};
   font-weight: ${props => props.theme.fontWeight.medium};
-  border: 1px solid ${props => props.theme.colors.status.infoText};
-  border-radius: ${props => props.theme.borderRadius.md};
+  border: none;
+  border-radius: ${props => props.theme.borderRadius.sm};
+  background-color: transparent;
+  color: ${props => props.theme.colors.text.primary};
+  cursor: pointer;
+  text-align: left;
+  display: flex;
+  align-items: center;
+  gap: ${props => props.theme.spacing.sm};
+
+  &:hover {
+    background-color: ${props => props.theme.colors.background.tertiary};
+  }
+`;
+
+/**
+ * Logout Button - BEM: header__logout-button
+ * Now used inside dropdown, so styling is adjusted
+ */
+const StyledLogoutButton = styled.button`
+  width: 100%;
+  padding: ${props => props.theme.spacing.sm} ${props => props.theme.spacing.md};
+  font-size: ${props => props.theme.fontSize.sm};
+  font-weight: ${props => props.theme.fontWeight.medium};
+  border: none;
+  border-radius: ${props => props.theme.borderRadius.sm};
   background-color: transparent;
   color: ${props => props.theme.colors.status.infoText};
   cursor: pointer;
+  text-align: left;
 
   &:hover {
     background-color: ${props => props.theme.colors.status.infoBg};
@@ -112,6 +178,15 @@ const StyledLogo = styled.div`
   font-size: ${props => props.theme.fontSize['2xl']};
   font-weight: ${props => props.theme.fontWeight.bold};
   color: ${props => props.theme.colors.text.primary};
+`;
+
+
+/**
+ * Last Updated Text - BEM: header__last-updated
+ */
+const StyledLastUpdated = styled.span`
+  font-size: ${props => props.theme.fontSize.sm};
+  color: ${props => props.theme.colors.text.secondary};
 `;
 
 /**
@@ -141,22 +216,6 @@ export const Header = ({ left, right, isAuthenticated = false }) => {
   );
 };
 
-/**
- * LastUpdated Component
- * Displays a last updated timestamp
- * 
- * @param {Object} props
- * @param {Date} props.timestamp - The timestamp to display
- */
-export const LastUpdated = ({ timestamp }) => {
-  if (!timestamp) return null;
-
-  return (
-    <StyledLastUpdated className="header__last-updated">
-      Atualizado: {timestamp.toLocaleTimeString('pt-BR')}
-    </StyledLastUpdated>
-  );
-};
 
 /**
  * HeaderButton Component
@@ -183,16 +242,57 @@ export const HeaderButton = ({ children, onClick, disabled, title }) => {
 
 /**
  * UserInfo Component
- * Container for user information and actions
+ * Container for user information with dropdown menu
  * 
  * @param {Object} props
- * @param {React.ReactNode} props.children - User info content
+ * @param {React.ReactNode} props.children - User info content (ProfileIcon, username, etc.)
+ * @param {Function} [props.onEditProfile] - Handler for profile edit button
+ * @param {Function} [props.onLogout] - Handler for logout button
+ * @param {string} [props.email] - User's email address (for dropdown header)
+ * @param {string} [props.iconSvg] - Profile icon SVG (for dropdown header)
  */
-export const UserInfo = ({ children }) => {
+export const UserInfo = ({ children, onEditProfile, onLogout, email, iconSvg }) => {
+  // Build dropdown header
+  const dropdownHeader = (email || iconSvg) ? (
+    <>
+      {iconSvg && (
+        <StyledDropdownHeaderIcon 
+          className="header__user-info-dropdown-header-icon"
+          dangerouslySetInnerHTML={{ __html: iconSvg }} 
+        />
+      )}
+      {email && (
+        <StyledDropdownHeaderEmail className="header__user-info-dropdown-header-email">
+          {email}
+        </StyledDropdownHeaderEmail>
+      )}
+    </>
+  ) : null;
+
+  // Build dropdown content with both buttons
+  const dropdownContent = (onEditProfile || onLogout) ? (
+    <StyledDropdownContent className="header__dropdown-content">
+      {onEditProfile && (
+        <ProfileEditButton onClick={onEditProfile} />
+      )}
+      {onLogout && (
+        <LogoutButton onClick={onLogout} />
+      )}
+    </StyledDropdownContent>
+  ) : null;
+
   return (
-    <StyledUserInfo className="header__user-info">
-      {children}
-    </StyledUserInfo>
+    <Dropdown
+      className="header__user-info"
+      content={dropdownContent}
+      header={dropdownHeader}
+      align="right"
+      minWidth="180px"
+    >
+      <StyledUserInfo className="header__user-info-trigger">
+        {children}
+      </StyledUserInfo>
+    </Dropdown>
   );
 };
 
@@ -209,6 +309,43 @@ export const ProfileIcon = ({ iconSvg }) => {
       className="header__profile-icon"
       dangerouslySetInnerHTML={{ __html: iconSvg }} 
     />
+  );
+};
+
+/**
+ * UserEmail Component
+ * Displays the user's email address
+ * 
+ * @param {Object} props
+ * @param {string} props.email - User's email address
+ */
+export const UserEmail = ({ email }) => {
+  if (!email) return null;
+  
+  return (
+    <StyledUserEmail className="header__user-email">
+      {email}
+    </StyledUserEmail>
+  );
+};
+
+/**
+ * ProfileEditButton Component
+ * A button for editing user profile
+ * 
+ * @param {Object} props
+ * @param {Function} props.onClick - Click handler for profile edit
+ * @param {string} [props.label] - Button label (default: 'Editar Perfil')
+ */
+export const ProfileEditButton = ({ onClick, label = 'Editar Perfil' }) => {
+  return (
+    <StyledProfileEditButton
+      onClick={onClick}
+      className="header__profile-edit-button"
+    >
+      <span>✏️</span>
+      <span>{label}</span>
+    </StyledProfileEditButton>
   );
 };
 
@@ -238,7 +375,7 @@ export const LogoutButton = ({ onClick, label = 'Sair' }) => {
  * @param {Object} props
  * @param {string} [props.text] - Logo text (default: 'Rapidy Informática')
  */
-export const Logo = ({ text = 'Rapidy Informática' }) => {
+export const Logo = ({ text = 'All Good Informatics' }) => {
   return (
     <StyledLogo className="header__logo">
       {text}
@@ -246,3 +383,21 @@ export const Logo = ({ text = 'Rapidy Informática' }) => {
   );
 };
 
+
+/**
+ * TODO: Move this component to the stats-grid component, change its naming accordingly to the block component naming.
+ * LastUpdated Component
+ * Displays a last updated timestamp
+ * 
+ * @param {Object} props
+ * @param {Date} props.timestamp - The timestamp to display
+ */
+export const LastUpdated = ({ timestamp }) => {
+  if (!timestamp) return null;
+
+  return (
+    <StyledLastUpdated className="header__last-updated">
+      Última atualização: {timestamp.toLocaleTimeString('pt-BR')}
+    </StyledLastUpdated>
+  );
+};

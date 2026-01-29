@@ -2,7 +2,9 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { StatusBadge } from './StatusBadge';
 import { TableList } from './TableList';
 import { SearchableLayout } from './SearchableLayout';
+import { PedidoDetailModal } from './PedidoDetailModal';
 import styled from 'styled-components';
+import { adaptPedidoForDisplay } from '../utils/pedidoAdapter';
 
 /**
  * Data Display Container - BEM: data-display
@@ -125,6 +127,8 @@ const StyledEmptyState = styled.div`
 export const DataDisplay = ({ data, type }) => {
   const [filter, setFilter] = useState('');
   const [isDesktop, setIsDesktop] = useState(false);
+  const [selectedPedido, setSelectedPedido] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   // Detect screen size
   useEffect(() => {
@@ -137,17 +141,35 @@ export const DataDisplay = ({ data, type }) => {
     return () => window.removeEventListener('resize', checkScreenSize);
   }, []);
 
-  const filteredData = useMemo(() => {
-    return data.filter(row =>
+  // Adapt data for display (only for pedidos with new structure)
+  const adaptedData = useMemo(() => {
+    const adapted = type === 'pedidos' 
+      ? data.map(adaptPedidoForDisplay)
+      : data;
+    
+    // Filter adapted data
+    return adapted.filter(row =>
       Object.values(row).some(val =>
         String(val).toLowerCase().includes(filter.toLowerCase())
       )
     );
-  }, [data, filter]);
+  }, [data, filter, type]);
 
   const arrowIcon = `<svg width="16" height="13" viewBox="0 0 16 13" fill="none" xmlns="http://www.w3.org/2000/svg">
 <path d="M0.75 6.25H14.75M14.75 6.25L9.5 11.75M14.75 6.25L9.5 0.75" stroke="#6b7280" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>`;
+
+  const handleCardClick = (row) => {
+    if (type === 'pedidos') {
+      setSelectedPedido(row);
+      setIsModalOpen(true);
+    }
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setSelectedPedido(null);
+  };
 
   return (
     <StyledDataDisplayContainer className="data-display">
@@ -158,17 +180,21 @@ export const DataDisplay = ({ data, type }) => {
       >
         {/* Desktop: Table View */}
         {isDesktop ? (
-          <TableList data={filteredData} type={type} />
+          <TableList data={adaptedData} type={type} />
         ) : (
           /* Mobile: Card View */
           <StyledMobileCardsContainer className="data-display__cards">
-            {filteredData.length === 0 ? (
+            {adaptedData.length === 0 ? (
               <StyledEmptyState className="data-display__empty">
                 Nenhum registro encontrado
               </StyledEmptyState>
             ) : (
-              filteredData.map((row, idx) => (
-                <StyledMobileCard key={row.ID || idx} className="data-display__card">
+              adaptedData.map((row, idx) => (
+                <StyledMobileCard 
+                  key={row.ID || idx} 
+                  className="data-display__card"
+                  onClick={() => handleCardClick(row)}
+                >
                   <StyledCardHeader className="data-display__card-header">
                     <StatusBadge status={row.Status || '-'} />
                     <StyledCardDate className="data-display__card-date">
@@ -188,7 +214,7 @@ export const DataDisplay = ({ data, type }) => {
                   </StyledCardTitleRow>
 
                   <StyledCardDescription className="data-display__card-description">
-                    {row.Descrição || '-'}
+                    {row.Descrição || row.descricao || '-'}
                   </StyledCardDescription>
 
                   <StyledCardFooter className="data-display__card-footer">
@@ -204,6 +230,14 @@ export const DataDisplay = ({ data, type }) => {
               ))
             )}
           </StyledMobileCardsContainer>
+        )}
+        
+        {type === 'pedidos' && (
+          <PedidoDetailModal
+            isOpen={isModalOpen}
+            onClose={handleCloseModal}
+            pedido={selectedPedido}
+          />
         )}
       </SearchableLayout>
     </StyledDataDisplayContainer>

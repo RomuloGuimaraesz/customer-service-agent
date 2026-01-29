@@ -1,6 +1,8 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { StatusBadge } from './StatusBadge';
 import styled from 'styled-components';
+import { adaptPedidoForDisplay } from '../utils/pedidoAdapter';
+import { PedidoDetailModal } from './PedidoDetailModal';
 
 /**
  * Table Container - BEM: data-display__table
@@ -92,6 +94,9 @@ const StyledEmptyState = styled.div`
  * Table List Component - Desktop view
  */
 export const TableList = ({ data, type }) => {
+  const [selectedPedido, setSelectedPedido] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
   if (data.length === 0) {
     return (
       <StyledEmptyState className="data-display__table-empty">
@@ -99,6 +104,23 @@ export const TableList = ({ data, type }) => {
       </StyledEmptyState>
     );
   }
+
+  // Adapt data for display (only for pedidos with new structure)
+  const adaptedData = type === 'pedidos' 
+    ? data.map(adaptPedidoForDisplay)
+    : data;
+
+  const handleRowClick = (row) => {
+    if (type === 'pedidos') {
+      setSelectedPedido(row);
+      setIsModalOpen(true);
+    }
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setSelectedPedido(null);
+  };
 
   // Determine columns based on data type
   const getColumns = () => {
@@ -144,8 +166,12 @@ export const TableList = ({ data, type }) => {
             </StyledTableHeaderRow>
           </thead>
           <tbody>
-            {data.map((row, idx) => (
-              <StyledTableRow key={row.ID || idx} className="data-display__table-row">
+            {adaptedData.map((row, idx) => (
+              <StyledTableRow 
+                key={row.ID || idx} 
+                className="data-display__table-row"
+                onClick={() => handleRowClick(row)}
+              >
                 {columns.map((col) => (
                   <StyledTableCell
                     key={col.key}
@@ -165,6 +191,14 @@ export const TableList = ({ data, type }) => {
           </tbody>
         </StyledTable>
       </StyledTableWrapper>
+      
+      {type === 'pedidos' && (
+        <PedidoDetailModal
+          isOpen={isModalOpen}
+          onClose={handleCloseModal}
+          pedido={selectedPedido}
+        />
+      )}
     </StyledTableContainer>
   );
 };

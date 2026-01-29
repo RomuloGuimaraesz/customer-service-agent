@@ -20,9 +20,10 @@ import {
   HeaderButton, 
   UserInfo, 
   ProfileIcon, 
-  LogoutButton,
-  Logo
+  Logo,
+  UserEmail
 } from './Header';
+import { ProfileEditModal } from './ProfileEditModal';
 import styled from 'styled-components';
 
 /**
@@ -66,6 +67,7 @@ export const Dashboard = () => {
   const [toastVisible, setToastVisible] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [showAnalytics, setShowAnalytics] = useState(false);
+  const [showProfileEdit, setShowProfileEdit] = useState(false);
 
   // Use activeTab from AdminContext instead of deriving from URL
   const currentTab = adminContext.activeTab;
@@ -152,12 +154,14 @@ export const Dashboard = () => {
             >
               {DASHBOARD_LABELS.HEADER_BUTTONS.REFRESH}
             </HeaderButton>
-            <UserInfo>
+            <UserInfo 
+              onEditProfile={() => setShowProfileEdit(true)}
+              onLogout={handleLogout}
+              email={credentials.username}
+              iconSvg={PROFILE_ICON}
+            >
               <ProfileIcon iconSvg={PROFILE_ICON} />
-              <span>
-                {/*credentials.username*/}
-              </span>
-              <LogoutButton onClick={handleLogout} />
+              <UserEmail email={credentials.username} />
             </UserInfo>
           </>
         }
@@ -166,6 +170,16 @@ export const Dashboard = () => {
 
       {/* Main Content */}
       <StyledMainContent className="dashboard__main">
+        {/* Profile Edit Modal */}
+        <ProfileEditModal
+          isOpen={showProfileEdit}
+          onClose={() => setShowProfileEdit(false)}
+          onSave={(profileData) => {
+            // Handle profile save if needed
+            console.log('Profile saved:', profileData);
+          }}
+        />
+
         {/* Analytics Modal/View */}
         <Modal
           isOpen={showAnalytics}
