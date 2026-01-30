@@ -6,7 +6,7 @@ import { Dropdown } from './Dropdown';
 // CONFIGURATION - Easy to find and change
 // ============================================================================
 const CONFIG = {
-  logoText: 'Acme Co', // 👈 Change logo name here!
+  logoText: 'Avecta AI',
   profileEditLabel: 'Editar Perfil',
   logoutLabel: 'Sair',
 };
@@ -18,11 +18,9 @@ const CONFIG = {
 // Header Layout
 const StyledHeader = styled.header`
   padding: ${props => props.theme.spacing.xs} ${props => props.theme.spacing.md};
-  border-bottom: 1px solid ${props => props.theme.colors.border.primary};
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background-color: ${props => props.theme.colors.background.secondary};
   flex-wrap: wrap;
   gap: ${props => props.theme.spacing.md};
 `;

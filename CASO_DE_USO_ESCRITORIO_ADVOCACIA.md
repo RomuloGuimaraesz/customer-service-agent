@@ -565,3 +565,4 @@ A estrutura generalista do sistema permite adaptação a diferentes áreas do di
 **Sistema SaaS Generalista - Versão 1.0**
 
 
+
