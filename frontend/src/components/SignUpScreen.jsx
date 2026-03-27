@@ -3,7 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { Header, Logo } from './Header';
 import { Toast } from './Toast';
-import { FieldContainer, FieldInput, FieldLabel } from './form';
+import { FieldContainer, FieldInput, FieldLabel, FormSubmitButton } from './form';
 import styled from 'styled-components';
 
 /**
@@ -124,32 +124,6 @@ const StyledCloseButton = styled.button`
 
   &:hover {
     opacity: 1;
-  }
-`;
-
-/**
- * Submit Button - BEM: signup-screen__submit-button
- */
-const StyledSubmitButton = styled.button`
-  width: 100%;
-  padding: ${props => props.theme.spacing.base} ${props => props.theme.spacing['2xl']};
-  font-size: ${props => props.theme.fontSize.lg};
-  font-weight: ${props => props.theme.fontWeight.bold};
-  border: none;
-  border-radius: ${props => props.theme.borderRadius.lg};
-  background: ${props => props.disabled ? props.theme.colors.button.disabled : props.theme.colors.button.primary};
-  color: ${props => props.theme.colors.text.light};
-  cursor: ${props => props.disabled ? 'not-allowed' : 'pointer'};
-  transition: opacity ${props => props.theme.transitions.fast}, 
-              transform ${props => props.theme.transitions.fast};
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: ${props => props.theme.spacing.sm};
-
-  &:hover:not(:disabled) {
-    opacity: 0.9;
-    transform: translateY(-1px);
   }
 `;
 
@@ -399,13 +373,13 @@ export const SignUpScreen = () => {
           )}
 
           {/* Submit Button */}
-          <StyledSubmitButton
+          <FormSubmitButton
             type="submit"
             disabled={isLoading}
             className="signup-screen__submit-button"
           >
             {isLoading ? 'Criando conta...' : 'Criar Conta'}
-          </StyledSubmitButton>
+          </FormSubmitButton>
         </form>
 
         {/* Footer */}
