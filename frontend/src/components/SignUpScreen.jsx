@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { Header, Logo } from './Header';
 import { Toast } from './Toast';
+import { FieldContainer, FieldInput, FieldLabel } from './form';
 import styled from 'styled-components';
 
 /**
@@ -72,39 +73,6 @@ const StyledSignUpSubtitle = styled.p`
  */
 const StyledFormGroup = styled.div`
   margin-bottom: ${props => props.theme.spacing.xl};
-`;
-
-/**
- * Form Label - BEM: signup-screen__label
- */
-const StyledFormLabel = styled.label`
-  display: block;
-  font-size: ${props => props.theme.fontSize.base};
-  font-weight: ${props => props.theme.fontWeight.bold};
-  color: ${props => props.theme.colors.text.primary};
-  margin-bottom: ${props => props.theme.spacing.sm};
-`;
-
-/**
- * Form Input - BEM: signup-screen__input
- */
-const StyledFormInput = styled.input`
-  width: 100%;
-  padding: ${props => props.theme.spacing.base} ${props => props.theme.spacing.lg};
-  font-size: ${props => props.theme.fontSize.base};
-  border: 1px solid ${props => props.theme.colors.border.primary};
-  border-radius: ${props => props.theme.borderRadius.lg};
-  background-color: ${props => props.theme.colors.background.tertiary};
-  color: ${props => props.theme.colors.text.primary};
-  outline: none;
-  transition: border-color ${props => props.theme.transitions.normal}, 
-              box-shadow ${props => props.theme.transitions.normal};
-  box-sizing: border-box;
-
-  &:focus {
-    border-color: ${props => props.theme.colors.text.tertiary};
-    box-shadow: 0 0 0 3px rgba(156, 163, 175, 0.1);
-  }
 `;
 
 /**
@@ -339,60 +307,72 @@ export const SignUpScreen = () => {
         {/* Form */}
         <form onSubmit={handleSubmit}>
           <StyledFormGroup className="signup-screen__form-group">
-            <StyledFormLabel className="signup-screen__label">
-              Nome Completo
-            </StyledFormLabel>
-            <StyledFormInput
-              type="text"
-              value={fullName}
-              onChange={(e) => setFullName(e.target.value)}
-              placeholder="Informe seu nome completo"
-              className="signup-screen__input"
-            />
+            <FieldContainer className="signup-screen__field-container">
+              <FieldLabel htmlFor="fullName" className="signup-screen__label">
+                Nome Completo
+              </FieldLabel>
+              <FieldInput
+                id="fullName"
+                type="text"
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
+                placeholder="Informe seu nome completo"
+                className="signup-screen__input"
+              />
+            </FieldContainer>
           </StyledFormGroup>
 
           <StyledFormGroup className="signup-screen__form-group">
-            <StyledFormLabel className="signup-screen__label">
-              Email
-            </StyledFormLabel>
-            <StyledFormInput
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="Informe seu email"
-              required
-              className="signup-screen__input"
-            />
+            <FieldContainer className="signup-screen__field-container">
+              <FieldLabel htmlFor="email" className="signup-screen__label">
+                Email
+              </FieldLabel>
+              <FieldInput
+                id="email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="Informe seu email"
+                required
+                className="signup-screen__input"
+              />
+            </FieldContainer>
           </StyledFormGroup>
 
           <StyledFormGroup className="signup-screen__form-group">
-            <StyledFormLabel className="signup-screen__label">
-              Senha
-            </StyledFormLabel>
-            <StyledFormInput
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="Crie uma senha (mínimo 6 caracteres)"
-              required
-              minLength={6}
-              className="signup-screen__input"
-            />
+            <FieldContainer className="signup-screen__field-container">
+              <FieldLabel htmlFor="password" className="signup-screen__label">
+                Senha
+              </FieldLabel>
+              <FieldInput
+                id="password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Crie uma senha (mínimo 6 caracteres)"
+                required
+                minLength={6}
+                className="signup-screen__input"
+              />
+            </FieldContainer>
           </StyledFormGroup>
 
           <StyledFormGroup className="signup-screen__form-group">
-            <StyledFormLabel className="signup-screen__label">
-              Confirmar Senha
-            </StyledFormLabel>
-            <StyledFormInput
-              type="password"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              placeholder="Confirme sua senha"
-              required
-              minLength={6}
-              className="signup-screen__input"
-            />
+            <FieldContainer className="signup-screen__field-container">
+              <FieldLabel htmlFor="confirmPassword" className="signup-screen__label">
+                Confirmar Senha
+              </FieldLabel>
+              <FieldInput
+                id="confirmPassword"
+                type="password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                placeholder="Confirme sua senha"
+                required
+                minLength={6}
+                className="signup-screen__input"
+              />
+            </FieldContainer>
           </StyledFormGroup>
 
           {/* Error Message */}
