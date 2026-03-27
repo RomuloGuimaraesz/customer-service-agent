@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { Header, Logo } from './Header';
 import { Toast } from './Toast';
+import { FieldContainer, FieldInput, FieldLabel } from './form';
 import styled from 'styled-components';
 
 /**
@@ -72,39 +73,6 @@ const StyledLoginSubtitle = styled.p`
  */
 const StyledFormGroup = styled.div`
   margin-bottom: ${props => props.theme.spacing.xl};
-`;
-
-/**
- * Form Label - BEM: login-screen__label
- */
-const StyledFormLabel = styled.label`
-  display: block;
-  font-size: ${props => props.theme.fontSize.base};
-  font-weight: ${props => props.theme.fontWeight.bold};
-  color: ${props => props.theme.colors.text.primary};
-  margin-bottom: ${props => props.theme.spacing.sm};
-`;
-
-/**
- * Form Input - BEM: login-screen__input
- */
-const StyledFormInput = styled.input`
-  width: 100%;
-  padding: ${props => props.theme.spacing.base} ${props => props.theme.spacing.lg};
-  font-size: ${props => props.theme.fontSize.base};
-  border: 1px solid ${props => props.theme.colors.border.primary};
-  border-radius: ${props => props.theme.borderRadius.lg};
-  background-color: ${props => props.theme.colors.background.tertiary};
-  color: ${props => props.theme.colors.text.primary};
-  outline: none;
-  transition: border-color ${props => props.theme.transitions.normal}, 
-              box-shadow ${props => props.theme.transitions.normal};
-  box-sizing: border-box;
-
-  &:focus {
-    border-color: ${props => props.theme.colors.text.tertiary};
-    box-shadow: 0 0 0 3px rgba(156, 163, 175, 0.1);
-  }
 `;
 
 /**
@@ -266,41 +234,47 @@ export const LoginScreen = () => {
           {/* Header */}
           <StyledLoginHeader className="login-screen__header">
             <StyledLoginTitle className="login-screen__title">
-              Rapidy Informática
+              Avecta AI
             </StyledLoginTitle>
             <StyledLoginSubtitle className="login-screen__subtitle">
-              Acesso exclusivo para Administradores
+              Boas-vindas a Avecta AI
             </StyledLoginSubtitle>
           </StyledLoginHeader>
 
         {/* Form */}
         <form onSubmit={handleSubmit}>
           <StyledFormGroup className="login-screen__form-group">
-            <StyledFormLabel className="login-screen__label">
-              Usuário
-            </StyledFormLabel>
-            <StyledFormInput
-              type="text"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              placeholder="Informe seu Usuário de acesso"
-              required
-              className="login-screen__input"
-            />
+            <FieldContainer className="login-screen__field-container">
+              <FieldLabel htmlFor="username" className="login-screen__label">
+                Usuário
+              </FieldLabel>
+              <FieldInput
+                id="username"
+                type="text"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                placeholder="Informe seu Usuário de acesso"
+                required
+                className="login-screen__input"
+              />
+            </FieldContainer>
           </StyledFormGroup>
 
           <StyledFormGroup className="login-screen__form-group">
-            <StyledFormLabel className="login-screen__label">
-              Senha
-            </StyledFormLabel>
-            <StyledFormInput
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="Informe a sua Senha de acesso"
-              required
-              className="login-screen__input"
-            />
+            <FieldContainer className="login-screen__field-container">
+              <FieldLabel htmlFor="password" className="login-screen__label">
+                Senha
+              </FieldLabel>
+              <FieldInput
+                id="password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Informe a sua Senha de acesso"
+                required
+                className="login-screen__input"
+              />
+            </FieldContainer>
           </StyledFormGroup>
 
           {/* Warning Message */}
