@@ -4,6 +4,7 @@ import { AuthLayout } from "../components/AuthLayout";
 import { LoginScreen } from "../components/LoginScreen";
 import { SignUpScreen } from "../components/SignUpScreen";
 import { Dashboard } from "../components/Dashboard";
+import { Contatos } from "../components/Contatos";
 import { RootRedirect } from "./RootRedirect";
 import { ProtectedRoute } from "./ProtectedRoute";
 import { PublicRoute } from "./PublicRoute";
@@ -12,6 +13,7 @@ import {
   DashboardRoutes,
   PedidosRoute,
   AgendamentosRoute,
+  AtendimentosRoute,
   WhatsAppRoute,
   DashboardDefaultRoute,
 } from "../components/DashboardRoutes";
@@ -74,6 +76,10 @@ export const router = createBrowserRouter([
                 element: <AgendamentosRoute />,
               },
               {
+                path: "atendimentos",
+                element: <AtendimentosRoute />,
+              },
+              {
                 path: "whatsapp",
                 element: <WhatsAppRoute />,
               },
@@ -88,6 +94,14 @@ export const router = createBrowserRouter([
             ],
           },
         ],
+      },
+      {
+        path: "contatos",
+        element: (
+          <ProtectedRoute>
+            <Contatos />
+          </ProtectedRoute>
+        ),
       },
     ],
   },

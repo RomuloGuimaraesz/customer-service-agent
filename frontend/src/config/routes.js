@@ -18,7 +18,13 @@ export const ROUTES = {
     BASE: '/dashboard',
     PEDIDOS: '/dashboard/pedidos',
     AGENDAMENTOS: '/dashboard/agendamentos',
+    ATENDIMENTOS: '/dashboard/atendimentos',
     WHATSAPP: '/dashboard/whatsapp',
+  },
+
+  // Contatos (app-level surface)
+  CONTATOS: {
+    BASE: '/contatos',
   },
 };
 
