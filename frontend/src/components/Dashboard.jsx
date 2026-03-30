@@ -16,13 +16,13 @@ import { Tabs } from './Tabs';
 import { Modal } from './Modal';
 import { 
   Header, 
-  LastUpdated, 
   HeaderButton, 
   UserInfo, 
   ProfileIcon, 
   Logo,
   UserEmail
 } from './Header';
+import { MainNavigation } from './MainNavigation';
 import { ProfileEditModal } from './ProfileEditModal';
 import styled from 'styled-components';
 
@@ -31,6 +31,9 @@ import styled from 'styled-components';
  */
 const StyledDashboard = styled.div`
   min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
   background-color: ${props => props.theme.colors.background.primary};
   color: ${props => props.theme.colors.text.primary};
   font-family: ${props => props.theme.fontFamily.primary};
@@ -40,7 +43,7 @@ const StyledDashboard = styled.div`
  * Main Content - BEM: dashboard__main
  */
 const StyledMainContent = styled.main`
-  padding: ${props => props.theme.spacing.xl};
+  padding: 0;
   max-width: 100%;
   margin: 0 auto;
   overflow-x: hidden;
@@ -48,20 +51,10 @@ const StyledMainContent = styled.main`
 `;
 
 /**
- * Dashboard Title - BEM: dashboard__title
- */
-const StyledDashboardTitle = styled.h1`
-  font-size: ${props => props.theme.fontSize['5xl']};
-  font-weight: ${props => props.theme.fontWeight.bold};
-  color: ${props => props.theme.colors.text.primary};
-  margin: 0 0 ${props => props.theme.spacing['2xl']} 0;
-`;
-
-/**
  * Dashboard Component
  */
 export const Dashboard = () => {
-  const { credentials, isAuthenticated } = useAuth();
+  const { credentials, isAuthenticated, role } = useAuth();
   const adminContext = useAdmin();
 
   const [toastVisible, setToastVisible] = useState(false);
@@ -81,6 +74,9 @@ export const Dashboard = () => {
   const tabs = DASHBOARD_TABS.map(tab => {
     if (tab.id === 'agendamentos') {
       return { ...tab, count: adminContext.agendamentos.length };
+    }
+    if (tab.id === 'atendimentos') {
+      return { ...tab, count: adminContext.atendimentos.length };
     }
     if (tab.id === 'pedidos') {
       return { ...tab, count: adminContext.pedidos.length };
@@ -103,13 +99,6 @@ export const Dashboard = () => {
     window.location.replace(ROUTES.AUTH.LOGIN);
   };
 
-  // Refresh all data
-  const refreshAll = () => {
-    if (isAuthenticated) {
-      adminContext.refreshAll();
-    }
-  };
-
   useEffect(() => {
     const handleResize = () => {
       setIsMobile(window.innerWidth < 768);
@@ -121,39 +110,35 @@ export const Dashboard = () => {
 
   // Show toast when error appears
   useEffect(() => {
-    if (adminContext.error.pedidos || adminContext.error.agendamentos) {
+    if (adminContext.error.pedidos || adminContext.error.agendamentos || adminContext.error.atendimentos) {
       setToastVisible(true);
     }
-  }, [adminContext.error.pedidos, adminContext.error.agendamentos]);
+  }, [adminContext.error.pedidos, adminContext.error.agendamentos, adminContext.error.atendimentos]);
 
   const handleCloseToast = () => {
     setToastVisible(false);
   };
 
   // Calculate stats using custom hook
-  const { stats } = useDashboardStats(adminContext.pedidos, adminContext.agendamentos);
+  const { stats } = useDashboardStats(adminContext.pedidos, adminContext.agendamentos, adminContext.atendimentos);
 
   return (
     <StyledDashboard className="dashboard">
       {/* Header */}
       <Header
         left={<Logo />}
+        center={<MainNavigation />}
         right={
           <>
-            <LastUpdated timestamp={adminContext.lastUpdated.pedidos} />
-            <HeaderButton
-              onClick={() => setShowAnalytics(true)}
-              title={DASHBOARD_TOOLTIPS.STATISTICS}
-            >
-              {/*<span>📊</span>*/}
-              <span>{DASHBOARD_LABELS.HEADER_BUTTONS.STATISTICS}</span>
-            </HeaderButton>
-            <HeaderButton
-              onClick={refreshAll}
-              disabled={adminContext.loading.pedidos || adminContext.loading.agendamentos}
-            >
-              {DASHBOARD_LABELS.HEADER_BUTTONS.REFRESH}
-            </HeaderButton>
+            {role === 'architect' && (
+              <HeaderButton
+                onClick={() => setShowAnalytics(true)}
+                title={DASHBOARD_TOOLTIPS.STATISTICS}
+              >
+                {/*<span>📊</span>*/}
+                <span>{DASHBOARD_LABELS.HEADER_BUTTONS.STATISTICS}</span>
+              </HeaderButton>
+            )}
             <UserInfo 
               onEditProfile={() => setShowProfileEdit(true)}
               onLogout={handleLogout}
@@ -167,6 +152,8 @@ export const Dashboard = () => {
         }
         isAuthenticated={isAuthenticated}
       />
+
+      <StatsGrid stats={stats} sectionTitle="Informações Gerais" />
 
       {/* Main Content */}
       <StyledMainContent className="dashboard__main">
@@ -188,14 +175,6 @@ export const Dashboard = () => {
           <AnalyticsView onClose={() => setShowAnalytics(false)} />
         </Modal>
 
-        {/* Title */}
-        <StyledDashboardTitle className="dashboard__title">
-          {DASHBOARD_LABELS.PAGE_TITLE}
-        </StyledDashboardTitle>
-
-        {/* Stats Grid */}
-        <StatsGrid stats={stats} />
-
         {/* Tabs */}
         <Tabs
           tabs={tabs}
@@ -205,8 +184,8 @@ export const Dashboard = () => {
 
         {/* Toast Notification */}
         <Toast
-          message={`${DASHBOARD_MESSAGES.TOAST.DEMO_MODE} ${adminContext.error.pedidos || adminContext.error.agendamentos}`}
-          visible={(adminContext.error.pedidos || adminContext.error.agendamentos) && toastVisible}
+          message={`${DASHBOARD_MESSAGES.TOAST.DEMO_MODE} ${adminContext.error.pedidos || adminContext.error.agendamentos || adminContext.error.atendimentos}`}
+          visible={(adminContext.error.pedidos || adminContext.error.agendamentos || adminContext.error.atendimentos) && toastVisible}
           onClose={handleCloseToast}
           isMobile={isMobile}
         />

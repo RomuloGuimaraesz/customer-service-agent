@@ -1,6 +1,7 @@
 import React from 'react';
 import styled from 'styled-components';
 import { Dropdown } from './Dropdown';
+import logoPb from '../../assets/img/avecta-logo-pb.png';
 
 // ============================================================================
 // CONFIGURATION - Easy to find and change
@@ -17,18 +18,38 @@ const CONFIG = {
 
 // Header Layout
 const StyledHeader = styled.header`
-  padding: ${props => props.theme.spacing.xs} ${props => props.theme.spacing.md};
-  display: flex;
-  justify-content: space-between;
+  box-sizing: border-box;
+  height: 64px;
+  padding: 0 47px;
   align-items: center;
-  flex-wrap: wrap;
-  gap: ${props => props.theme.spacing.md};
+
+  ${props =>
+    props.$centerLogo
+      ? `
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: ${props.theme.spacing.md};
+  `
+      : `
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    column-gap: ${props.theme.spacing.md};
+  `}
 `;
 
 const StyledHeaderLeft = styled.div`
   display: flex;
   align-items: center;
   gap: ${props => props.theme.spacing.md};
+  justify-self: start;
+`;
+
+const StyledHeaderCenter = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  justify-self: center;
 `;
 
 const StyledHeaderRight = styled.div`
@@ -36,6 +57,7 @@ const StyledHeaderRight = styled.div`
   align-items: center;
   gap: ${props => props.theme.spacing.sm};
   flex-wrap: wrap;
+  justify-self: end;
 `;
 
 // Buttons
@@ -81,6 +103,20 @@ const StyledProfileIcon = styled.div`
   justify-content: center;
   background-color: ${props => props.theme.colors.background.tertiary};
   border-radius: ${props => props.theme.borderRadius['2xl']};
+  color: ${props => props.theme.colors.icon.stroke};
+
+  svg {
+    display: block;
+    height: ${props => props.theme.colors.icon.profileSvgHeight};
+    width: auto;
+    max-width: 100%;
+    overflow: visible;
+  }
+
+  svg path {
+    stroke: currentColor;
+    stroke-width: ${props => props.theme.colors.icon.strokeWidth};
+  }
 `;
 
 const StyledUserEmail = styled.span`
@@ -102,6 +138,20 @@ const StyledDropdownHeaderIcon = styled.div`
   justify-content: center;
   background-color: ${props => props.theme.colors.background.tertiary};
   border-radius: ${props => props.theme.borderRadius['2xl']};
+  color: ${props => props.theme.colors.icon.stroke};
+
+  svg {
+    display: block;
+    height: ${props => props.theme.colors.icon.profileSvgHeight};
+    width: auto;
+    max-width: 100%;
+    overflow: visible;
+  }
+
+  svg path {
+    stroke: currentColor;
+    stroke-width: ${props => props.theme.colors.icon.strokeWidth};
+  }
 `;
 
 const StyledDropdownContent = styled.div`
@@ -149,15 +199,15 @@ const StyledLogoutButton = styled.button`
 
 // Logo
 const StyledLogo = styled.div`
-  font-size: ${props => props.theme.fontSize['2xl']};
-  font-weight: ${props => props.theme.fontWeight.bold};
-  color: ${props => props.theme.colors.text.primary};
+  display: inline-flex;
+  align-items: center;
 `;
 
-// Last Updated
-const StyledLastUpdated = styled.span`
-  font-size: ${props => props.theme.fontSize.sm};
-  color: ${props => props.theme.colors.text.secondary};
+const StyledLogoImg = styled.img`
+  height: 24px;
+  width: auto;
+  display: block;
+  object-fit: contain;
 `;
 
 // ============================================================================
@@ -166,26 +216,51 @@ const StyledLastUpdated = styled.span`
 
 /**
  * Header Component
- * Reusable header component with left and right content sections
- * 
+ * Reusable header component with left, optional center, and right sections
+ *
  * @param {Object} props
- * @param {React.ReactNode} [props.left] - Content to display on the left side
- * @param {React.ReactNode} [props.right] - Content to display on the right side
+ * @param {React.ReactNode} [props.left] - Content on the left (e.g. logo)
+ * @param {React.ReactNode} [props.center] - Centered content when authenticated (e.g. MainNavigation)
+ * @param {React.ReactNode} [props.right] - Content on the right when authenticated
  * @param {boolean} [props.isAuthenticated] - Whether user is authenticated
+ * @param {boolean} [props.centerLogo] - When true, centers left only (e.g. auth screens)
  */
-export const Header = ({ left, right, isAuthenticated = false }) => {
+export const Header = ({
+  left,
+  center,
+  right,
+  isAuthenticated = false,
+  centerLogo = false,
+}) => {
   return (
-    <StyledHeader className="header">
-      {left && (
-        <StyledHeaderLeft className="header__left">
-          {left}
-        </StyledHeaderLeft>
-      )}
-
-      {right && isAuthenticated && (
-        <StyledHeaderRight className="header__right">
-          {right}
-        </StyledHeaderRight>
+    <StyledHeader
+      className={`header${centerLogo ? ' header--center-logo' : ''}`}
+      $centerLogo={centerLogo}
+    >
+      {centerLogo ? (
+        left && (
+          <StyledHeaderLeft className="header__left">
+            {left}
+          </StyledHeaderLeft>
+        )
+      ) : (
+        <>
+          {left && (
+            <StyledHeaderLeft className="header__left">
+              {left}
+            </StyledHeaderLeft>
+          )}
+          {center && isAuthenticated && (
+            <StyledHeaderCenter className="header__center">
+              {center}
+            </StyledHeaderCenter>
+          )}
+          {right && isAuthenticated && (
+            <StyledHeaderRight className="header__right">
+              {right}
+            </StyledHeaderRight>
+          )}
+        </>
       )}
     </StyledHeader>
   );
@@ -193,8 +268,8 @@ export const Header = ({ left, right, isAuthenticated = false }) => {
 
 /**
  * HeaderButton Component
- * A button styled for use in headers
- * 
+ * Statistics action in the dashboard header (BEM: header__user-statistics)
+ *
  * @param {Object} props
  * @param {React.ReactNode} props.children - Button content
  * @param {Function} [props.onClick] - Click handler
@@ -207,7 +282,7 @@ export const HeaderButton = ({ children, onClick, disabled, title }) => {
       onClick={onClick}
       disabled={disabled}
       title={title}
-      className="header__button"
+      className="header__user-statistics"
     >
       {children}
     </StyledHeaderButton>
@@ -342,33 +417,20 @@ export const LogoutButton = ({ onClick, label = CONFIG.logoutLabel }) => {
 
 /**
  * Logo Component
- * Displays the application logo text
- * 
+ * Displays the application logo image (accessible name via alt)
+ *
  * @param {Object} props
- * @param {string} [props.text] - Logo text (default: from CONFIG)
+ * @param {string} [props.alt] - Image alt text / accessible name (default: from CONFIG.logoText)
  */
-export const Logo = ({ text = CONFIG.logoText }) => {
+export const Logo = ({ alt = CONFIG.logoText }) => {
   return (
     <StyledLogo className="header__logo">
-      {text}
+      <StyledLogoImg
+        src={logoPb}
+        alt={alt}
+        className="header__logo-img"
+        decoding="async"
+      />
     </StyledLogo>
-  );
-};
-
-/**
- * TODO: Move this component to the stats-grid component, change its naming accordingly to the block component naming.
- * LastUpdated Component
- * Displays a last updated timestamp
- * 
- * @param {Object} props
- * @param {Date} props.timestamp - The timestamp to display
- */
-export const LastUpdated = ({ timestamp }) => {
-  if (!timestamp) return null;
-
-  return (
-    <StyledLastUpdated className="header__last-updated">
-      Última atualização: {timestamp.toLocaleTimeString('pt-BR')}
-    </StyledLastUpdated>
   );
 };

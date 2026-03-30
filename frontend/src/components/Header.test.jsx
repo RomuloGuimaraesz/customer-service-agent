@@ -10,7 +10,6 @@ import {
   UserEmail,
   ProfileEditButton,
   LogoutButton,
-  LastUpdated,
 } from './Header';
 import { theme } from '../styles/theme';
 
@@ -74,11 +73,43 @@ describe('Header Component', () => {
       expect(screen.getByText('Right Content')).toBeInTheDocument();
     });
 
+    it('should render center content when authenticated', () => {
+      const { container } = renderWithTheme(
+        <Header
+          left={<div>Left Content</div>}
+          center={<div>Center Content</div>}
+          right={<div>Right Content</div>}
+          isAuthenticated={true}
+        />
+      );
+      expect(screen.getByText('Center Content')).toBeInTheDocument();
+      expect(container.querySelector('.header__center')).toBeInTheDocument();
+    });
+
+    it('should not render center content when not authenticated', () => {
+      renderWithTheme(
+        <Header
+          left={<div>Left Content</div>}
+          center={<div>Center Content</div>}
+          right={<div>Right Content</div>}
+          isAuthenticated={false}
+        />
+      );
+      expect(screen.queryByText('Center Content')).not.toBeInTheDocument();
+    });
+
     it('should have correct className', () => {
       const { container } = renderWithTheme(
         <Header left={<div>Test</div>} />
       );
       expect(container.querySelector('.header')).toBeInTheDocument();
+    });
+
+    it('should center left content when centerLogo is true', () => {
+      const { container } = renderWithTheme(
+        <Header left={<div>Logo</div>} centerLogo />
+      );
+      expect(container.querySelector('.header--center-logo')).toBeInTheDocument();
     });
   });
 
@@ -113,17 +144,28 @@ describe('Header Component', () => {
       );
       expect(screen.getByTitle('Tooltip')).toBeInTheDocument();
     });
+
+    it('should use header__user-statistics class', () => {
+      const { container } = renderWithTheme(
+        <HeaderButton>Stats</HeaderButton>
+      );
+      expect(container.querySelector('.header__user-statistics')).toBeInTheDocument();
+    });
   });
 
   describe('Logo', () => {
-    it('should render with default text from CONFIG', () => {
+    it('should render logo image with default accessible name', () => {
       renderWithTheme(<Logo />);
-      expect(screen.getByText('Acme Co')).toBeInTheDocument();
+      expect(
+        screen.getByRole('img', { name: 'Avecta AI' })
+      ).toBeInTheDocument();
     });
 
-    it('should render with custom text when provided', () => {
-      renderWithTheme(<Logo text="Custom Logo" />);
-      expect(screen.getByText('Custom Logo')).toBeInTheDocument();
+    it('should allow overriding accessible name', () => {
+      renderWithTheme(<Logo alt="Marca personalizada" />);
+      expect(
+        screen.getByRole('img', { name: 'Marca personalizada' })
+      ).toBeInTheDocument();
     });
 
     it('should have correct className', () => {
@@ -302,29 +344,5 @@ describe('Header Component', () => {
     });
   });
 
-  describe('LastUpdated', () => {
-    it('should render timestamp when provided', () => {
-      const timestamp = new Date('2024-01-01T12:00:00');
-      renderWithTheme(<LastUpdated timestamp={timestamp} />);
-      expect(screen.getByText(/Última atualização:/)).toBeInTheDocument();
-    });
-
-    it('should not render when timestamp is not provided', () => {
-      const { container } = renderWithTheme(<LastUpdated />);
-      expect(container.querySelector('.header__last-updated')).not.toBeInTheDocument();
-    });
-
-    it('should not render when timestamp is null', () => {
-      const { container } = renderWithTheme(<LastUpdated timestamp={null} />);
-      expect(container.querySelector('.header__last-updated')).not.toBeInTheDocument();
-    });
-
-    it('should format timestamp in pt-BR locale', () => {
-      const timestamp = new Date('2024-01-01T12:00:00');
-      renderWithTheme(<LastUpdated timestamp={timestamp} />);
-      const text = screen.getByText(/Última atualização:/).textContent;
-      expect(text).toContain('Última atualização:');
-    });
-  });
 });
 
