@@ -3,10 +3,27 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from './AuthContext';
 import { usePedidos, PedidosProvider } from './PedidosContext';
 import { useAgendamentos, AgendamentosProvider } from './AgendamentosContext';
+import { useAtendimentos, AtendimentosProvider } from './AtendimentosContext';
 import { useWhatsAppConversations, WhatsAppConversationsProvider } from './WhatsAppConversationsContext';
 import { useTabAnalytics } from '../hooks/useTabAnalytics';
 import { VALID_TAB_IDS, DEFAULT_TAB_ID } from '../config/dashboardTabs';
-import { getDashboardRoute } from '../config/routes';
+import { getDashboardRoute, ROUTES } from '../config/routes';
+
+/**
+ * Dashboard tab id from URL, or null when not on the dashboard surface (e.g. /contatos).
+ * Avoids coercing invalid segments to DEFAULT_TAB_ID, which mis-fired tab analytics.
+ */
+const parseDashboardTabFromPathname = (pathname) => {
+  if (!pathname.startsWith(ROUTES.DASHBOARD.BASE)) {
+    return null;
+  }
+  const segments = pathname.split('/').filter(Boolean);
+  const pathTab = segments[segments.length - 1];
+  if (!pathTab || pathTab === 'dashboard') {
+    return DEFAULT_TAB_ID;
+  }
+  return VALID_TAB_IDS.includes(pathTab) ? pathTab : DEFAULT_TAB_ID;
+};
 
 /**
  * Admin Data Context - Orchestrator Context
@@ -31,42 +48,34 @@ export const useAdmin = () => {
 
 // Internal component that uses the focused contexts
 const AdminContextInner = ({ children }) => {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, userId, role } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
   
-  // Initialize activeTab based on current route
-  const getInitialTab = () => {
-    const pathTab = location.pathname.split('/').pop() || DEFAULT_TAB_ID;
-    return VALID_TAB_IDS.includes(pathTab) ? pathTab : DEFAULT_TAB_ID;
-  };
-  
-  const [activeTab, setActiveTab] = useState(getInitialTab);
+  const [activeTab, setActiveTab] = useState(() =>
+    parseDashboardTabFromPathname(location.pathname)
+  );
 
   // Use focused contexts
   const pedidosContext = usePedidos();
   const agendamentosContext = useAgendamentos();
+  const atendimentosContext = useAtendimentos();
   const whatsappContext = useWhatsAppConversations();
 
   // Destructure stable action functions to avoid depending on whole context objects
   const { refreshPedidos } = pedidosContext;
   const { refreshAgendamentos } = agendamentosContext;
+  const { refreshAtendimentos } = atendimentosContext;
   const { refreshConversations } = whatsappContext;
 
   // Sync activeTab with route changes (for redirects, direct navigation, etc.)
   useEffect(() => {
-    const pathTab = location.pathname.split('/').pop() || DEFAULT_TAB_ID;
-    const currentTab = VALID_TAB_IDS.includes(pathTab) ? pathTab : DEFAULT_TAB_ID;
-    
-    // Update activeTab to match the route
-    setActiveTab(prevTab => {
-      // Only update if different to avoid unnecessary re-renders
-      return currentTab !== prevTab ? currentTab : prevTab;
-    });
+    const currentTab = parseDashboardTabFromPathname(location.pathname);
+    setActiveTab((prevTab) => (currentTab !== prevTab ? currentTab : prevTab));
   }, [location.pathname]);
 
-  // Use analytics hook
-  useTabAnalytics(activeTab);
+  // Use analytics hook with userId and role
+  useTabAnalytics(activeTab, userId, role);
 
   // Navigate to a tab
   const navigateTab = useCallback((tabId) => {
@@ -82,17 +91,20 @@ const AdminContextInner = ({ children }) => {
       await pedidosContext.fetchPedidos();
     } else if (type === 'agendamentos') {
       await agendamentosContext.fetchAgendamentos();
+    } else if (type === 'atendimentos') {
+      await atendimentosContext.fetchAtendimentos();
     }
-  }, [pedidosContext, agendamentosContext]);
+  }, [pedidosContext, agendamentosContext, atendimentosContext]);
 
   // Refresh all data (depends only on stable function refs, not entire context objects)
   const refreshAll = useCallback(() => {
     if (isAuthenticated) {
       refreshPedidos();
       refreshAgendamentos();
+      refreshAtendimentos();
       refreshConversations();
     }
-  }, [isAuthenticated, refreshPedidos, refreshAgendamentos, refreshConversations]);
+  }, [isAuthenticated, refreshPedidos, refreshAgendamentos, refreshAtendimentos, refreshConversations]);
 
   // Initial data fetch when authenticated (no automatic polling)
   useEffect(() => {
@@ -100,6 +112,7 @@ const AdminContextInner = ({ children }) => {
       // Call the concrete refresh functions directly to avoid effect thrashing
       refreshPedidos();
       refreshAgendamentos();
+      refreshAtendimentos();
       refreshConversations();
     }
     // Only depends on auth status; refresh function refs are stable and called inside
@@ -111,6 +124,8 @@ const AdminContextInner = ({ children }) => {
     pedidos: pedidosContext.pedidos,
     // Agendamentos data
     agendamentos: agendamentosContext.agendamentos,
+    // Atendimentos data
+    atendimentos: atendimentosContext.atendimentos,
     // WhatsApp conversations data
     conversations: whatsappContext.conversations,
     selectedConversation: whatsappContext.selectedConversation,
@@ -119,6 +134,7 @@ const AdminContextInner = ({ children }) => {
     loading: {
       pedidos: pedidosContext.loading,
       agendamentos: agendamentosContext.loading,
+      atendimentos: atendimentosContext.loading,
       conversations: whatsappContext.loading.conversations,
       messages: whatsappContext.loading.messages,
       sendMessage: whatsappContext.loading.sendMessage,
@@ -128,6 +144,7 @@ const AdminContextInner = ({ children }) => {
     error: {
       pedidos: pedidosContext.error,
       agendamentos: agendamentosContext.error,
+      atendimentos: atendimentosContext.error,
       conversations: whatsappContext.error.conversations,
       messages: whatsappContext.error.messages,
       sendMessage: whatsappContext.error.sendMessage,
@@ -137,6 +154,7 @@ const AdminContextInner = ({ children }) => {
     lastUpdated: {
       pedidos: pedidosContext.lastUpdated,
       agendamentos: agendamentosContext.lastUpdated,
+      atendimentos: atendimentosContext.lastUpdated,
       conversations: whatsappContext.lastUpdated.conversations,
     },
 
@@ -167,14 +185,14 @@ export const AdminProvider = ({ children }) => {
   return (
     <PedidosProvider>
       <AgendamentosProvider>
-        <WhatsAppConversationsProvider>
-          <AdminContextInner>
-            {children}
-          </AdminContextInner>
-        </WhatsAppConversationsProvider>
+        <AtendimentosProvider>
+          <WhatsAppConversationsProvider>
+            <AdminContextInner>
+              {children}
+            </AdminContextInner>
+          </WhatsAppConversationsProvider>
+        </AtendimentosProvider>
       </AgendamentosProvider>
     </PedidosProvider>
   );
 };
-
-

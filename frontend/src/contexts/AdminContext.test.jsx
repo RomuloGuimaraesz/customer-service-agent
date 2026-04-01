@@ -87,9 +87,11 @@ describe('AdminContext', () => {
 
       expect(result.current.pedidos).toEqual([])
       expect(result.current.agendamentos).toEqual([])
+      expect(result.current.atendimentos).toEqual([])
       expect(result.current.loading).toEqual({
         pedidos: false,
         agendamentos: false,
+        atendimentos: false,
         conversations: false,
         messages: false,
         sendMessage: false,
@@ -97,6 +99,7 @@ describe('AdminContext', () => {
       expect(result.current.error).toEqual({
         pedidos: null,
         agendamentos: null,
+        atendimentos: null,
         conversations: null,
         messages: null,
         sendMessage: null,
@@ -118,7 +121,7 @@ describe('AdminContext', () => {
     })
 
     it('should fetch pedidos successfully when authenticated', async () => {
-      const mockPedidos = [{ ID: 'TEST-001', Cliente: 'Test Client' }]
+      const mockPedidos = [{ ID: 'TEST-001', Status: 'Em andamento', Nome: 'Test Client', Data: '09/02/2026', Hora: '10:00:00', WhatsApp: '999999999', Prioridade: 'Baixa', Assunto: 'Test', 'Descricao Completa': 'Test description' }]
 
       // Set up test repository mock
       testPedidoRepository.setMockData('fetchPedidos', mockPedidos)
@@ -264,7 +267,7 @@ describe('AdminContext', () => {
 
   describe('refreshAll', () => {
     it('should refresh both pedidos and agendamentos', async () => {
-      const mockPedidos = [{ ID: 'P-001' }]
+      const mockPedidos = [{ ID: 'P-001', Status: 'Concluído', Nome: 'Test', Data: '09/02/2026', Hora: '10:00:00', WhatsApp: '999999999', Prioridade: 'Baixa', Assunto: 'Test', 'Descricao Completa': 'Test' }]
       const mockAgendamentos = [{ ID: 'A-001' }]
 
       // Set up test repository mocks
@@ -314,6 +317,12 @@ describe('AdminContext', () => {
       })
 
       expect(result.current.activeTab).toBe('agendamentos')
+    })
+
+    it('should be null outside dashboard surface so tab analytics are not attributed to pedidos', () => {
+      const { result } = renderWithProviders(() => useAdmin(), [ROUTES.CONTATOS.BASE])
+
+      expect(result.current.activeTab).toBeNull()
     })
   })
 })
