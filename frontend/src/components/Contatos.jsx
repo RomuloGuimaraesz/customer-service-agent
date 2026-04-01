@@ -1,11 +1,15 @@
 import React from 'react';
 import styled from 'styled-components';
 import { useAuth } from '../contexts/AuthContext';
+import { useAdmin } from '../contexts/AdminContext';
+import { useDashboardStats } from '../hooks/useDashboardStats';
 import { CONFIG } from '../config/constants';
 import { ROUTES } from '../config/routes';
 import { supabase } from '../infrastructure/supabase/config';
-import { Header, Logo, ProfileIcon, UserEmail, UserInfo } from './Header';
+import { Header, Logo } from './Header';
 import { MainNavigation } from './MainNavigation';
+import { StatsGrid } from './StatsGrid';
+import { AuthenticatedHeaderRight } from './AuthenticatedHeaderRight';
 import { PROFILE_ICON } from '../config/icons';
 
 const StyledContatos = styled.div`
@@ -23,7 +27,13 @@ const StyledContent = styled.main`
 `;
 
 export const Contatos = () => {
-  const { credentials, isAuthenticated } = useAuth();
+  const { credentials, isAuthenticated, role } = useAuth();
+  const adminContext = useAdmin();
+  const { stats } = useDashboardStats(
+    adminContext.pedidos,
+    adminContext.agendamentos,
+    adminContext.atendimentos
+  );
 
   const handleLogout = async () => {
     sessionStorage.removeItem(CONFIG.AUTH_STORAGE_KEY);
@@ -37,17 +47,17 @@ export const Contatos = () => {
         left={<Logo />}
         center={<MainNavigation />}
         right={
-          <UserInfo
+          <AuthenticatedHeaderRight
+            role={role}
             onLogout={handleLogout}
             email={credentials?.username}
             iconSvg={PROFILE_ICON}
-          >
-            <ProfileIcon iconSvg={PROFILE_ICON} />
-            <UserEmail email={credentials?.username} />
-          </UserInfo>
+          />
         }
         isAuthenticated={isAuthenticated}
       />
+
+      <StatsGrid stats={stats} sectionTitle="Informações Gerais" />
 
       <StyledContent className="contatos__content">
         Contatos

@@ -99,7 +99,9 @@ export const router = createBrowserRouter([
         path: "contatos",
         element: (
           <ProtectedRoute>
-            <Contatos />
+            <AdminProvider>
+              <Contatos />
+            </AdminProvider>
           </ProtectedRoute>
         ),
       },

@@ -4,25 +4,20 @@ import { useAuth } from '../contexts/AuthContext';
 import { useAdmin } from '../contexts/AdminContext';
 import { useDashboardStats } from '../hooks/useDashboardStats';
 import { PROFILE_ICON } from '../config/icons';
-import { DASHBOARD_TABS, VALID_TAB_IDS, DEFAULT_TAB_ID } from '../config/dashboardTabs';
+import { DASHBOARD_TABS } from '../config/dashboardTabs';
 import { getDashboardRoute, ROUTES } from '../config/routes';
-import { DASHBOARD_LABELS, DASHBOARD_MESSAGES, DASHBOARD_TOOLTIPS } from '../config/dashboardConfig';
+import { DASHBOARD_MESSAGES } from '../config/dashboardConfig';
 import { CONFIG } from '../config/constants';
 import { supabase } from '../infrastructure/supabase/config';
 import { StatsGrid } from './StatsGrid';
-import { AnalyticsView } from './AnalyticsView';
 import { Toast } from './Toast';
 import { Tabs } from './Tabs';
-import { Modal } from './Modal';
 import { 
   Header, 
-  HeaderButton, 
-  UserInfo, 
-  ProfileIcon, 
   Logo,
-  UserEmail
 } from './Header';
 import { MainNavigation } from './MainNavigation';
+import { AuthenticatedHeaderRight } from './AuthenticatedHeaderRight';
 import { ProfileEditModal } from './ProfileEditModal';
 import styled from 'styled-components';
 
@@ -59,7 +54,6 @@ export const Dashboard = () => {
 
   const [toastVisible, setToastVisible] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
-  const [showAnalytics, setShowAnalytics] = useState(false);
   const [showProfileEdit, setShowProfileEdit] = useState(false);
 
   // Use activeTab from AdminContext instead of deriving from URL
@@ -129,26 +123,13 @@ export const Dashboard = () => {
         left={<Logo />}
         center={<MainNavigation />}
         right={
-          <>
-            {role === 'architect' && (
-              <HeaderButton
-                onClick={() => setShowAnalytics(true)}
-                title={DASHBOARD_TOOLTIPS.STATISTICS}
-              >
-                {/*<span>📊</span>*/}
-                <span>{DASHBOARD_LABELS.HEADER_BUTTONS.STATISTICS}</span>
-              </HeaderButton>
-            )}
-            <UserInfo 
-              onEditProfile={() => setShowProfileEdit(true)}
-              onLogout={handleLogout}
-              email={credentials.username}
-              iconSvg={PROFILE_ICON}
-            >
-              <ProfileIcon iconSvg={PROFILE_ICON} />
-              <UserEmail email={credentials.username} />
-            </UserInfo>
-          </>
+          <AuthenticatedHeaderRight
+            role={role}
+            onEditProfile={() => setShowProfileEdit(true)}
+            onLogout={handleLogout}
+            email={credentials.username}
+            iconSvg={PROFILE_ICON}
+          />
         }
         isAuthenticated={isAuthenticated}
       />
@@ -166,14 +147,6 @@ export const Dashboard = () => {
             console.log('Profile saved:', profileData);
           }}
         />
-
-        {/* Analytics Modal/View */}
-        <Modal
-          isOpen={showAnalytics}
-          onClose={() => setShowAnalytics(false)}
-        >
-          <AnalyticsView onClose={() => setShowAnalytics(false)} />
-        </Modal>
 
         {/* Tabs */}
         <Tabs
