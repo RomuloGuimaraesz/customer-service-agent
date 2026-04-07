@@ -1,6 +1,5 @@
 import React, { createContext, useContext, useReducer, useCallback } from 'react';
 import { useAuth } from './AuthContext';
-import { MOCK_DATA } from '../data/mockData';
 import { UseCaseFactory } from '../domain/useCaseFactory.js';
 import { agendamentosReducer, initialAgendamentosState, AGENDAMENTOS_ACTIONS } from '../reducers/agendamentosReducer';
 
@@ -43,8 +42,8 @@ export const AgendamentosProvider = ({ children }) => {
       }
     } catch (err) {
       dispatch({ type: AGENDAMENTOS_ACTIONS.FETCH_ERROR, payload: err.message });
-      // Load mock data for demo (fallback behavior)
-      dispatch({ type: AGENDAMENTOS_ACTIONS.FETCH_SUCCESS, payload: MOCK_DATA.agendamentos });
+      // For agendamentos, do not fallback to mock data: keep UI truthful to API state.
+      dispatch({ type: AGENDAMENTOS_ACTIONS.FETCH_SUCCESS, payload: [], preserveError: true });
     }
   }, [getAuthHeader]);
 

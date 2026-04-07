@@ -122,7 +122,7 @@ export const createInitialMaisInfoValues = () => ({
  *
  * @param {ReturnType<createInitialMaisInfoValues>} props.values
  * @param {(field: string, value: string) => void} props.onMaisInfoChange
- * @param {() => void} props.onSaveInformacoesAdicionais
+ * @param {() => void} props.onSaveInformacoesAdicionais - ação local (fecha/conclui); persistência ocorre no submit principal
  * @param {() => string | null} props.getAuthHeader — Authorization para GET em CONFIG.API_ENDPOINTS.categorias
  */
 export const ContatosMaisInformacoesModal = ({
@@ -350,7 +350,7 @@ export const ContatosMaisInformacoesModal = ({
                 className="contatos-mais-info-modal__submit-button"
                 onClick={handleSaveClick}
               >
-                Salvar informações adicionais
+                Concluir
               </FormSubmitButton>
             </ContatosFormCellSpan3>
           </ContatosFormColumnGrid>

@@ -69,3 +69,44 @@ export function mapContatoRowToMaisInfoValues(row) {
     secaoEleitoral: cell(row, 'Seção Eleitoral', 'Secao Eleitoral', 'secaoEleitoral'),
   };
 }
+
+function setIfNonEmpty(out, key, val) {
+  if (val == null) return;
+  const s = String(val).trim();
+  if (s !== '') out[key] = s;
+}
+
+/**
+ * Corpo JSON plano para POST em admin-contatos-post (chaves da planilha / n8n).
+ *
+ * @param {Record<string, string>|null|undefined} dadosPrincipais
+ * @param {Record<string, string>|null|undefined} informacoesAdicionais
+ * @returns {Record<string, string>}
+ */
+export function buildFlatContatoPayload(dadosPrincipais, informacoesAdicionais) {
+  const dp = dadosPrincipais ?? {};
+  const ex = informacoesAdicionais ?? {};
+  const out = {};
+
+  setIfNonEmpty(out, 'Nome', dp.nome);
+  setIfNonEmpty(out, 'WhatsApp', dp.whatsapp);
+  setIfNonEmpty(out, 'Data de Nascimento', dp.dataNascimento);
+  setIfNonEmpty(out, 'Idade', dp.idade);
+  setIfNonEmpty(out, 'CEP', dp.cep);
+  setIfNonEmpty(out, 'Cidade', dp.cidade);
+  setIfNonEmpty(out, 'Estado', dp.estado);
+  setIfNonEmpty(out, 'Endereço', dp.endereco);
+  setIfNonEmpty(out, 'Número', dp.numero);
+  setIfNonEmpty(out, 'Endereço/Complemento', dp.complemento);
+  setIfNonEmpty(out, 'Bairro', dp.bairro);
+  setIfNonEmpty(out, 'Bairro/Complemento', dp.bairroComplemento);
+
+  setIfNonEmpty(out, 'Indicação', ex.indicacao);
+  setIfNonEmpty(out, 'Categoria', ex.categoria);
+  setIfNonEmpty(out, 'CPF', ex.cpf);
+  setIfNonEmpty(out, 'Título de Eleitor', ex.tituloEleitor);
+  setIfNonEmpty(out, 'Zona Eleitoral', ex.zonaEleitoral);
+  setIfNonEmpty(out, 'Seção Eleitoral', ex.secaoEleitoral);
+
+  return out;
+}

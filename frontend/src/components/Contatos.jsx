@@ -1,4 +1,9 @@
-import React, { useState, useMemo, useEffect, useCallback } from 'react';
+import React, {
+  useState,
+  useMemo,
+  useEffect,
+  useCallback,
+} from 'react';
 import styled from 'styled-components';
 import { useAuth } from '../contexts/AuthContext';
 import { useAdmin } from '../contexts/AdminContext';
@@ -18,8 +23,14 @@ import { Tabs } from './Tabs';
 import { useTabAnalytics } from '../hooks/useTabAnalytics';
 import { CONTATOS_SURFACE_TABS } from '../config/contatosSurfaceTabs';
 import { PROFILE_ICON } from '../config/icons';
-import { getContatos, postContatos } from '../services/contatosApi';
 import {
+  getContatos,
+  deleteContato,
+  putContatos,
+  postNovoContato,
+} from '../services/contatosApi';
+import {
+  buildFlatContatoPayload,
   getContatoRowKey,
   mapContatoRowToDadosPrincipais,
   mapContatoRowToMaisInfoValues,
@@ -46,12 +57,8 @@ const CONTATOS_FILTER_FIELDS = [
   { id: 'cep', label: 'CEP' },
 ];
 
-const TOAST_MAIN_WITH_UNSAVED_EXTRA =
-  'Dados principais registrados. Salve também as informações adicionais em "Mais informações".';
 const TOAST_MAIN_OK = 'Dados principais registrados.';
-const TOAST_EXTRA_SAVED = 'Informações adicionais salvas.';
-const MAIS_INFO_ATTENTION_HINT =
-  'Há informações adicionais não salvas. Abra Mais informações e use Salvar informações adicionais.';
+const TOAST_EXTRA_READY = 'Informações adicionais prontas para envio.';
 
 const StyledContatos = styled.div`
   min-height: 100vh;
@@ -169,6 +176,11 @@ const ContatosListItem = styled.li`
       : p.theme.colors.background.tertiary};
 `;
 
+const ContatosListRowActions = styled.div`
+  display: flex;
+  align-items: stretch;
+`;
+
 const ContatosListRowButton = styled.button`
   display: block;
   width: 100%;
@@ -186,6 +198,28 @@ const ContatosListRowButton = styled.button`
   &:focus-visible {
     outline: 2px solid ${p => p.theme.colors.focus.ring};
     outline-offset: 2px;
+  }
+`;
+
+const ContatosDeleteButton = styled.button`
+  width: 44px;
+  min-width: 44px;
+  border: none;
+  border-left: 1px solid ${p => p.theme.colors.border.primary};
+  background: transparent;
+  color: ${p => p.theme.colors.status.errorText};
+  cursor: pointer;
+  font-size: ${p => p.theme.fontSize.lg};
+  line-height: 1;
+  transition: background-color ${p => p.theme.transitions.fast} ease;
+
+  &:hover {
+    background-color: ${p => p.theme.colors.status.errorBg};
+  }
+
+  &:focus-visible {
+    outline: 2px solid ${p => p.theme.colors.focus.ring};
+    outline-offset: -2px;
   }
 `;
 
@@ -234,9 +268,6 @@ export const Contatos = () => {
   const [maisInfoValues, setMaisInfoValues] = useState(() =>
     createInitialMaisInfoValues(),
   );
-  const [maisInfoSavedSnapshot, setMaisInfoSavedSnapshot] = useState(() =>
-    createInitialMaisInfoValues(),
-  );
   const [toast, setToast] = useState({
     visible: false,
     message: '',
@@ -250,7 +281,6 @@ export const Contatos = () => {
   const [contatosLoadError, setContatosLoadError] = useState('');
   /** `null` = nenhuma linha selecionada na lista (form vazio em Todos) */
   const [selectedContatoKey, setSelectedContatoKey] = useState(null);
-
   const { credentials, isAuthenticated, role, userId, getAuthHeader } = useAuth();
   const contatosTabNames = useMemo(
     () => Object.fromEntries(CONTATOS_TABS.map(t => [t.id, t.label])),
@@ -274,7 +304,6 @@ export const Contatos = () => {
   useEffect(() => {
     const init = createInitialMaisInfoValues();
     setMaisInfoValues(init);
-    setMaisInfoSavedSnapshot(init);
   }, [contatosPillMode]);
 
   useEffect(() => {
@@ -312,70 +341,65 @@ export const Contatos = () => {
     loadContatos();
   }, [loadContatos]);
 
-  const maisInfoDirty = useMemo(
-    () =>
-      JSON.stringify(maisInfoValues) !== JSON.stringify(maisInfoSavedSnapshot),
-    [maisInfoValues, maisInfoSavedSnapshot],
-  );
-
   const handleMaisInfoChange = useCallback((field, value) => {
     setMaisInfoValues(s => ({ ...s, [field]: value }));
   }, []);
 
   const handleSaveInformacoesAdicionais = useCallback(async () => {
-    const authHeader = getAuthHeader();
-    try {
-      await postContatos(
-        {
-          modo: contatosPillMode,
-          informacoesAdicionais: maisInfoValues,
-        },
-        authHeader,
-      );
-      setMaisInfoSavedSnapshot({ ...maisInfoValues });
-      setToast({
-        visible: true,
-        message: TOAST_EXTRA_SAVED,
-        variant: 'success',
-      });
-      setMaisInfoOpen(false);
-      await loadContatos();
-    } catch (err) {
-      setToast({
-        visible: true,
-        message:
-          err?.message ||
-          'Não foi possível salvar as informações adicionais.',
-        variant: 'error',
-      });
-    }
-  }, [contatosPillMode, maisInfoValues, getAuthHeader, loadContatos]);
+    setMaisInfoOpen(false);
+    setToast({
+      visible: true,
+      message: TOAST_EXTRA_READY,
+      variant: 'success',
+    });
+  }, []);
+
+  const selectedContatoRow = useMemo(() => {
+    if (!selectedContatoKey) return null;
+    return (
+      contatosLista.find(
+        (r, i) => getContatoRowKey(r, i) === selectedContatoKey,
+      ) ?? null
+    );
+  }, [contatosLista, selectedContatoKey]);
+
+  const prefillDadosPrincipais = useMemo(() => {
+    if (!selectedContatoRow) return null;
+    return mapContatoRowToDadosPrincipais(selectedContatoRow);
+  }, [selectedContatoRow]);
 
   const handleMainFormSave = useCallback(
     async dadosPrincipais => {
       const authHeader = getAuthHeader();
       try {
-        await postContatos(
-          {
-            modo: contatosPillMode,
-            dadosPrincipais,
-            informacoesAdicionais: maisInfoSavedSnapshot,
-          },
-          authHeader,
-        );
-        if (maisInfoDirty) {
-          setToast({
-            visible: true,
-            message: TOAST_MAIN_WITH_UNSAVED_EXTRA,
-            variant: 'warning',
-          });
+        if (contatosPillMode === 'novo') {
+          const body = buildFlatContatoPayload(dadosPrincipais, maisInfoValues);
+          await postNovoContato(body, authHeader);
         } else {
-          setToast({
-            visible: true,
-            message: TOAST_MAIN_OK,
-            variant: 'success',
-          });
+          if (!selectedContatoRow) {
+            setToast({
+              visible: true,
+              message: 'Selecione um contato da lista para atualizar.',
+              variant: 'error',
+            });
+            return;
+          }
+          const body = buildFlatContatoPayload(dadosPrincipais, maisInfoValues);
+          // Backend n8n usa WhatsApp como chave de busca para UPDATE.
+          // Mantemos a chave original da linha selecionada para evitar no-op
+          // quando o usuário altera o campo WhatsApp no formulário.
+          const originalWhatsapp =
+            selectedContatoRow.WhatsApp ?? selectedContatoRow['WhatsApp'];
+          if (originalWhatsapp != null && String(originalWhatsapp).trim() !== '') {
+            body.WhatsApp = String(originalWhatsapp).trim();
+          }
+          await putContatos(body, authHeader);
         }
+        setToast({
+          visible: true,
+          message: TOAST_MAIN_OK,
+          variant: 'success',
+        });
         await loadContatos();
       } catch (err) {
         setToast({
@@ -387,8 +411,8 @@ export const Contatos = () => {
     },
     [
       contatosPillMode,
-      maisInfoSavedSnapshot,
-      maisInfoDirty,
+      maisInfoValues,
+      selectedContatoRow,
       getAuthHeader,
       loadContatos,
     ],
@@ -434,20 +458,6 @@ export const Contatos = () => {
     });
   }, [contatosLista, contatosSearch, contatosSearchScope]);
 
-  const selectedContatoRow = useMemo(() => {
-    if (!selectedContatoKey) return null;
-    return (
-      contatosLista.find(
-        (r, i) => getContatoRowKey(r, i) === selectedContatoKey,
-      ) ?? null
-    );
-  }, [contatosLista, selectedContatoKey]);
-
-  const prefillDadosPrincipais = useMemo(() => {
-    if (!selectedContatoRow) return null;
-    return mapContatoRowToDadosPrincipais(selectedContatoRow);
-  }, [selectedContatoRow]);
-
   const handleSelectContatoRow = useCallback(row => {
     const fullIdx = contatosLista.indexOf(row);
     const idx = fullIdx >= 0 ? fullIdx : 0;
@@ -455,8 +465,47 @@ export const Contatos = () => {
     setSelectedContatoKey(getContatoRowKey(row, idx));
     const mais = mapContatoRowToMaisInfoValues(row);
     setMaisInfoValues(mais);
-    setMaisInfoSavedSnapshot(mais);
   }, [contatosLista]);
+
+  const handleDeleteContato = useCallback(
+    async row => {
+      const authHeader = getAuthHeader();
+      const targetRow = row;
+      const whatsapp = targetRow?.WhatsApp ?? targetRow?.['WhatsApp'];
+      const key = whatsapp != null ? String(whatsapp).trim() : '';
+      if (!key) {
+        setToast({
+          visible: true,
+          message: 'Não foi possível excluir: WhatsApp do contato ausente.',
+          variant: 'error',
+        });
+        return;
+      }
+      try {
+        await deleteContato({ WhatsApp: key }, authHeader);
+        if (
+          selectedContatoRow &&
+          getContatoRowKey(selectedContatoRow, 0) === getContatoRowKey(targetRow, 0)
+        ) {
+          setSelectedContatoKey(null);
+          setMaisInfoValues(createInitialMaisInfoValues());
+        }
+        setToast({
+          visible: true,
+          message: 'Contato removido com sucesso.',
+          variant: 'success',
+        });
+        await loadContatos();
+      } catch (err) {
+        setToast({
+          visible: true,
+          message: err?.message || 'Não foi possível excluir o contato.',
+          variant: 'error',
+        });
+      }
+    },
+    [getAuthHeader, loadContatos, selectedContatoRow],
+  );
 
   const handleLogout = async () => {
     sessionStorage.removeItem(CONFIG.AUTH_STORAGE_KEY);
@@ -534,8 +583,8 @@ export const Contatos = () => {
             prefillDadosPrincipais={prefillDadosPrincipais}
             onMaisInformacoesClick={() => setMaisInfoOpen(true)}
             onMainFormSave={handleMainFormSave}
-            showMaisInfoAttention={maisInfoDirty}
-            maisInfoAttentionHint={MAIS_INFO_ATTENTION_HINT}
+            showMaisInfoAttention={false}
+            maisInfoAttentionHint=""
           />
           <ContatosRightPane
             className="contatos__detail-pane"
@@ -571,18 +620,32 @@ export const Contatos = () => {
                       $selected={isSelected}
                       className="contatos__list-item"
                     >
-                      <ContatosListRowButton
-                        type="button"
-                        className="contatos__list-row-button"
-                        aria-pressed={isSelected}
-                        aria-label={`Abrir contato: ${nome}`}
-                        onClick={() => handleSelectContatoRow(row)}
-                      >
-                        <ContatosListItemTitle>{nome}</ContatosListItemTitle>
-                        <ContatosListItemMeta>
-                          {metaParts.length ? metaParts.join(' · ') : '—'}
-                        </ContatosListItemMeta>
-                      </ContatosListRowButton>
+                      <ContatosListRowActions>
+                        <ContatosListRowButton
+                          type="button"
+                          className="contatos__list-row-button"
+                          aria-pressed={isSelected}
+                          aria-label={`Abrir contato: ${nome}`}
+                          onClick={() => handleSelectContatoRow(row)}
+                        >
+                          <ContatosListItemTitle>{nome}</ContatosListItemTitle>
+                          <ContatosListItemMeta>
+                            {metaParts.length ? metaParts.join(' · ') : '—'}
+                          </ContatosListItemMeta>
+                        </ContatosListRowButton>
+                        <ContatosDeleteButton
+                          type="button"
+                          className="contatos__list-delete-button"
+                          aria-label={`Excluir contato: ${nome}`}
+                          title={`Excluir contato: ${nome}`}
+                          onClick={e => {
+                            e.stopPropagation();
+                            handleDeleteContato(row);
+                          }}
+                        >
+                          🗑
+                        </ContatosDeleteButton>
+                      </ContatosListRowActions>
                     </ContatosListItem>
                   );
                 })}

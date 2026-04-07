@@ -12,6 +12,40 @@ import { fetchApi } from '../../services/apiService.js';
  * Implements PedidoRepository interface using API calls
  */
 export class PedidoApiRepository extends PedidoRepository {
+  normalizePedidoItem(item, idx) {
+    if (!item || typeof item !== 'object') return null;
+    const safe = key => item[key] ?? item[String(key).toLowerCase()];
+    const id =
+      safe('ID') ??
+      safe('id') ??
+      safe('row_number') ??
+      safe('rowNumber') ??
+      `pedido-${idx}`;
+    const nome = (safe('Nome') ?? safe('nome') ?? '').trim() || '—';
+    const statusRaw = safe('Status') ?? safe('status');
+    const status =
+      statusRaw != null && String(statusRaw).trim() !== ''
+        ? String(statusRaw).trim()
+        : 'Sem status';
+
+    return {
+      ID: String(id),
+      Status: status,
+      Data: safe('Data') ?? safe('data') ?? '',
+      Hora: safe('Hora') ?? safe('hora') ?? '',
+      Nome: nome,
+      WhatsApp: safe('WhatsApp') ?? safe('whatsapp') ?? '',
+      Prioridade: safe('Prioridade') ?? safe('prioridade') ?? '',
+      Assunto: safe('Assunto') ?? safe('assunto') ?? '',
+      'Descricao Completa':
+        safe('Descricao Completa') ??
+        safe('Descrição Completa') ??
+        safe('descricao completa') ??
+        safe('descrição completa') ??
+        '',
+    };
+  }
+
   /**
    * Fetches all pedidos from API
    * @param {string} [authHeader] - Authorization header
@@ -19,13 +53,23 @@ export class PedidoApiRepository extends PedidoRepository {
    */
   async fetchPedidos(authHeader = null) {
     try {
-      const data = await fetchApi(CONFIG.API_ENDPOINTS.pedidos, { authHeader });
+      const response = await fetchApi(CONFIG.API_ENDPOINTS.pedidos, {
+        authHeader,
+      });
+      const list = Array.isArray(response)
+        ? response
+        : Array.isArray(response?.data)
+          ? response.data
+          : Array.isArray(response?.items)
+            ? response.items
+            : Array.isArray(response?.results)
+              ? response.results
+              : [];
 
-      if (!Array.isArray(data)) {
-        throw new Error('Invalid response format: expected array of pedidos');
-      }
-
-      return data.map(item => new Pedido(item));
+      return list
+        .map((item, idx) => this.normalizePedidoItem(item, idx))
+        .filter(Boolean)
+        .map(item => new Pedido(item));
     } catch (error) {
       throw new Error(`Failed to fetch pedidos: ${error.message}`);
     }

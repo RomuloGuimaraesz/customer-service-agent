@@ -8,17 +8,12 @@ Este documento explica, em linguagem simples, o que foi feito na tela de **Conta
 
 O formulário principal de contato fica na coluna esquerda. Alguns campos **não couberam** aí ou são “complementares” (indicação, categoria eleitoral, etc.). Eles foram colocados num **segundo formulário** que abre num **modal** quando o usuário clica em **“Mais informações”**.
 
-Porém existem **dois lugares** onde o usuário pode “salvar”:
+Para reduzir fricção e evitar duplicidade, o fluxo foi simplificado para **um único ponto de persistência**:
 
-1. O botão principal do formulário (**“Salvar alterações”** / **“Cadastrar contato”**).
-2. O botão dentro do modal (**“Salvar informações adicionais”**).
+1. O botão principal do formulário (**“Salvar alterações”** / **“Cadastrar contato”**) é o único que envia para a API.
+2. O botão do modal agora é **“Concluir”** e serve apenas para fechar o modal (edição local).
 
-A equipe precisava deixar claro:
-
-- Quando os dados **extras** ainda **não** foram “confirmados” no fluxo da sessão.
-- Quando o usuário salva só o **formulário principal** mas ainda há **informações adicionais** pendentes.
-
-Por isso implementamos **estado compartilhado**, **ícone de atenção**, **tooltips acessíveis** e **toasts** com mensagens diferentes.
+Assim, os dados extras continuam no estado compartilhado e são enviados junto com os dados principais no submit final.
 
 ---
 
@@ -28,8 +23,7 @@ Por isso implementamos **estado compartilhado**, **ícone de atenção**, **tool
 |--------|----------------------|
 | **Estado (state)** | Dados guardados no React que mudam com o tempo (texto dos campos, se o modal está aberto, etc.). |
 | **Estado “lifted” (elevado)** | Em vez de cada componente guardar seus próprios dados sozinhos, o **pai** (`Contatos.jsx`) guarda tudo e **passa para baixo** via props. Assim o formulário principal e o modal **enxergam os mesmos dados**. |
-| **Snapshot salvo** | Uma **cópia** dos valores extras **na última vez** que o usuário clicou em **“Salvar informações adicionais”**. Serve para saber se algo mudou depois disso. |
-| **Dirty (sujo)** | Significa “**há diferença** entre o que está na tela agora e o que foi salvo no snapshot”. Se estiver dirty, mostramos o ícone de atenção e podemos avisar no toast ao salvar só o principal. |
+| **Draft local** | Valores das informações adicionais mantidos no estado do React enquanto o usuário edita. |
 | **Toast** | Pequena mensagem que aparece no canto da tela (sucesso, aviso, erro). |
 
 ---
@@ -49,28 +43,18 @@ Por isso implementamos **estado compartilhado**, **ícone de atenção**, **tool
 ## Fluxo resumido (passo a passo)
 
 1. O usuário preenche campos no **modal** → os valores vão para `maisInfoValues` no `Contatos.jsx`.
-2. Comparamos `maisInfoValues` com `maisInfoSavedSnapshot` (JSON). Se forem diferentes → **dirty = true**.
-3. Se **dirty**, mostramos o **ícone de atenção** ao lado de “Mais informações” e um texto de ajuda (tooltip + leitores de tela).
-4. Quando o usuário clica **“Salvar informações adicionais”**, copiamos os valores atuais para o **snapshot**, fechamos o modal e mostramos toast de **sucesso**.
-5. Quando o usuário envia o **formulário principal**:
-   - Se ainda houver dados extras **dirty** → toast **warning** lembrando de salvar também as informações adicionais.
-   - Se **não** houver diferença → toast de **sucesso** só dos dados principais.
-6. Ao trocar **Todos / Novo** (pill), **zeramos** valores extras e snapshot (novo “contexto” de edição).
+2. Ao clicar **“Concluir”**, o modal fecha e os valores permanecem em memória (sem chamada de API).
+3. Quando o usuário envia o **formulário principal**, a tela envia **dados principais + informações adicionais atuais** em uma única operação.
+4. Ao trocar **Todos / Novo** (pill), os valores extras são resetados para o estado inicial do contexto atual.
 
 ---
 
 ## Detalhes de UX que implementamos
 
-### Ícone de atenção
-
-- Arquivo: [`frontend/assets/img/attention-icon.svg`](../frontend/assets/img/attention-icon.svg).
-- Só aparece quando `showMaisInfoAttention` é verdadeiro (no código: quando `maisInfoDirty`).
-- Além do visual, há **`title`** (dica ao passar o mouse) e **`aria-describedby`** com texto escondido visualmente mas lido por leitores de tela — boa prática de acessibilidade.
-
 ### Toasts
 
-- **Sucesso** (verde): dados principais OK sem pendências extras, ou informações adicionais salvas.
-- **Warning** (âmbar): dados principais “salvos” no fluxo atual, mas **ainda há** alterações extras não refletidas no snapshot.
+- **Sucesso** (verde): dados principais registrados; ao concluir o modal, o usuário também recebe confirmação de que as informações adicionais estão prontas para envio no submit principal.
+- **Erro** (vermelho): falha de integração no envio para a API.
 
 O componente `Toast` foi estendido com **`variant="warning"`** usando as cores de aviso do tema (`warningBg`, `warningText`, etc.).
 
@@ -86,39 +70,33 @@ A URL está em **`CONFIG.API_ENDPOINTS.contatos`** ([`frontend/src/config/consta
 
 Serviço: [`frontend/src/services/contatosApi.js`](../frontend/src/services/contatosApi.js) (`postContatos`).
 
-**Corpo enviado no formulário principal (“Salvar alterações” / “Cadastrar contato”):**
+**Corpo enviado no formulário principal (“Salvar alterações” / “Cadastrar contato”)**:
 
 - `modo`: `"todos"` ou `"novo"` (pill da página).
 - `dadosPrincipais`: objeto com os campos do formulário principal (nome, WhatsApp, CEP, endereço, etc.).
-- `informacoesAdicionais`: **último snapshot salvo** das informações adicionais (não inclui edições ainda não confirmadas no modal). Assim o aviso de “salve também as informações adicionais” continua fazendo sentido quando há diferença entre o que está no modal e o snapshot.
+- `informacoesAdicionais`: valores **atuais** de `maisInfoValues` (estado compartilhado do modal).
 
-**Corpo enviado em “Salvar informações adicionais”:**
-
-- `modo`: mesmo pill.
-- `informacoesAdicionais`: valores atuais do modal.
+**Observação**: o botão **“Concluir”** no modal não envia para API; ele apenas fecha o modal e mantém os dados no estado local até o submit principal.
 
 Em caso de erro HTTP, um toast **vermelho** mostra a mensagem retornada ou um texto genérico.
 
-O fluxo de **snapshot** no navegador continua valendo para UX (ícone e toasts); o servidor pode evoluir depois (ex.: retornar ID do contato, merge no n8n).
+Com isso, o modo **Novo** evita criação duplicada por dois cliques de salvar em superfícies diferentes.
 
 ---
 
 ## Dúvidas frequentes
 
 **Por que não deixar o estado só dentro do modal?**  
-Porque o **formulário principal** precisa saber se há pendências **sem** abrir o modal — por exemplo, para o toast e o ícone.
+Porque o **formulário principal** precisa enviar as informações adicionais no submit único.
 
-**Por que `JSON.stringify` para comparar?**  
-É uma forma simples de comparar objetos planos com as mesmas chaves. Para dados muito grandes ou tipos especiais, no futuro pode valer um `deepEqual` dedicado ou comparação campo a campo.
-
-**O botão “Salvar informações adicionais” está dentro de um `<form>` no modal?**  
-Sim, mas o botão é `type="button"` para **não** disparar submit acidental do form de forma inesperada; o clique chama a função `onSaveInformacoesAdicionais` passada pelo pai.
+**O botão “Concluir” está dentro de um `<form>` no modal?**  
+Sim, mas o botão é `type="button"` para **não** disparar submit acidental do form de forma inesperada.
 
 ---
 
 ## Referência rápida das props (para devs)
 
-- **`ContatosContactForm`**: `onMainFormSave`, `showMaisInfoAttention`, `maisInfoAttentionHint`, além de `onMaisInformacoesClick` e `mode`.
+- **`ContatosContactForm`**: `onMainFormSave`, além de `onMaisInformacoesClick` e `mode`.
 - **`ContatosMaisInformacoesModal`**: `values`, `onMaisInfoChange`, `onSaveInformacoesAdicionais`, `isOpen`, `onClose`.
 - Função exportada **`createInitialMaisInfoValues()`**: objeto inicial vazio dos campos extras (usado no reset e no estado inicial).
 

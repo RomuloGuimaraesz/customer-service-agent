@@ -159,6 +159,14 @@ describe('apiService', () => {
         })
       );
     });
+
+    it('should map browser network failure to a clearer message', async () => {
+      global.fetch.mockRejectedValueOnce(new TypeError('Failed to fetch'));
+
+      await expect(fetchApi('https://api.example.com/data')).rejects.toThrow(
+        /Conexão falhou \(CORS no webhook n8n/,
+      );
+    });
   });
 
   describe('fetchApiWithParams', () => {

@@ -19,6 +19,7 @@ export const useDashboardStats = (pedidos = [], agendamentos = [], atendimentos 
   const statsValues = useMemo(() => {
     return {
       totalPedidos: pedidos.length,
+      // Same rule as mock data: "Pendentes" = pedidos whose Status contains "em andamento" (case-insensitive)
       pedidosPendentes: pedidos.filter(p =>
         p.Status?.toLowerCase().includes('em andamento')
       ).length,

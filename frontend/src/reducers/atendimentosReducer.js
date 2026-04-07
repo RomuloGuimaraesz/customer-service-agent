@@ -41,7 +41,7 @@ export const atendimentosReducer = (state, action) => {
         loading: false,
         atendimentos: action.payload,
         lastUpdated: new Date(),
-        error: null,
+        error: action.preserveError ? state.error : null,
       };
 
     case ATENDIMENTOS_ACTIONS.FETCH_ERROR:

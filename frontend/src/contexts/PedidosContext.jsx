@@ -1,6 +1,5 @@
 import React, { createContext, useContext, useReducer, useCallback } from 'react';
 import { useAuth } from './AuthContext';
-import { MOCK_DATA } from '../data/mockData';
 import { UseCaseFactory } from '../domain/useCaseFactory.js';
 import { pedidosReducer, initialPedidosState, PEDIDOS_ACTIONS } from '../reducers/pedidosReducer';
 
@@ -43,9 +42,7 @@ export const PedidosProvider = ({ children }) => {
       }
     } catch (err) {
       dispatch({ type: PEDIDOS_ACTIONS.FETCH_ERROR, payload: err.message });
-      // Load mock data for demo (fallback behavior)
-      // Preserve error to show that we're in demo mode
-      dispatch({ type: PEDIDOS_ACTIONS.FETCH_SUCCESS, payload: MOCK_DATA.pedidos, preserveError: true });
+      dispatch({ type: PEDIDOS_ACTIONS.FETCH_SUCCESS, payload: [], preserveError: true });
     }
   }, [getAuthHeader]);
 

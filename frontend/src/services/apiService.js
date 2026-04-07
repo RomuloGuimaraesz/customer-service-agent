@@ -56,6 +56,23 @@ const handleApiError = async (response) => {
 };
 
 /**
+ * Browser `fetch` rejects with a generic message when the request never reaches
+ * a normal HTTP response (CORS block, offline, DNS, mixed content, extension).
+ */
+const isLikelyNetworkFailure = err => {
+  const m = String(err?.message || '');
+  return (
+    m === 'Failed to fetch' ||
+    m === 'NetworkError when attempting to fetch resource.' ||
+    m === 'Load failed' ||
+    (err?.name === 'TypeError' && m.includes('fetch'))
+  );
+};
+
+const networkFailureMessage =
+  'Conexão falhou (CORS no webhook n8n, rede ou bloqueio). Veja o Console (F12) → Rede.';
+
+/**
  * Fetches data from an API endpoint
  * @param {string} url - API endpoint URL
  * @param {Object} options - Fetch options
@@ -77,7 +94,15 @@ export const fetchApi = async (url, { authHeader, method = 'GET', body } = {}) =
     fetchOptions.body = JSON.stringify(body);
   }
   
-  const response = await fetch(url, fetchOptions);
+  let response;
+  try {
+    response = await fetch(url, fetchOptions);
+  } catch (err) {
+    if (isLikelyNetworkFailure(err)) {
+      throw new Error(networkFailureMessage);
+    }
+    throw err instanceof Error ? err : new Error(String(err));
+  }
   
   if (!response.ok) {
     await handleApiError(response);

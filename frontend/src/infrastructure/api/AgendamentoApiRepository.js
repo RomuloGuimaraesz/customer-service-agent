@@ -12,6 +12,43 @@ import { fetchApi } from '../../services/apiService.js';
  * Implements AgendamentoRepository interface using API calls
  */
 export class AgendamentoApiRepository extends AgendamentoRepository {
+  normalizeAgendamentoItem(item, idx) {
+    if (!item || typeof item !== 'object') return null;
+    const safe = key => item[key] ?? item[String(key).toLowerCase()];
+    const data = safe('Data') ?? safe('data');
+    const hora = safe('Hora') ?? safe('hora');
+    const nome = safe('Nome') ?? safe('nome');
+    const whatsapp = safe('WhatsApp') ?? safe('whatsapp');
+    const id =
+      safe('ID') ??
+      safe('id') ??
+      safe('row_number') ??
+      safe('rowNumber') ??
+      (whatsapp && data ? `${whatsapp}-${data}-${hora ?? '00:00:00'}` : null) ??
+      `agendamento-${idx}`;
+
+    return {
+      ID: String(id),
+      Status: safe('Status') ?? safe('status') ?? 'Agendado',
+      'Dia da Semana':
+        safe('Dia da Semana') ??
+        safe('dia da semana') ??
+        safe('DiaDaSemana') ??
+        '',
+      Data: data ?? '',
+      Hora: hora ?? '',
+      Nome: nome ?? '',
+      WhatsApp: whatsapp ?? '',
+      Assunto: safe('Assunto') ?? safe('assunto') ?? '',
+      'Descrição Completa':
+        safe('Descrição Completa') ??
+        safe('Descricao Completa') ??
+        safe('descrição completa') ??
+        safe('descricao completa') ??
+        '',
+    };
+  }
+
   /**
    * Fetches all agendamentos from API
    * @param {string} [authHeader] - Authorization header
@@ -19,13 +56,23 @@ export class AgendamentoApiRepository extends AgendamentoRepository {
    */
   async fetchAgendamentos(authHeader = null) {
     try {
-      const data = await fetchApi(CONFIG.API_ENDPOINTS.agendamentos, { authHeader });
+      const response = await fetchApi(CONFIG.API_ENDPOINTS.agendamentos, {
+        authHeader,
+      });
+      const list = Array.isArray(response)
+        ? response
+        : Array.isArray(response?.data)
+          ? response.data
+          : Array.isArray(response?.items)
+            ? response.items
+            : Array.isArray(response?.results)
+              ? response.results
+              : [];
 
-      if (!Array.isArray(data)) {
-        throw new Error('Invalid response format: expected array of agendamentos');
-      }
-
-      return data.map(item => new Agendamento(item));
+      return list
+        .map((item, idx) => this.normalizeAgendamentoItem(item, idx))
+        .filter(Boolean)
+        .map(item => new Agendamento(item));
     } catch (error) {
       throw new Error(`Failed to fetch agendamentos: ${error.message}`);
     }

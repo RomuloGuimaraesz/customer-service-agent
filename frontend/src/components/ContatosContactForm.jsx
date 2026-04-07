@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import styled from 'styled-components';
 import { FieldInput, FieldLabel, FormSubmitButton } from './form';
 import attentionIconUrl from '../../assets/img/attention-icon.svg?url';
@@ -92,6 +92,7 @@ const initialValues = () => ({
  * @param {string} [props.maisInfoAttentionHint] — texto para title e aria-describedby
  * @param {string|null} [props.prefillKey] — muda ao selecionar uma linha na lista; com prefillDadosPrincipais preenche o formulário
  * @param {Record<string, string>|null} [props.prefillDadosPrincipais] — valores vindos da API (modo Todos)
+ * @param {(values: Record<string, string>) => void} [props.onValuesChange] — valores atuais (ex.: POST novo contato + modal)
  */
 export const ContatosContactForm = ({
   mode = 'todos',
@@ -101,8 +102,20 @@ export const ContatosContactForm = ({
   maisInfoAttentionHint = '',
   prefillKey = null,
   prefillDadosPrincipais = null,
+  onValuesChange,
 }) => {
   const [values, setValues] = useState(initialValues);
+
+  const emitValues = useCallback(
+    next => {
+      onValuesChange?.(next);
+    },
+    [onValuesChange],
+  );
+
+  useEffect(() => {
+    emitValues(values);
+  }, [values, emitValues]);
 
   useEffect(() => {
     if (mode === 'novo') {
