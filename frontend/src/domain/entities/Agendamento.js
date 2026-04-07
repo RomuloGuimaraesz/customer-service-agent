@@ -5,22 +5,24 @@
 export class Agendamento {
   constructor({
     ID,
-    Cliente,
-    Serviço,
-    Produto,
-    Descrição,
     Status,
+    'Dia da Semana': DiaDaSemana,
     Data,
-    Observações
+    Hora,
+    Nome,
+    WhatsApp,
+    Assunto,
+    'Descrição Completa': DescricaoCompleta
   }) {
     this.ID = ID;
-    this.Cliente = Cliente;
-    this.Serviço = Serviço;
-    this.Produto = Produto;
-    this.Descrição = Descrição;
     this.Status = Status;
+    this['Dia da Semana'] = DiaDaSemana;
     this.Data = Data;
-    this.Observações = Observações;
+    this.Hora = Hora;
+    this.Nome = Nome;
+    this.WhatsApp = WhatsApp;
+    this.Assunto = Assunto;
+    this['Descrição Completa'] = DescricaoCompleta;
 
     this.validate();
   }
@@ -32,8 +34,8 @@ export class Agendamento {
     if (!this.ID) {
       throw new Error('Agendamento: ID is required');
     }
-    if (!this.Cliente) {
-      throw new Error('Agendamento: Cliente is required');
+    if (!this.Nome) {
+      throw new Error('Agendamento: Nome is required');
     }
     if (!this.Status) {
       throw new Error('Agendamento: Status is required');
@@ -56,23 +58,23 @@ export class Agendamento {
    * @returns {string} Client name
    */
   getClientName() {
-    return this.Cliente;
+    return this.Nome;
   }
 
   /**
-   * Gets the service type
-   * @returns {string} Service type
+   * Gets the subject/topic
+   * @returns {string} Assunto
    */
-  getServiceType() {
-    return this.Serviço;
+  getAssunto() {
+    return this.Assunto;
   }
 
   /**
-   * Gets the product name
-   * @returns {string} Product name
+   * Gets the full description
+   * @returns {string} Descrição Completa
    */
-  getProductName() {
-    return this.Produto;
+  getDescricaoCompleta() {
+    return this['Descrição Completa'];
   }
 
   /**
@@ -88,7 +90,7 @@ export class Agendamento {
    * @returns {string} Date and time
    */
   getDateTime() {
-    return this.Data;
+    return this.Hora ? `${this.Data} ${this.Hora}` : this.Data;
   }
 
   /**
@@ -97,9 +99,8 @@ export class Agendamento {
    */
   getAppointmentDate() {
     try {
-      // Parse the date format "DD/MM/YYYY HH:mm"
-      const [datePart, timePart] = this.Data.split(' ');
-      const [day, month, year] = datePart.split('/');
+      const [day, month, year] = this.Data.split('/');
+      const timePart = this.Hora ? this.Hora.substring(0, 5) : '00:00';
       return new Date(`${year}-${month}-${day}T${timePart}:00`);
     } catch {
       return null;
@@ -145,31 +146,14 @@ export class Agendamento {
   clone() {
     return new Agendamento({
       ID: this.ID,
-      Cliente: this.Cliente,
-      Serviço: this.Serviço,
-      Produto: this.Produto,
-      Descrição: this.Descrição,
       Status: this.Status,
+      'Dia da Semana': this['Dia da Semana'],
       Data: this.Data,
-      Observações: this.Observações
+      Hora: this.Hora,
+      Nome: this.Nome,
+      WhatsApp: this.WhatsApp,
+      Assunto: this.Assunto,
+      'Descrição Completa': this['Descrição Completa']
     });
   }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

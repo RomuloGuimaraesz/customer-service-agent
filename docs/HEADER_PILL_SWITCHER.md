@@ -43,7 +43,7 @@ Two equal circular **`button`** elements (`type="button"`) side by side inside t
 | Control | Background | `aria-label` |
 |---------|------------|----------------|
 | **Left** (far left) | **`#000000`** (fixed; matches existing spec) | **`Dashboard`** |
-| **Right** | App **primary** token: **`theme.colors.button.primary`** (`theme.js`) | **`Contatos`** |
+| **Right** | **`theme.colors.button.tertiary`** (`#f2f2f2` in `theme.js`) | **`Contatos`** |
 
 So each round button is **32×32px**, matching the inner height so the layout is consistent with the 4px padding.
 
@@ -53,7 +53,7 @@ So each round button is **32×32px**, matching the inner height so the layout is
 │   ┌──────── 32px ────────┐ 4px ┌──────── 32px ────────┐                                    │
 │   │                      │ gap │                      │                                    │
 │   │    round button      │     │    round button      │   inner height 32px               │
-│   │   (#000000)          │     │  (theme primary)     │                                    │
+│   │   (#000000)          │     │  (#f2f2f2 tertiary)  │                                    │
 │   └──────────────────────┘     └──────────────────────┘                                    │
 │                         white pill (theme.colors.background.white)                           │
 └────────────────────────────────────────────────────────────────────────────────────────────┘
@@ -65,7 +65,7 @@ So each round button is **32×32px**, matching the inner height so the layout is
 - Pill: `width: 76px`, `height: 40px`, `padding: 4px`, `background-color: ${theme.colors.background.white}`, `box-sizing: border-box`
 - Flex row: `display: flex`, `align-items: center`, `gap: 4px`
 - Left child: `width: 32px`, `height: 32px`, `border-radius: 50%`, `flex-shrink: 0`, background `#000000`
-- Right child: same dimensions, `border-radius: 50%`, `flex-shrink: 0`, background `theme.colors.button.primary`
+- Right child: same dimensions, `border-radius: 50%`, `flex-shrink: 0`, background `theme.colors.button.tertiary`
 
 ## Out of scope (later)
 

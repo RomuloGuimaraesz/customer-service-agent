@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { getUsageStatistics, exportAnalyticsData, clearAnalyticsData, getEventsByPeriod } from '../services/analytics';
+import { CONTATOS_SURFACE_TABS } from '../config/contatosSurfaceTabs';
+import { getUsageStatistics, exportAnalyticsData, clearAnalyticsData } from '../services/analytics';
 import styled from 'styled-components';
 import { StatsGrid } from './StatsGrid';
 import { CALENDAR_ICON } from '../config/icons';
@@ -125,9 +126,19 @@ const TIME_ICON = `<svg width="16" height="18" viewBox="0 0 16 18" fill="none" x
 <path d="M8.875 4.625V9.125L12.375 11.625" stroke="#5B5E55" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>`;
 
+const USER_ICON = `<svg width="16" height="18" viewBox="0 0 16 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+<circle cx="8" cy="6" r="4" stroke="#5B5E55" stroke-width="1.75"/>
+<path d="M1 16C1 12.134 4.134 9 8 9C11.866 9 15 12.134 15 16" stroke="#5B5E55" stroke-width="1.75" stroke-linecap="round"/>
+</svg>`;
+
+const SURFACE_ICON = `<svg width="16" height="18" viewBox="0 0 16 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+<rect x="1" y="2" width="14" height="14" rx="2" stroke="#5B5E55" stroke-width="1.75"/>
+<path d="M1 6H15" stroke="#5B5E55" stroke-width="1.75"/>
+<path d="M5.5 6V16" stroke="#5B5E55" stroke-width="1.75"/>
+</svg>`;
+
 /**
  * Stat Label - BEM: analytics-view__stat-label
- * Used in tab card stats section
  */
 const StyledStatLabel = styled.div`
   font-size: ${props => props.theme.fontSize.sm};
@@ -137,7 +148,6 @@ const StyledStatLabel = styled.div`
 
 /**
  * Stat Value Small - BEM: analytics-view__stat-value--small
- * Used in tab card stats section
  */
 const StyledStatValueSmall = styled.div`
   font-size: ${props => props.theme.fontSize['3xl']};
@@ -347,41 +357,114 @@ const StyledInfoText = styled.p`
 `;
 
 /**
+ * User Section - BEM: analytics-view__user-section
+ */
+const StyledUserSection = styled.div`
+  margin-bottom: ${props => props.theme.spacing['2xl']};
+  padding: ${props => props.theme.spacing.xl};
+  background-color: ${props => props.theme.colors.background.primary};
+  border-radius: ${props => props.theme.borderRadius.md};
+  border: 1px solid ${props => props.theme.colors.border.primary};
+`;
+
+/**
+ * User Section Header - BEM: analytics-view__user-section-header
+ */
+const StyledUserSectionHeader = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: ${props => props.theme.spacing.lg};
+  flex-wrap: wrap;
+  gap: ${props => props.theme.spacing.md};
+`;
+
+/**
+ * User Section Title - BEM: analytics-view__user-section-title
+ */
+const StyledUserSectionTitle = styled.h3`
+  font-size: ${props => props.theme.fontSize.xl};
+  font-weight: ${props => props.theme.fontWeight.semibold};
+  color: ${props => props.theme.colors.text.primary};
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: ${props => props.theme.spacing.sm};
+`;
+
+/**
+ * User Section Stats - BEM: analytics-view__user-section-stats
+ */
+const StyledUserSectionStats = styled.div`
+  display: flex;
+  gap: ${props => props.theme.spacing.lg};
+  font-size: ${props => props.theme.fontSize.sm};
+  color: ${props => props.theme.colors.text.secondary};
+`;
+
+/**
+ * User Filter - BEM: analytics-view__user-filter
+ */
+const StyledUserFilter = styled.select`
+  padding: ${props => props.theme.spacing.xs} ${props => props.theme.spacing.md};
+  font-size: ${props => props.theme.fontSize.base};
+  border: 1px solid ${props => props.theme.colors.border.primary};
+  border-radius: ${props => props.theme.borderRadius.xs};
+  background-color: ${props => props.theme.colors.background.secondary};
+  color: ${props => props.theme.colors.text.primary};
+  cursor: pointer;
+`;
+
+/**
+ * Surface names for display
+ */
+const SURFACE_NAMES = {
+  dashboard: 'Dashboard',
+  contatos: 'Contatos',
+};
+
+/**
  * Componente de Visualização de Analytics/Estatísticas de Uso
  */
 export const AnalyticsView = ({ onClose }) => {
   const [stats, setStats] = useState(null);
   const [selectedPeriod, setSelectedPeriod] = useState(7);
-  const [recentEvents, setRecentEvents] = useState([]);
+  const [selectedUser, setSelectedUser] = useState('all');
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     loadStatistics();
   }, [selectedPeriod]);
 
-  const loadStatistics = () => {
-    const statistics = getUsageStatistics();
-    const events = getEventsByPeriod(selectedPeriod);
-    setStats(statistics);
-    setRecentEvents(events);
+  const loadStatistics = async () => {
+    setLoading(true);
+    try {
+      const statistics = await getUsageStatistics(selectedPeriod);
+      setStats(statistics);
+    } catch (error) {
+      console.error('Erro ao carregar estatísticas:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleExport = () => {
-    const data = exportAnalyticsData();
+  const handleExport = async () => {
+    const data = await exportAnalyticsData(selectedPeriod);
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `rapidy-analytics-${new Date().toISOString().split('T')[0]}.json`;
+    link.download = `avecta-analytics-${new Date().toISOString().split('T')[0]}.json`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
   };
 
-  const handleClear = () => {
+  const handleClear = async () => {
     if (window.confirm('Tem certeza que deseja limpar todos os dados de analytics? Esta ação não pode ser desfeita.')) {
-      clearAnalyticsData();
-      loadStatistics();
+      await clearAnalyticsData();
+      await loadStatistics();
     }
   };
 
@@ -401,7 +484,7 @@ export const AnalyticsView = ({ onClose }) => {
     return date.toLocaleString('pt-BR');
   };
 
-  if (!stats) {
+  if (loading || !stats) {
     return (
       <StyledAnalyticsView className="analytics-view">
         <div style={{ padding: '20px', textAlign: 'center' }}>
@@ -411,114 +494,42 @@ export const AnalyticsView = ({ onClose }) => {
     );
   }
 
-  const tabs = [
+  const userList = Object.values(stats.users || {});
+  const filteredUsers = selectedUser === 'all'
+    ? userList
+    : userList.filter(u => u.userId === selectedUser);
+
+  const dashboardTabs = [
     { id: 'agendamentos', name: 'Agendamentos' },
     { id: 'pedidos', name: 'Pedidos' },
+    { id: 'atendimentos', name: 'Atendimentos' },
     { id: 'whatsapp', name: 'WhatsApp' },
   ];
 
-  // Ordenar tabs por número de cliques (decrescente)
-  const sortedTabs = tabs
-    .map(tab => ({
-      ...tab,
-      ...stats.tabs[tab.id],
-    }))
-    .sort((a, b) => b.clicks - a.clicks);
+  const contatosTabs = CONTATOS_SURFACE_TABS;
 
-  // Calcular percentuais
-  const totalClicksPercentage = stats.totalClicks > 0 ? 100 : 0;
-  const totalTimePercentage = stats.totalTime > 0 ? 100 : 0;
+  const emptyTabStats = { clicks: 0, totalTime: 0, sessions: 0, averageTime: 0 };
 
-  return (
-    <StyledAnalyticsView className="analytics-view">
-      {/* Header */}
-      <StyledAnalyticsHeader className="analytics-view__header">
-        <div>
-          <StyledAnalyticsTitle className="analytics-view__title">
-            Estatísticas de Uso
-          </StyledAnalyticsTitle>
-          <StyledAnalyticsSubtitle className="analytics-view__subtitle">
-            Análise de uso das abas do sistema
-          </StyledAnalyticsSubtitle>
-        </div>
-        
-        {onClose && (
-          <StyledCloseButton
-            onClick={onClose}
-            className="analytics-view__close-button"
-          >
-            Fechar
-          </StyledCloseButton>
-        )}
-      </StyledAnalyticsHeader>
+  const renderTabBreakdownSection = (user, sectionTitle, tabDefs) => {
+    const sortedTabs = tabDefs
+      .map(def => ({
+        ...def,
+        ...(user.tabs[def.id] || emptyTabStats),
+      }))
+      .sort((a, b) => b.clicks - a.clicks);
 
-      {/* Filtro de Período */}
-      <StyledPeriodFilter className="analytics-view__period-filter">
-        <StyledPeriodLabel className="analytics-view__period-label">
-          Período:
-        </StyledPeriodLabel>
-        <StyledPeriodSelect
-          value={selectedPeriod}
-          onChange={(e) => setSelectedPeriod(Number(e.target.value))}
-          className="analytics-view__period-select"
-        >
-          <option value={1}>Último dia</option>
-          <option value={7}>Últimos 7 dias</option>
-          <option value={30}>Últimos 30 dias</option>
-          <option value={90}>Últimos 90 dias</option>
-          <option value={365}>Último ano</option>
-          <option value={9999}>Todo o histórico</option>
-        </StyledPeriodSelect>
-        
-        <StyledRefreshButton
-          onClick={loadStatistics}
-          className="analytics-view__refresh-button"
-        >
-          Atualizar
-        </StyledRefreshButton>
-      </StyledPeriodFilter>
-
-      {/* Estatísticas Gerais */}
-      <div style={{ marginBottom: '3rem' }}>
-        <StatsGrid
-          stats={[
-            {
-              iconSvg: CLICKS_ICON,
-              label: 'Total de Cliques',
-              value: stats.totalClicks
-            },
-            {
-              iconSvg: TIME_ICON,
-              label: 'Tempo Total',
-              value: formatTime(stats.totalTime)
-            },
-            ...(stats.firstEvent ? [{
-              iconSvg: CALENDAR_ICON,
-              label: 'Primeiro Registro',
-              value: formatDate(stats.firstEvent)
-            }] : []),
-            ...(stats.lastEvent ? [{
-              iconSvg: CALENDAR_ICON,
-              label: 'Último Registro',
-              value: formatDate(stats.lastEvent)
-            }] : [])
-          ]}
-        />
-      </div>
-
-      {/* Estatísticas por Tab */}
-      <div>
-        <StyledSectionTitle className="analytics-view__section-title">
-          Estatísticas por Aba
+    return (
+      <>
+        <StyledSectionTitle className="analytics-view__section-title" style={{ fontSize: '1.1rem' }}>
+          {sectionTitle}
         </StyledSectionTitle>
-        
         <StyledTabsGrid className="analytics-view__tabs-grid">
           {sortedTabs.map((tab) => {
-            const clickPercentage = stats.totalClicks > 0
-              ? ((tab.clicks / stats.totalClicks) * 100).toFixed(1)
+            const clickPercentage = user.totalClicks > 0
+              ? ((tab.clicks / user.totalClicks) * 100).toFixed(1)
               : 0;
-            const timePercentage = stats.totalTime > 0
-              ? ((tab.totalTime / stats.totalTime) * 100).toFixed(1)
+            const timePercentage = user.totalTime > 0
+              ? ((tab.totalTime / user.totalTime) * 100).toFixed(1)
               : 0;
 
             return (
@@ -578,13 +589,12 @@ export const AnalyticsView = ({ onClose }) => {
                   </StyledTabCardStatItem>
                 </StyledTabCardStatsGrid>
 
-                {/* Barra de progresso visual */}
                 <StyledProgressContainer className="analytics-view__progress-container">
                   <StyledProgressRow className="analytics-view__progress-row">
                     <StyledProgressWrapper className="analytics-view__progress-wrapper">
                       <StyledProgressTrack className="analytics-view__progress-track">
-                        <StyledProgressFill 
-                          percentage={clickPercentage} 
+                        <StyledProgressFill
+                          percentage={clickPercentage}
                           color="#3b82f6"
                           className="analytics-view__progress-fill"
                         />
@@ -595,8 +605,8 @@ export const AnalyticsView = ({ onClose }) => {
                     </StyledProgressWrapper>
                     <StyledProgressWrapper className="analytics-view__progress-wrapper">
                       <StyledProgressTrack className="analytics-view__progress-track">
-                        <StyledProgressFill 
-                          percentage={timePercentage} 
+                        <StyledProgressFill
+                          percentage={timePercentage}
                           color="#10b981"
                           className="analytics-view__progress-fill"
                         />
@@ -611,6 +621,284 @@ export const AnalyticsView = ({ onClose }) => {
             );
           })}
         </StyledTabsGrid>
+      </>
+    );
+  };
+
+  const renderSurfaceStats = (surfacesData, totalViews, totalTime) => {
+    const surfaceEntries = Object.entries(surfacesData);
+    if (surfaceEntries.length === 0) return null;
+
+    return (
+      <StyledTabsGrid className="analytics-view__tabs-grid">
+        {surfaceEntries.map(([surfaceId, surface]) => {
+          const viewPercentage = totalViews > 0
+            ? ((surface.views / totalViews) * 100).toFixed(1)
+            : 0;
+          const timePercentage = totalTime > 0
+            ? ((surface.totalTime / totalTime) * 100).toFixed(1)
+            : 0;
+
+          return (
+            <StyledTabCard key={surfaceId} className="analytics-view__tab-card">
+              <StyledTabCardHeader className="analytics-view__tab-card-header">
+                <div>
+                  <StyledTabCardTitle className="analytics-view__tab-card-title">
+                    {SURFACE_NAMES[surfaceId] || surfaceId}
+                  </StyledTabCardTitle>
+                  <StyledTabCardSubtitle className="analytics-view__tab-card-subtitle">
+                    {surfaceId}
+                  </StyledTabCardSubtitle>
+                </div>
+              </StyledTabCardHeader>
+
+              <StyledTabCardStatsGrid className="analytics-view__tab-card-stats">
+                <StyledTabCardStatItem className="analytics-view__tab-card-stat">
+                  <StyledStatLabel className="analytics-view__stat-label">
+                    Visualizações
+                  </StyledStatLabel>
+                  <StyledStatValueSmall className="analytics-view__stat-value--small">
+                    {surface.views}
+                  </StyledStatValueSmall>
+                  <StyledTabCardStatPercentage className="analytics-view__tab-card-stat-percentage">
+                    {viewPercentage}% do total
+                  </StyledTabCardStatPercentage>
+                </StyledTabCardStatItem>
+
+                <StyledTabCardStatItem className="analytics-view__tab-card-stat">
+                  <StyledStatLabel className="analytics-view__stat-label">
+                    Tempo Total
+                  </StyledStatLabel>
+                  <StyledStatValueSmall className="analytics-view__stat-value--small">
+                    {formatTime(surface.totalTime)}
+                  </StyledStatValueSmall>
+                  <StyledTabCardStatPercentage className="analytics-view__tab-card-stat-percentage">
+                    {timePercentage}% do total
+                  </StyledTabCardStatPercentage>
+                </StyledTabCardStatItem>
+
+                <StyledTabCardStatItem className="analytics-view__tab-card-stat">
+                  <StyledStatLabel className="analytics-view__stat-label">
+                    Sessões
+                  </StyledStatLabel>
+                  <StyledStatValueSmall className="analytics-view__stat-value--small">
+                    {surface.sessions}
+                  </StyledStatValueSmall>
+                </StyledTabCardStatItem>
+
+                <StyledTabCardStatItem className="analytics-view__tab-card-stat">
+                  <StyledStatLabel className="analytics-view__stat-label">
+                    Tempo Médio
+                  </StyledStatLabel>
+                  <StyledStatValueSmall className="analytics-view__stat-value--small">
+                    {formatTime(surface.averageTime || 0)}
+                  </StyledStatValueSmall>
+                </StyledTabCardStatItem>
+              </StyledTabCardStatsGrid>
+
+              <StyledProgressContainer className="analytics-view__progress-container">
+                <StyledProgressRow className="analytics-view__progress-row">
+                  <StyledProgressWrapper className="analytics-view__progress-wrapper">
+                    <StyledProgressTrack className="analytics-view__progress-track">
+                      <StyledProgressFill 
+                        percentage={viewPercentage} 
+                        color="#8b5cf6"
+                        className="analytics-view__progress-fill"
+                      />
+                    </StyledProgressTrack>
+                    <StyledProgressLabel className="analytics-view__progress-label">
+                      Visualizações: {viewPercentage}%
+                    </StyledProgressLabel>
+                  </StyledProgressWrapper>
+                  <StyledProgressWrapper className="analytics-view__progress-wrapper">
+                    <StyledProgressTrack className="analytics-view__progress-track">
+                      <StyledProgressFill 
+                        percentage={timePercentage} 
+                        color="#f59e0b"
+                        className="analytics-view__progress-fill"
+                      />
+                    </StyledProgressTrack>
+                    <StyledProgressLabel className="analytics-view__progress-label">
+                      Tempo: {timePercentage}%
+                    </StyledProgressLabel>
+                  </StyledProgressWrapper>
+                </StyledProgressRow>
+              </StyledProgressContainer>
+            </StyledTabCard>
+          );
+        })}
+      </StyledTabsGrid>
+    );
+  };
+
+  const renderUserStats = (user) => (
+    <StyledUserSection key={user.userId} className="analytics-view__user-section">
+      <StyledUserSectionHeader className="analytics-view__user-section-header">
+        <StyledUserSectionTitle className="analytics-view__user-section-title">
+          <span dangerouslySetInnerHTML={{ __html: USER_ICON }} />
+          {user.email}
+        </StyledUserSectionTitle>
+        <StyledUserSectionStats className="analytics-view__user-section-stats">
+          <span>{user.totalClicks} cliques</span>
+          <span>{formatTime(user.totalTime)} em tabs</span>
+          <span>{user.totalSurfaceViews} nav. superfície</span>
+          <span>{formatTime(user.totalSurfaceTime)} em superfícies</span>
+        </StyledUserSectionStats>
+      </StyledUserSectionHeader>
+
+      {Object.keys(user.surfaces).length > 0 && (
+        <div style={{ marginBottom: '1.5rem' }}>
+          <StyledSectionTitle className="analytics-view__section-title" style={{ fontSize: '1.1rem' }}>
+            Navegação por Superfície
+          </StyledSectionTitle>
+          {renderSurfaceStats(user.surfaces, user.totalSurfaceViews, user.totalSurfaceTime)}
+        </div>
+      )}
+
+      {renderTabBreakdownSection(user, 'Abas do Dashboard', dashboardTabs)}
+      <div style={{ marginTop: '1.5rem' }}>
+        {renderTabBreakdownSection(user, 'Abas de Contatos', contatosTabs)}
+      </div>
+    </StyledUserSection>
+  );
+
+  return (
+    <StyledAnalyticsView className="analytics-view">
+      {/* Header */}
+      <StyledAnalyticsHeader className="analytics-view__header">
+        <div>
+          <StyledAnalyticsTitle className="analytics-view__title">
+            Estatísticas de Uso
+          </StyledAnalyticsTitle>
+          <StyledAnalyticsSubtitle className="analytics-view__subtitle">
+            Análise de uso das superfícies e abas do sistema por usuário
+          </StyledAnalyticsSubtitle>
+        </div>
+        
+        {onClose && (
+          <StyledCloseButton
+            onClick={onClose}
+            className="analytics-view__close-button"
+          >
+            Fechar
+          </StyledCloseButton>
+        )}
+      </StyledAnalyticsHeader>
+
+      {/* Filtros */}
+      <StyledPeriodFilter className="analytics-view__period-filter">
+        <StyledPeriodLabel className="analytics-view__period-label">
+          Período:
+        </StyledPeriodLabel>
+        <StyledPeriodSelect
+          value={selectedPeriod}
+          onChange={(e) => setSelectedPeriod(Number(e.target.value))}
+          className="analytics-view__period-select"
+        >
+          <option value={1}>Último dia</option>
+          <option value={7}>Últimos 7 dias</option>
+          <option value={30}>Últimos 30 dias</option>
+          <option value={90}>Últimos 90 dias</option>
+          <option value={365}>Último ano</option>
+          <option value={9999}>Todo o histórico</option>
+        </StyledPeriodSelect>
+
+        {userList.length > 1 && (
+          <>
+            <StyledPeriodLabel className="analytics-view__period-label">
+              Usuário:
+            </StyledPeriodLabel>
+            <StyledUserFilter
+              value={selectedUser}
+              onChange={(e) => setSelectedUser(e.target.value)}
+              className="analytics-view__user-filter"
+            >
+              <option value="all">Todos os usuários</option>
+              {userList.map(user => (
+                <option key={user.userId} value={user.userId}>
+                  {user.email}
+                </option>
+              ))}
+            </StyledUserFilter>
+          </>
+        )}
+        
+        <StyledRefreshButton
+          onClick={loadStatistics}
+          className="analytics-view__refresh-button"
+        >
+          Atualizar
+        </StyledRefreshButton>
+      </StyledPeriodFilter>
+
+      {/* Estatísticas Gerais */}
+      <div style={{ marginBottom: '3rem' }}>
+        <StatsGrid
+          stats={[
+            {
+              iconSvg: USER_ICON,
+              label: 'Usuários Rastreados',
+              value: userList.length
+            },
+            {
+              iconSvg: CLICKS_ICON,
+              label: 'Cliques em Tabs',
+              value: stats.totalClicks
+            },
+            {
+              iconSvg: TIME_ICON,
+              label: 'Tempo em Tabs',
+              value: formatTime(stats.totalTime)
+            },
+            {
+              iconSvg: SURFACE_ICON,
+              label: 'Navegações Superfície',
+              value: stats.totalSurfaceViews
+            },
+            {
+              iconSvg: TIME_ICON,
+              label: 'Tempo em Superfícies',
+              value: formatTime(stats.totalSurfaceTime)
+            },
+            ...(stats.firstEvent ? [{
+              iconSvg: CALENDAR_ICON,
+              label: 'Primeiro Registro',
+              value: formatDate(stats.firstEvent)
+            }] : []),
+            ...(stats.lastEvent ? [{
+              iconSvg: CALENDAR_ICON,
+              label: 'Último Registro',
+              value: formatDate(stats.lastEvent)
+            }] : [])
+          ]}
+        />
+      </div>
+
+      {/* Superfícies Globais */}
+      {Object.keys(stats.surfaces).length > 0 && (
+        <div style={{ marginBottom: '3rem' }}>
+          <StyledSectionTitle className="analytics-view__section-title">
+            Navegação por Superfície (Global)
+          </StyledSectionTitle>
+          {renderSurfaceStats(stats.surfaces, stats.totalSurfaceViews, stats.totalSurfaceTime)}
+        </div>
+      )}
+
+      {/* Breakdown por Usuário */}
+      <div>
+        <StyledSectionTitle className="analytics-view__section-title">
+          Estatísticas por Usuário
+        </StyledSectionTitle>
+
+        {filteredUsers.length === 0 ? (
+          <StyledInfoBox className="analytics-view__info-box">
+            <StyledInfoText className="analytics-view__info-text">
+              Nenhum dado de uso encontrado para o período selecionado.
+            </StyledInfoText>
+          </StyledInfoBox>
+        ) : (
+          filteredUsers.map(user => renderUserStats(user))
+        )}
       </div>
 
       {/* Ações */}
@@ -633,8 +921,9 @@ export const AnalyticsView = ({ onClose }) => {
       {/* Informação adicional */}
       <StyledInfoBox className="analytics-view__info-box">
         <StyledInfoText className="analytics-view__info-text">
-          <strong>Nota:</strong> Os dados são armazenados localmente no navegador. Para manter os dados após limpar o cache, exporte-os regularmente.
-          Sessões ativas são contabilizadas no tempo total mesmo que ainda não tenham sido finalizadas.
+          <strong>Nota:</strong> Os dados são armazenados no banco de dados e centralizados para todos os usuários.
+          Apenas usuários não-architect são rastreados. O sistema rastreia tanto a navegação entre superfícies (Dashboard, Contatos) 
+          quanto as abas dentro do Dashboard e da superfície Contatos. O filtro de período e usuário permite análise detalhada do uso.
         </StyledInfoText>
       </StyledInfoBox>
     </StyledAnalyticsView>

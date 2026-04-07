@@ -3,6 +3,8 @@ import { useWhatsAppConversations } from '../../contexts/WhatsAppConversationsCo
 import { WhatsAppChatList } from './WhatsAppChatList';
 import { WhatsAppChat } from './WhatsAppChat';
 import { SearchableLayout } from '../SearchableLayout';
+import { Tabs } from '../Tabs';
+import { useDashboardTabs } from '../../hooks/useDashboardTabs';
 import styled from 'styled-components';
 
 /**
@@ -127,6 +129,7 @@ export const WhatsAppView = () => {
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [toastVisible, setToastVisible] = useState(false);
   const [searchFilter, setSearchFilter] = useState('');
+  const { tabs, currentTab, handleTabClick } = useDashboardTabs();
 
   useEffect(() => {
     const handleResize = () => {
@@ -201,6 +204,14 @@ export const WhatsAppView = () => {
         placeholder="Pesquisar conversas..."
         onSearchChange={setSearchFilter}
         initialSearchValue={searchFilter}
+        showFilter={false}
+        tabs={
+          <Tabs
+            tabs={tabs}
+            activeTab={currentTab}
+            onTabClick={handleTabClick}
+          />
+        }
       >
         <StyledWhatsAppContent className="whatsapp-view__content">
           {/* Conversation List */}

@@ -183,12 +183,13 @@ describe('Header Component', () => {
       expect(container.querySelector('svg')).toBeInTheDocument();
     });
 
-    it('should have correct className', () => {
+    it('should render profile svg without profile chip wrapper', () => {
       const svgIcon = '<svg><circle r="10"/></svg>';
       const { container } = renderWithTheme(
         <ProfileIcon iconSvg={svgIcon} />
       );
-      expect(container.querySelector('.header__profile-icon')).toBeInTheDocument();
+      expect(container.querySelector('.header__profile-icon')).not.toBeInTheDocument();
+      expect(container.querySelector('svg')).toBeInTheDocument();
     });
   });
 

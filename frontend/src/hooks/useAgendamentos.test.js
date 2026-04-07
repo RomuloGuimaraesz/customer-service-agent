@@ -89,7 +89,7 @@ describe('useAgendamentos', () => {
 
   describe('data fetching', () => {
     it('should fetch agendamentos successfully', async () => {
-      const mockAgendamentos = [{ ID: 'A-001', Cliente: 'Test Client' }]
+      const mockAgendamentos = [{ ID: 'A-001', Nome: 'Test Client', Status: 'Agendado', Data: '07/02/2026' }]
       testAgendamentoRepository.setMockData('fetchAgendamentos', mockAgendamentos)
 
       const { result } = renderWithProviders(() => useAgendamentos())
@@ -165,7 +165,7 @@ describe('useAgendamentos', () => {
 
   describe('refreshAgendamentos', () => {
     it('should be an alias for fetchAgendamentos', async () => {
-      const mockAgendamentos = [{ ID: 'A-001' }]
+      const mockAgendamentos = [{ ID: 'A-001', Nome: 'Test Client', Status: 'Agendado', Data: '07/02/2026' }]
       testAgendamentoRepository.setMockData('fetchAgendamentos', mockAgendamentos)
 
       const { result } = renderWithProviders(() => useAgendamentos())

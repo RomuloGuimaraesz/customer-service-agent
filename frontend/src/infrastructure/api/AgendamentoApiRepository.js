@@ -67,13 +67,14 @@ export class AgendamentoApiRepository extends AgendamentoRepository {
         method: 'POST',
         body: {
           ID: agendamento.ID,
-          Cliente: agendamento.Cliente,
-          Serviço: agendamento.Serviço,
-          Produto: agendamento.Produto,
-          Descrição: agendamento.Descrição,
           Status: agendamento.Status,
+          'Dia da Semana': agendamento['Dia da Semana'],
           Data: agendamento.Data,
-          Observações: agendamento.Observações
+          Hora: agendamento.Hora,
+          Nome: agendamento.Nome,
+          WhatsApp: agendamento.WhatsApp,
+          Assunto: agendamento.Assunto,
+          'Descrição Completa': agendamento['Descrição Completa']
         }
       });
 
@@ -99,13 +100,14 @@ export class AgendamentoApiRepository extends AgendamentoRepository {
         authHeader,
         method: 'PUT',
         body: {
-          Cliente: agendamento.Cliente,
-          Serviço: agendamento.Serviço,
-          Produto: agendamento.Produto,
-          Descrição: agendamento.Descrição,
           Status: agendamento.Status,
+          'Dia da Semana': agendamento['Dia da Semana'],
           Data: agendamento.Data,
-          Observações: agendamento.Observações
+          Hora: agendamento.Hora,
+          Nome: agendamento.Nome,
+          WhatsApp: agendamento.WhatsApp,
+          Assunto: agendamento.Assunto,
+          'Descrição Completa': agendamento['Descrição Completa']
         }
       });
 

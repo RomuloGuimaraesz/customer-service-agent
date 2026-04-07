@@ -71,6 +71,8 @@ const StyledDropdownItem = styled.div`
  * @param {string} [props.align='right'] - Alignment: 'left' or 'right'
  * @param {string} [props.minWidth] - Minimum width of dropdown
  * @param {string} [props.className] - Additional CSS class
+ * @param {string} [props.toggleSelector] - When set, only clicks inside this selector (within the dropdown root) toggle the menu
+ * @param {React.ReactNode|function(close: () => void): React.ReactNode} [props.content] - Menu body; if a function, receives close() to dismiss the menu
  */
 export const Dropdown = ({ 
   children, 
@@ -78,7 +80,8 @@ export const Dropdown = ({
   header,
   align = 'right',
   minWidth,
-  className
+  className,
+  toggleSelector,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef(null);
@@ -108,15 +111,29 @@ export const Dropdown = ({
     setIsOpen(!isOpen);
   };
 
+  const handleContainerClick = (e) => {
+    if (toggleSelector) {
+      const triggerEl = containerRef.current?.querySelector(toggleSelector);
+      if (!triggerEl?.contains(e.target)) {
+        return;
+      }
+    }
+    handleToggle();
+  };
+
   const handleContentClick = (e) => {
     e.stopPropagation();
   };
+
+  const closeMenu = () => setIsOpen(false);
+  const renderedContent =
+    typeof content === 'function' ? content(closeMenu) : content;
 
   return (
     <StyledDropdownContainer 
       className={className}
       ref={containerRef}
-      onClick={handleToggle}
+      onClick={handleContainerClick}
     >
       {children}
       {content && (
@@ -137,7 +154,7 @@ export const Dropdown = ({
             className="dropdown__item"
             clickable={false}
           >
-            {content}
+            {renderedContent}
           </StyledDropdownItem>
         </StyledDropdownMenu>
       )}

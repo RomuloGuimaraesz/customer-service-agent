@@ -2,7 +2,7 @@ import styled from 'styled-components';
 
 export const FormSubmitButton = styled.button`
   width: 100%;
-  padding: ${props => props.theme.spacing.base} ${props => props.theme.spacing['2xl']};
+  padding: ${props => props.theme.spacing.md} ${props => props.theme.spacing['2xl']};
   font-size: ${props => props.theme.fontSize.lg};
   font-weight: ${props => props.theme.fontWeight.bold};
   border: none;

@@ -15,7 +15,7 @@ describe('pedidosReducer', () => {
   });
 
   it('should handle FETCH_SUCCESS', () => {
-    const mockPedidos = [{ id: 1, name: 'Pedido 1' }];
+    const mockPedidos = [{ ID: 'BW-09022026-1000', Status: 'Em andamento', Nome: 'Bruce Wayne' }];
     const result = pedidosReducer(
       { ...initialPedidosState, loading: true },
       { type: PEDIDOS_ACTIONS.FETCH_SUCCESS, payload: mockPedidos }
@@ -48,7 +48,7 @@ describe('pedidosReducer', () => {
 
   it('should handle RESET_STATE', () => {
     const modifiedState = {
-      pedidos: [{ id: 1 }],
+      pedidos: [{ ID: 'BW-09022026-1000', Nome: 'Bruce Wayne' }],
       loading: true,
       error: 'error',
       lastUpdated: new Date(),

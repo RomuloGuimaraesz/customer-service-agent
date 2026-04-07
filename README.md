@@ -1,11 +1,11 @@
-# Rapidy Admin
+# Avecta AI Admin
 
 Painel administrativo para gestão de pedidos, agendamentos e WhatsApp Business.
 
 ## Estrutura do Projeto
 
 ```
-0-rapidy/
+0-avecta/
 ├── frontend/          # Aplicação React/Vite
 │   ├── src/          # Código-fonte
 │   ├── dist/         # Build de produção

@@ -4,10 +4,8 @@
  */
 
 export const DASHBOARD_LABELS = {
-  PAGE_TITLE: 'Status Geral',
   HEADER_BUTTONS: {
     STATISTICS: 'Estatísticas',
-    REFRESH: 'Atualizar',
   },
 };
 

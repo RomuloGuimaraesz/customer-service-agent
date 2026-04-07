@@ -89,7 +89,7 @@ describe('usePedidos', () => {
 
   describe('data fetching', () => {
     it('should fetch pedidos successfully', async () => {
-      const mockPedidos = [{ ID: 'TEST-001', Cliente: 'Test Client' }]
+      const mockPedidos = [{ ID: 'TEST-001', Status: 'Em andamento', Nome: 'Test Client', Data: '09/02/2026', Hora: '10:00:00', WhatsApp: '999999999', Prioridade: 'Baixa', Assunto: 'Test', 'Descricao Completa': 'Test description' }]
       testPedidoRepository.setMockData('fetchPedidos', mockPedidos)
 
       const { result } = renderWithProviders(() => usePedidos())
@@ -165,7 +165,7 @@ describe('usePedidos', () => {
 
   describe('refreshPedidos', () => {
     it('should be an alias for fetchPedidos', async () => {
-      const mockPedidos = [{ ID: 'P-001' }]
+      const mockPedidos = [{ ID: 'P-001', Status: 'Concluído', Nome: 'Test', Data: '09/02/2026', Hora: '10:00:00', WhatsApp: '999999999', Prioridade: 'Baixa', Assunto: 'Test', 'Descricao Completa': 'Test' }]
       testPedidoRepository.setMockData('fetchPedidos', mockPedidos)
 
       const { result } = renderWithProviders(() => usePedidos())

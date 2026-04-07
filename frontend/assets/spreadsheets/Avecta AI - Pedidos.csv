@@ -1,3 +1,3 @@
-ID,Status,Data,Nome,Prioridade,Descricao
-AR-12012026-1430,Protocolado,12/01/2026,Ana Rosa,Baixa,Reparo do Gira-gira na praça da quadra da Rua B
-RF-13012026-1000,Protocolado,13/01/2026,Rafael Ferreira,Moderada,Manutenção asfáltica da travessa próximo a Rua Antônio Dias Adorno
+ID,Status,Data,Hora,Nome,WhatsApp,Prioridade,Assunto,Descricao Completa
+BW-09022026-1000,Em andamento,09/02/2026,10:00:00,Bruce Wayne,998877665,Baixa,Instalação de farol de pedestre para travessia segura no cruzamento entre rua Orense e Salgado de Castro,BW-09022026-1700 Em andamento 09/02/2026 Bruce Wayne 998877665 Baixa Instalação de farol de pedestre para travessia segura no cruzamento entre rua Orense e Salgado de Castro
+RG-09022026-1100,Concluído,09/02/2026,11:00:00,Rômulo Guimarães,992368100,Moderada,Manutenção de postes de luz na Praça Lauro Michels,RG-09022026-1100 Concluído 09/02/2026 11:00:00 Rômulo Guimarães 992368100 Moderada Manutenção de postes de luz na Praça Lauro Michels

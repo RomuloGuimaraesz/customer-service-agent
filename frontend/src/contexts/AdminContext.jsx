@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from './AuthContext';
 import { usePedidos, PedidosProvider } from './PedidosContext';
@@ -6,6 +6,7 @@ import { useAgendamentos, AgendamentosProvider } from './AgendamentosContext';
 import { useAtendimentos, AtendimentosProvider } from './AtendimentosContext';
 import { useWhatsAppConversations, WhatsAppConversationsProvider } from './WhatsAppConversationsContext';
 import { useTabAnalytics } from '../hooks/useTabAnalytics';
+import { useSurfaceAnalytics } from '../hooks/useSurfaceAnalytics';
 import { VALID_TAB_IDS, DEFAULT_TAB_ID } from '../config/dashboardTabs';
 import { getDashboardRoute, ROUTES } from '../config/routes';
 
@@ -23,6 +24,16 @@ const parseDashboardTabFromPathname = (pathname) => {
     return DEFAULT_TAB_ID;
   }
   return VALID_TAB_IDS.includes(pathTab) ? pathTab : DEFAULT_TAB_ID;
+};
+
+/**
+ * Derives the active app-level surface from the pathname.
+ * Returns 'dashboard', 'contatos', or null for unknown routes.
+ */
+const deriveSurfaceFromPathname = (pathname) => {
+  if (pathname.startsWith(ROUTES.DASHBOARD.BASE)) return 'dashboard';
+  if (pathname.startsWith(ROUTES.CONTATOS.BASE)) return 'contatos';
+  return null;
 };
 
 /**
@@ -56,6 +67,11 @@ const AdminContextInner = ({ children }) => {
     parseDashboardTabFromPathname(location.pathname)
   );
 
+  const activeSurface = useMemo(
+    () => deriveSurfaceFromPathname(location.pathname),
+    [location.pathname]
+  );
+
   // Use focused contexts
   const pedidosContext = usePedidos();
   const agendamentosContext = useAgendamentos();
@@ -76,6 +92,7 @@ const AdminContextInner = ({ children }) => {
 
   // Use analytics hook with userId and role
   useTabAnalytics(activeTab, userId, role);
+  useSurfaceAnalytics(activeSurface, userId, role);
 
   // Navigate to a tab
   const navigateTab = useCallback((tabId) => {

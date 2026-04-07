@@ -1,4 +1,6 @@
-ID,Status,Data,Nome,Prioridade,Descricao
-MC-08012026-0900,Pendente,08/01/2026,Maria Clara,Moderada,Poda de copa das arvores na Rua José Alfredo Magalhães
-PH-08012026-1100,Confirmado,08/01/2026,Pedro Henrique,Baixa,PIntura da sinalização de trânsito nas Ruas Conde da Cunha com a João Correa de Sá
-LS-11012026-1600,Confirmado,11/01/2026,Larissa Silva,Alta,Possível foco de dengue terreno de esquina na Rua Paris com a Rua Ubatuba
+ID,Status,Dia da Semana,Data,Hora,Nome,WhatsApp,Assunto,Descrição Completa
+BW-07022026-1700,Agendado,Sábado,07/02/2026,15:30:00,Bruce Wayne,998877665,Instalação de farol de pedestre para travessia segura no cruzamento entre rua Orense e Salgado de Castro,BW-07022026-1700 Agendado 07/02/2026 15:30 Bruce Wayne 998877665 Instalação de farol de pedestre para travessia segura no cruzamento entre rua Orense e Salgado de Castro
+RG-07022026-1500,Agendado,Sábado,07/02/2026,17:00:00,Rômulo Guimarães,992368100,Manutenção de postes de luz na Praça Lauro Michels,RG-07022026-1500 Agendado 07/02/2026 17:00 Rômulo Guimarães 992368100 Manutenção de postes de luz na Praça Lauro Michels
+JV-08022026-1430,Agendado,Domingo,08/02/2026,14:30:00,João Vitor,992368100,Manutenção do espaço da Quadra na rua São Paulo,JV-08022026-1430 Agendado 08/02/2026 14:30:00 João Vitor 992368100 Manutenção do espaço da Quadra na rua São Paulo
+LL-08022026-1530,Agendado,Domingo,08/02/2026,15:30:00,Luana Lia,952512474,Criar inventário de herança ,LL-08022026-1530 Agendado 08/02/2026 Domingo 15:30 Luana Lia 952512474 Criar inventário de herança 
+MM-08022026-1630,Agendado,Domingo,08/02/2026,16:30:00,Marion Oliveira,952512474,Reunião com grupo de mulheres da terceira idade,MM-08022026-1630 Agendado 08/02/2026 Domingo 16:30 Marion Magela 952512474 Reunião com grupo de mulheres da terceira idade

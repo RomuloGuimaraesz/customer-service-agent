@@ -6,6 +6,7 @@
 export const DASHBOARD_TABS = [
   { id: 'agendamentos', label: 'Agendamentos' },
   { id: 'pedidos', label: 'Pedidos' },
+  { id: 'atendimentos', label: 'Atendimentos' },
   { id: 'whatsapp', label: 'WhatsApp' },
 ];
 

@@ -1,32 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { Header, Logo } from './Header';
 import { Toast } from './Toast';
 import { FieldContainer, FieldInput, FieldLabel, FormSubmitButton } from './form';
+import {
+  AuthScreenRoot,
+  AuthBrandPanel,
+  AuthFormColumn,
+} from './AuthScreenLayout';
 import styled from 'styled-components';
-
-/**
- * SignUp Screen Container - BEM: signup-screen
- */
-const StyledSignUpScreen = styled.div`
-  min-height: 100vh;
-  background-color: ${props => props.theme.colors.background.primary};
-  display: flex;
-  flex-direction: column;
-  font-family: ${props => props.theme.fontFamily.primary};
-  padding: ${props => props.theme.spacing.xl};
-`;
-
-/**
- * SignUp Card Wrapper - BEM: signup-screen__card-wrapper
- */
-const StyledSignUpCardWrapper = styled.div`
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-`;
 
 /**
  * SignUp Card - BEM: signup-screen__card
@@ -34,10 +16,11 @@ const StyledSignUpCardWrapper = styled.div`
 const StyledSignUpCard = styled.div`
   width: 100%;
   max-width: 420px;
+  box-sizing: border-box;
   background-color: ${props => props.theme.colors.background.secondary};
-  border-radius: ${props => props.theme.borderRadius['2xl']};
   border: none;
-  padding: ${props => props.theme.spacing['4xl']};
+  border-radius: ${props => props.theme.borderRadius['3xl']};
+  padding: ${props => props.theme.spacing['2xl']};
   box-shadow: ${props => props.theme.shadows.sm};
 `;
 
@@ -46,16 +29,17 @@ const StyledSignUpCard = styled.div`
  */
 const StyledSignUpHeader = styled.div`
   text-align: center;
-  margin-bottom: ${props => props.theme.spacing['3xl']};
+  margin-bottom: ${props => props.theme.spacing['2xl']};
 `;
 
 /**
  * SignUp Title - BEM: signup-screen__title
  */
 const StyledSignUpTitle = styled.h1`
-  margin: 0 0 ${props => props.theme.spacing.sm} 0;
-  font-size: ${props => props.theme.fontSize['4xl']};
-  font-weight: ${props => props.theme.fontWeight.bold};
+  margin: 0 0 ${props => props.theme.spacing.xs} 0;
+  font-size: ${props => props.theme.fontSize['3xl']};
+  font-weight: ${props => props.theme.fontWeight.semibold};
+  line-height: 1.25;
   color: ${props => props.theme.colors.text.primary};
 `;
 
@@ -65,6 +49,8 @@ const StyledSignUpTitle = styled.h1`
 const StyledSignUpSubtitle = styled.p`
   margin: 0;
   font-size: ${props => props.theme.fontSize.base};
+  font-weight: ${props => props.theme.fontWeight.normal};
+  line-height: 1.45;
   color: ${props => props.theme.colors.text.secondary};
 `;
 
@@ -83,7 +69,7 @@ const StyledErrorMessage = styled.div`
   margin-bottom: ${props => props.theme.spacing.xl};
   background-color: ${props => props.theme.colors.status.errorBg};
   border: 1px solid ${props => props.theme.colors.status.error};
-  border-radius: ${props => props.theme.borderRadius.md};
+  border-radius: ${props => props.theme.borderRadius.lg};
   color: ${props => props.theme.colors.status.errorText};
   font-size: ${props => props.theme.fontSize.md};
   display: flex;
@@ -97,10 +83,10 @@ const StyledErrorMessage = styled.div`
 const StyledSuccessMessage = styled.div`
   padding: ${props => props.theme.spacing.md} ${props => props.theme.spacing.lg};
   margin-bottom: ${props => props.theme.spacing.xl};
-  background-color: ${props => props.theme.colors.status.successBg || '#d1fae5'};
-  border: 1px solid ${props => props.theme.colors.status.success || '#10b981'};
-  border-radius: ${props => props.theme.borderRadius.md};
-  color: ${props => props.theme.colors.status.successText || '#065f46'};
+  background-color: ${props => props.theme.colors.status.successBg};
+  border: 1px solid ${props => props.theme.colors.status.success};
+  border-radius: ${props => props.theme.borderRadius.lg};
+  color: ${props => props.theme.colors.status.successText};
   font-size: ${props => props.theme.fontSize.md};
   display: flex;
   align-items: center;
@@ -132,22 +118,25 @@ const StyledCloseButton = styled.button`
  */
 const StyledSignUpFooter = styled.p`
   margin-top: ${props => props.theme.spacing['2xl']};
+  margin-bottom: 0;
   text-align: center;
   font-size: ${props => props.theme.fontSize.sm};
-  color: ${props => props.theme.colors.text.tertiary};
+  color: ${props => props.theme.colors.text.secondary};
+  line-height: 1.45;
 `;
 
 /**
  * Link to Login - BEM: signup-screen__link
  */
 const StyledLink = styled(Link)`
-  color: ${props => props.theme.colors.text.tertiary};
+  color: ${props => props.theme.colors.status.infoText};
   text-decoration: none;
-  font-weight: ${props => props.theme.fontWeight.bold};
+  font-weight: ${props => props.theme.fontWeight.medium};
+  transition: color ${props => props.theme.transitions.fast} ease;
 
   &:hover {
+    color: ${props => props.theme.colors.status.info};
     text-decoration: underline;
-    color: ${props => props.theme.colors.text.primary};
   }
 `;
 
@@ -156,7 +145,7 @@ const StyledLink = styled(Link)`
  */
 export const SignUpScreen = () => {
   const navigate = useNavigate();
-  const { signup, isAuthenticated } = useAuth();
+  const { signup } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -259,29 +248,26 @@ export const SignUpScreen = () => {
   };
 
   return (
-    <StyledSignUpScreen className="signup-screen">
-      {/* Header */}
-      <Header
-        left={<Logo />}
-        isAuthenticated={isAuthenticated}
-      />
-      
-      <StyledSignUpCardWrapper>
+    <>
+    <AuthScreenRoot className="signup-screen">
+      <AuthBrandPanel className="signup-screen__brand" />
+
+      <AuthFormColumn className="signup-screen__form-column">
         <StyledSignUpCard className="signup-screen__card">
           {/* Header */}
           <StyledSignUpHeader className="signup-screen__header">
             <StyledSignUpTitle className="signup-screen__title">
-              Criar Conta
+              Cadastro de Usuário 
             </StyledSignUpTitle>
             <StyledSignUpSubtitle className="signup-screen__subtitle">
-              Preencha os dados para criar sua conta
+              Informe seus dados para Cadastrar o seu Usuário
             </StyledSignUpSubtitle>
           </StyledSignUpHeader>
 
         {/* Form */}
         <form onSubmit={handleSubmit}>
           <StyledFormGroup className="signup-screen__form-group">
-            <FieldContainer className="signup-screen__field-container">
+            <FieldContainer $borderless className="signup-screen__field-container">
               <FieldLabel htmlFor="fullName" className="signup-screen__label">
                 Nome Completo
               </FieldLabel>
@@ -297,7 +283,7 @@ export const SignUpScreen = () => {
           </StyledFormGroup>
 
           <StyledFormGroup className="signup-screen__form-group">
-            <FieldContainer className="signup-screen__field-container">
+            <FieldContainer $borderless className="signup-screen__field-container">
               <FieldLabel htmlFor="email" className="signup-screen__label">
                 Email
               </FieldLabel>
@@ -314,7 +300,7 @@ export const SignUpScreen = () => {
           </StyledFormGroup>
 
           <StyledFormGroup className="signup-screen__form-group">
-            <FieldContainer className="signup-screen__field-container">
+            <FieldContainer $borderless className="signup-screen__field-container">
               <FieldLabel htmlFor="password" className="signup-screen__label">
                 Senha
               </FieldLabel>
@@ -332,7 +318,7 @@ export const SignUpScreen = () => {
           </StyledFormGroup>
 
           <StyledFormGroup className="signup-screen__form-group">
-            <FieldContainer className="signup-screen__field-container">
+            <FieldContainer $borderless className="signup-screen__field-container">
               <FieldLabel htmlFor="confirmPassword" className="signup-screen__label">
                 Confirmar Senha
               </FieldLabel>
@@ -390,18 +376,18 @@ export const SignUpScreen = () => {
           </StyledLink>
         </StyledSignUpFooter>
       </StyledSignUpCard>
-      </StyledSignUpCardWrapper>
+      </AuthFormColumn>
+    </AuthScreenRoot>
 
-      {/* Toast Notification */}
-      <Toast
-        message={successMessage}
-        visible={successMessage && toastVisible}
-        onClose={handleCloseToast}
-        isMobile={isMobile}
-        icon="✅"
-        variant="success"
-      />
-    </StyledSignUpScreen>
+    <Toast
+      message={successMessage}
+      visible={successMessage && toastVisible}
+      onClose={handleCloseToast}
+      isMobile={isMobile}
+      icon="✅"
+      variant="success"
+    />
+    </>
   );
 };
 

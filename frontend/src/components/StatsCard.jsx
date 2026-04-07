@@ -5,25 +5,51 @@ import styled from 'styled-components';
  * Stats Card Container - BEM: stats-card
  */
 const StyledStatsCard = styled.div`
-  padding: ${props => props.theme.spacing.lg};
+  width: 272px;
+  flex-shrink: 0;
+  height: 48px;
+  padding: 7px ${props => props.theme.spacing.sm};
+  box-sizing: border-box;
   background-color: ${props => props.theme.colors.background.secondary};
   border-radius: ${props => props.theme.borderRadius.xl};
-  border: 1px solid ${props => props.theme.colors.border.primary};
   display: flex;
   align-items: center;
-  gap: ${props => props.theme.spacing.md};
-  box-shadow: ${props => props.theme.shadows.sm};
+  gap: 16px;
+
+  &:first-child {
+    margin-left: 0;
+  }
 `;
 
 /**
  * Stats Card Icon - BEM: stats-card__icon
  */
 const StyledStatsCardIcon = styled.div`
-  width: 40px;
-  height: 40px;
+  flex-shrink: 0;
+  width: 48px;
+  height: 32px;
+  border-radius: ${props => props.theme.borderRadius.md};
+  background-color: ${props => props.theme.colors.background.primary};
   display: flex;
   align-items: center;
   justify-content: center;
+  color: ${props => props.theme.colors.icon.stroke};
+  overflow: visible;
+
+  svg {
+    height: ${props => props.theme.colors.icon.statsSvgHeight};
+    width: auto;
+    max-width: ${props => props.theme.colors.icon.statsSvgMaxWidth};
+    display: block;
+    flex-shrink: 0;
+    overflow: visible;
+  }
+
+  svg circle,
+  svg path {
+    stroke: currentColor;
+    stroke-width: ${props => props.theme.colors.icon.strokeWidth};
+  }
 `;
 
 /**
@@ -31,6 +57,12 @@ const StyledStatsCardIcon = styled.div`
  */
 const StyledStatsCardContent = styled.div`
   flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2px;
+  overflow-wrap: break-word;
 `;
 
 /**
@@ -38,17 +70,19 @@ const StyledStatsCardContent = styled.div`
  */
 const StyledStatsCardLabel = styled.div`
   font-size: ${props => props.theme.fontSize.base};
+  font-weight: ${props => props.theme.fontWeight.medium};
   color: ${props => props.theme.colors.text.secondary};
-  margin-bottom: ${props => props.theme.spacing.xs};
+  line-height: 1;
 `;
 
 /**
  * Stats Card Value - BEM: stats-card__value
  */
 const StyledStatsCardValue = styled.div`
-  font-size: ${props => props.theme.fontSize['4xl']};
-  font-weight: ${props => props.theme.fontWeight.bold};
+  font-size: ${props => props.theme.fontSize.xl};
+  font-weight: ${props => props.theme.fontWeight.semibold};
   color: ${props => props.theme.colors.text.primary};
+  line-height: 1;
 `;
 
 /**

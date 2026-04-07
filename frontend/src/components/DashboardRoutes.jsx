@@ -2,6 +2,7 @@ import React from 'react';
 import { Outlet, Navigate } from 'react-router-dom';
 import { usePedidos } from '../contexts/PedidosContext';
 import { useAgendamentos } from '../contexts/AgendamentosContext';
+import { useAtendimentos } from '../contexts/AtendimentosContext';
 import { DataDisplay } from './DataDisplay';
 import { WhatsAppView } from './whatsapp/WhatsAppView';
 import { DEFAULT_TAB_ID } from '../config/dashboardTabs';
@@ -29,6 +30,14 @@ export const PedidosRoute = () => {
 export const AgendamentosRoute = () => {
   const { agendamentos } = useAgendamentos();
   return <DataDisplay data={agendamentos} type="agendamentos" />;
+};
+
+/**
+ * Atendimentos Route Component - Accesses context and renders DataDisplay
+ */
+export const AtendimentosRoute = () => {
+  const { atendimentos } = useAtendimentos();
+  return <DataDisplay data={atendimentos} type="atendimentos" />;
 };
 
 /**

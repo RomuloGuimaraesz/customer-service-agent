@@ -30,6 +30,15 @@ const StyledModalContent = styled.div`
   max-height: ${props => props.maxHeight || '90vh'};
   overflow: auto;
   box-shadow: ${props => props.theme.shadows.lg};
+
+  ${props =>
+    props.$bare &&
+    `
+    background: transparent;
+    box-shadow: none;
+    border-radius: 0;
+    max-width: none;
+  `}
 `;
 
 /**
@@ -42,8 +51,16 @@ const StyledModalContent = styled.div`
  * @param {React.ReactNode} props.children - Modal content
  * @param {string} [props.maxWidth] - Maximum width of modal content (default: '1200px')
  * @param {string} [props.maxHeight] - Maximum height of modal content (default: '90vh')
+ * @param {boolean} [props.bareContent=false] - No outer card chrome; child supplies the panel
  */
-export const Modal = ({ isOpen, onClose, children, maxWidth, maxHeight }) => {
+export const Modal = ({
+  isOpen,
+  onClose,
+  children,
+  maxWidth,
+  maxHeight,
+  bareContent = false,
+}) => {
   // Handle ESC key press
   React.useEffect(() => {
     if (!isOpen) return;
@@ -73,6 +90,7 @@ export const Modal = ({ isOpen, onClose, children, maxWidth, maxHeight }) => {
         className="modal__content"
         maxWidth={maxWidth}
         maxHeight={maxHeight}
+        $bare={bareContent}
         onClick={(e) => e.stopPropagation()}
       >
         {children}

@@ -1,4 +1,5 @@
-ID,Status,Data,Nome,Prioridade,Descricao
-RG-06012026-0921,Concluido,06/01/2026,Rômulo Guimarães,Baixa,Limpeza do entulho da calçada da escola Fabio Eduardo Ramos Esquivel
-JM-06012026-1130,Concluido,06/01/2026,João Mendes,Moderada,Fios caidos em frente ao ponto de ônibus do ginásio poliesportivo de Diadema
-GR-06012026-1131,Pendente,06/01/2026,Giulia Ribeiro,Moderada,Problemas na iluminação das quadras da Av. Juarez Rios de Vasconselos
+ID,Status,Data,Hora,Nome,WhatsApp,Prioridade,Assunto,Descricao Completa
+RG-06012026-0921,Concluido,06/01/2026,09:21:00,Rômulo Guimarães,992368100,Baixa,Limpeza do entulho da calçada da escola Fabio Eduardo Ramos Esquivel,RG-06012026-0921 Concluido 06/01/2026 09:21:00 Rômulo Guimarães 992368100 Baixa Limpeza do entulho da calçada da escola Fabio Eduardo Ramos Esquivel
+JM-06012026-1130,Cancelado,06/01/2026,11:30:00,João Mendes,998877665,Moderada,Fios caidos em frente ao ponto de ônibus do ginásio poliesportivo de Diadema,JM-06012026-1130 Cancelado 06/01/2026 11:30:00 João Mendes 998877665 Moderada Fios caidos em frente ao ponto de ônibus do ginásio poliesportivo de Diadema
+GR-06012026-1131,Concluido,06/01/2026,11:31:00,Giulia Ribeiro,998877667,Moderada,Problemas na iluminação das quadras da Av. Juarez Rios de Vasconselos,GR-06012026-1131 Concluido 06/01/2026 11:31:00 Giulia Ribeiro 998877667 Moderada Problemas na iluminação das quadras da Av. Juarez Rios de Vasconselos
+RG-09022026-1100,Concluído,09/02/2026,11:00:00,Rômulo Guimarães,992368100,Moderada,Manutenção de postes de luz na Praça Lauro Michels,RG-09022026-1100 Concluído 09/02/2026 11:00:00 Rômulo Guimarães 992368100 Moderada Manutenção de postes de luz na Praça Lauro Michels

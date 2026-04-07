@@ -4,6 +4,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import dashboardIconSvg from '../../assets/img/dashboard-icon.svg?raw';
 import newContactIconSvg from '../../assets/img/new-contact-icon.svg?raw';
 import { ROUTES } from '../config/routes';
+import { RoundIconButton } from './RoundIconButton';
 
 const Pill = styled.div`
   box-sizing: border-box;
@@ -15,25 +16,6 @@ const Pill = styled.div`
   display: flex;
   align-items: center;
   gap: ${props => props.theme.spacing.xs};
-`;
-
-const NavRoundButton = styled.button`
-  box-sizing: border-box;
-  width: 32px;
-  height: 32px;
-  flex-shrink: 0;
-  border: none;
-  padding: 0;
-  border-radius: 50%;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  &:focus-visible {
-    outline: 2px solid ${props => props.theme.colors.focus.ring};
-    outline-offset: 2px;
-  }
 `;
 
 const Icon = styled.span`
@@ -54,16 +36,6 @@ const Icon = styled.span`
   }
 `;
 
-const DashboardNavButton = styled(NavRoundButton)`
-  background-color: ${props => (props.$active ? '#000000' : props.theme.colors.button.tertiary)};
-  color: ${props => (props.$active ? props.theme.colors.text.light : props.theme.colors.text.primary)};
-`;
-
-const ContatosNavButton = styled(NavRoundButton)`
-  background-color: ${props => (props.$active ? '#000000' : props.theme.colors.button.tertiary)};
-  color: ${props => (props.$active ? props.theme.colors.text.light : props.theme.colors.text.primary)};
-`;
-
 const toCurrentColorStroke = (svgString) => {
   if (!svgString) return '';
   return svgString.replaceAll('stroke="black"', 'stroke="currentColor"');
@@ -82,7 +54,7 @@ export const MainNavigation = () => {
   return (
     <nav className="main-navigation" aria-label="Navegação principal">
       <Pill className="main-navigation__pill">
-        <DashboardNavButton
+        <RoundIconButton
           type="button"
           className="main-navigation__btn main-navigation__btn--dashboard"
           aria-label="Dashboard"
@@ -97,8 +69,8 @@ export const MainNavigation = () => {
             aria-hidden="true"
             dangerouslySetInnerHTML={{ __html: toCurrentColorStroke(dashboardIconSvg) }}
           />
-        </DashboardNavButton>
-        <ContatosNavButton
+        </RoundIconButton>
+        <RoundIconButton
           type="button"
           className="main-navigation__btn main-navigation__btn--contatos"
           aria-label="Contatos"
@@ -113,7 +85,7 @@ export const MainNavigation = () => {
             aria-hidden="true"
             dangerouslySetInnerHTML={{ __html: toCurrentColorStroke(newContactIconSvg) }}
           />
-        </ContatosNavButton>
+        </RoundIconButton>
       </Pill>
     </nav>
   );

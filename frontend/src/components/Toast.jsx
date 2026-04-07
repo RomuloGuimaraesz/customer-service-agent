@@ -20,6 +20,9 @@ const StyledToast = styled.div`
       // Use successText color (#065f46) with 20% opacity
       return 'rgba(6, 95, 70, 0.2)';
     }
+    if (props.$variant === 'warning') {
+      return props.theme.colors.status.warningBg;
+    }
     return props.theme.colors.background.secondary;
   }};
   border: 1px solid ${props => {
@@ -31,12 +34,18 @@ const StyledToast = styled.div`
       // Use success color (#10b981) with 80% opacity
       return 'rgba(16, 185, 129, 0.8)';
     }
+    if (props.$variant === 'warning') {
+      return props.theme.colors.status.warning;
+    }
     return props.theme.colors.status.errorBg;
   }};
   border-radius: ${props => props.theme.borderRadius.md};
   color: ${props => {
     if (props.$variant === 'success') {
       return props.theme.colors.status.successText;
+    }
+    if (props.$variant === 'warning') {
+      return props.theme.colors.status.warningText;
     }
     return props.theme.colors.status.errorText;
   }};
@@ -74,6 +83,9 @@ const StyledToastClose = styled.button`
     if (props.$variant === 'success') {
       return props.theme.colors.status.successText;
     }
+    if (props.$variant === 'warning') {
+      return props.theme.colors.status.warningText;
+    }
     return props.theme.colors.status.errorText;
   }};
   cursor: pointer;
@@ -92,6 +104,9 @@ const StyledToastClose = styled.button`
       if (props.$variant === 'success') {
         return props.theme.colors.status.successBg;
       }
+      if (props.$variant === 'warning') {
+        return props.theme.colors.status.warningBg;
+      }
       return props.theme.colors.status.errorBg;
     }};
   }
@@ -107,7 +122,7 @@ const StyledToastClose = styled.button`
  * @param {Function} props.onClose - Callback when toast is closed
  * @param {boolean} props.isMobile - Whether the device is mobile (for responsive styling)
  * @param {string} [props.icon] - Optional icon/emoji to display (default: '⚠️')
- * @param {string} [props.variant] - Toast variant: 'error', 'success', or default
+ * @param {string} [props.variant] - Toast variant: 'error', 'success', 'warning', or default
  */
 export const Toast = ({ 
   message, 

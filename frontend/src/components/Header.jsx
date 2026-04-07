@@ -1,7 +1,15 @@
 import React from 'react';
 import styled from 'styled-components';
 import { Dropdown } from './Dropdown';
+import { PillButton } from './PillButton';
+import { RoundIconFrame } from './RoundIconButton';
 import logoPb from '../../assets/img/avecta-logo-pb.png';
+import chevronDownSvg from '../../assets/img/chevron-down.svg?raw';
+
+const PROFILE_DROPDOWN_CHEVRON_SVG = chevronDownSvg.replace(
+  /stroke="#443D4F"/g,
+  'stroke="currentColor"',
+);
 
 // ============================================================================
 // CONFIGURATION - Easy to find and change
@@ -20,7 +28,7 @@ const CONFIG = {
 const StyledHeader = styled.header`
   box-sizing: border-box;
   height: 64px;
-  padding: 0 47px;
+  padding: 0 ${props => props.theme.spacing['5xl']};
   align-items: center;
 
   ${props =>
@@ -55,39 +63,23 @@ const StyledHeaderCenter = styled.div`
 const StyledHeaderRight = styled.div`
   display: flex;
   align-items: center;
-  gap: ${props => props.theme.spacing.sm};
+  gap: ${props => props.theme.spacing.xs};
   flex-wrap: wrap;
   justify-self: end;
 `;
 
-// Buttons
-const StyledHeaderButton = styled.button`
-  padding: ${props => props.theme.spacing.sm} ${props => props.theme.spacing.lg};
-  font-size: ${props => props.theme.fontSize.sm};
-  font-weight: ${props => props.theme.fontWeight.medium};
-  border: 1px solid ${props => props.theme.colors.border.primary};
-  border-radius: ${props => props.theme.borderRadius.md};
-  background-color: ${props => props.theme.colors.background.secondary};
-  color: ${props => props.theme.colors.text.primary};
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: ${props => props.theme.spacing.sm};
-  opacity: ${props => props.disabled ? 0.7 : 1};
-
-  &:hover:not(:disabled) {
-    background-color: ${props => props.theme.colors.background.tertiary};
-  }
-`;
-
 // User Info
 const StyledUserInfo = styled.div`
+  background-color: ${props => props.theme.colors.background.white};
+  box-sizing: border-box;
+  height: 32px;
+  width: 56px;
   display: flex;
   align-items: center;
-  gap: ${props => props.theme.spacing.sm};
-  padding: ${props => props.theme.spacing.sm} ${props => props.theme.spacing.lg};
+  justify-content: center;
+  padding-left: ${props => props.theme.spacing.md};
   cursor: pointer;
-  border-radius: ${props => props.theme.borderRadius.md};
+  border-radius: ${props => props.theme.borderRadius['5xl']};
   transition: background-color ${props => props.theme.transitions.fast} ease;
 
   &:hover {
@@ -95,19 +87,17 @@ const StyledUserInfo = styled.div`
   }
 `;
 
-const StyledProfileIcon = styled.div`
-  width: 32px;
-  height: 32px;
-  display: flex;
+/** Inline profile glyph (no round frame); sits on header__user-info-trigger pill. */
+const StyledProfileSvgHost = styled.span`
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  background-color: ${props => props.theme.colors.background.tertiary};
-  border-radius: ${props => props.theme.borderRadius['2xl']};
-  color: ${props => props.theme.colors.icon.stroke};
+  flex-shrink: 0;
+  color: ${p => p.theme.colors.icon.stroke};
 
   svg {
     display: block;
-    height: ${props => props.theme.colors.icon.profileSvgHeight};
+    height: 12px;
     width: auto;
     max-width: 100%;
     overflow: visible;
@@ -115,7 +105,22 @@ const StyledProfileIcon = styled.div`
 
   svg path {
     stroke: currentColor;
-    stroke-width: ${props => props.theme.colors.icon.strokeWidth};
+    stroke-width: ${p => p.theme.colors.icon.strokeWidth};
+  }
+`;
+
+/** Round white chip matching profile icon; chevron uses asset-native stroke width. */
+const StyledProfileDropdown = styled(RoundIconFrame)`
+  flex-shrink: 0;
+
+  svg {
+    width: 8px;
+    height: 5px;
+    max-width: none;
+  }
+
+  svg path {
+    stroke-width: 1.25px;
   }
 `;
 
@@ -128,30 +133,6 @@ const StyledDropdownHeaderEmail = styled.span`
   font-size: ${props => props.theme.fontSize.sm};
   color: ${props => props.theme.colors.text.primary};
   font-weight: ${props => props.theme.fontWeight.normal};
-`;
-
-const StyledDropdownHeaderIcon = styled.div`
-  width: 32px;
-  height: 32px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background-color: ${props => props.theme.colors.background.tertiary};
-  border-radius: ${props => props.theme.borderRadius['2xl']};
-  color: ${props => props.theme.colors.icon.stroke};
-
-  svg {
-    display: block;
-    height: ${props => props.theme.colors.icon.profileSvgHeight};
-    width: auto;
-    max-width: 100%;
-    overflow: visible;
-  }
-
-  svg path {
-    stroke: currentColor;
-    stroke-width: ${props => props.theme.colors.icon.strokeWidth};
-  }
 `;
 
 const StyledDropdownContent = styled.div`
@@ -268,7 +249,8 @@ export const Header = ({
 
 /**
  * HeaderButton Component
- * Statistics action in the dashboard header (BEM: header__user-statistics)
+ * Statistics action in the dashboard header (BEM: header__user-statistics).
+ * Built on PillButton; extra native button props are forwarded.
  *
  * @param {Object} props
  * @param {React.ReactNode} props.children - Button content
@@ -276,16 +258,17 @@ export const Header = ({
  * @param {boolean} [props.disabled] - Whether the button is disabled
  * @param {string} [props.title] - Button title/tooltip
  */
-export const HeaderButton = ({ children, onClick, disabled, title }) => {
+export const HeaderButton = ({ children, onClick, disabled, title, ...rest }) => {
   return (
-    <StyledHeaderButton
+    <PillButton
       onClick={onClick}
       disabled={disabled}
       title={title}
       className="header__user-statistics"
+      {...rest}
     >
       {children}
-    </StyledHeaderButton>
+    </PillButton>
   );
 };
 
@@ -304,9 +287,9 @@ export const UserInfo = ({ children, onEditProfile, onLogout, email, iconSvg }) 
   const dropdownHeader = (email || iconSvg) ? (
     <>
       {iconSvg && (
-        <StyledDropdownHeaderIcon 
+        <RoundIconFrame
           className="header__user-info-dropdown-header-icon"
-          dangerouslySetInnerHTML={{ __html: iconSvg }} 
+          dangerouslySetInnerHTML={{ __html: iconSvg }}
         />
       )}
       {email && (
@@ -335,9 +318,15 @@ export const UserInfo = ({ children, onEditProfile, onLogout, email, iconSvg }) 
       header={dropdownHeader}
       align="right"
       minWidth="180px"
+      toggleSelector=".header__profile-dropdown"
     >
       <StyledUserInfo className="header__user-info-trigger">
         {children}
+        <StyledProfileDropdown
+          className="header__profile-dropdown"
+          aria-hidden="true"
+          dangerouslySetInnerHTML={{ __html: PROFILE_DROPDOWN_CHEVRON_SVG }}
+        />
       </StyledUserInfo>
     </Dropdown>
   );
@@ -345,17 +334,15 @@ export const UserInfo = ({ children, onEditProfile, onLogout, email, iconSvg }) 
 
 /**
  * ProfileIcon Component
- * Displays a profile icon (SVG)
- * 
+ * Renders the profile SVG inline (no wrapper chip; trigger pill provides the surface).
+ *
  * @param {Object} props
  * @param {string} props.iconSvg - SVG string to display
  */
 export const ProfileIcon = ({ iconSvg }) => {
+  if (!iconSvg) return null;
   return (
-    <StyledProfileIcon 
-      className="header__profile-icon"
-      dangerouslySetInnerHTML={{ __html: iconSvg }} 
-    />
+    <StyledProfileSvgHost dangerouslySetInnerHTML={{ __html: iconSvg }} />
   );
 };
 

@@ -13,7 +13,7 @@ const StyledTabsContainer = styled.div`
   -webkit-overflow-scrolling: touch;
   width: 100%;
   position: relative;
-  border-bottom: 1px solid ${props => props.theme.colors.border.primary};
+  border-bottom: none;
 
   &::-webkit-scrollbar {
     display: none;

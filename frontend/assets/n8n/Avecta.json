@@ -1,0 +1,1419 @@
+{
+  "name": "Avecta",
+  "nodes": [
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "has-messages",
+              "leftValue": "={{ $json.body.entry[0].changes[0].value.messages[0].id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {
+          "looseTypeValidation": true
+        }
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1280,
+        480
+      ],
+      "id": "a4310feb-9c6a-4833-b9dc-e2373aad666f",
+      "name": "É Mensagem de Candidato?"
+    },
+    {
+      "parameters": {
+        "path": "whatsapp-webhook",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        256,
+        544
+      ],
+      "id": "00ed2be0-00af-4e89-86a3-e803474615df",
+      "name": "Webhook Validação Meta",
+      "webhookId": "6ae197a9-8a03-4da2-ad6a-f7de2ef3d31c",
+      "notes": "Recebe a requisição GET da Meta para validação"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "validation-check",
+              "leftValue": "={{ $json.query['hub.mode'] }}",
+              "rightValue": "subscribe",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "verify-token-check",
+              "leftValue": "={{ $json.query['hub.verify_token'] }}",
+              "rightValue": "NerdDrama1234",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        464,
+        544
+      ],
+      "id": "339726a2-8462-4060-85bc-55ffd33cf6eb",
+      "name": "Valida Token Meta"
+    },
+    {
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "={{ $json.query['hub.challenge'] }}",
+        "options": {
+          "responseCode": 200,
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Content-Type",
+                "value": "text/plain"
+              }
+            ]
+          }
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        672,
+        448
+      ],
+      "id": "b5d29236-f419-4d1e-953d-30b084b09050",
+      "name": "Responde Challenge (Sucesso)"
+    },
+    {
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "Forbidden: Invalid verification token",
+        "options": {
+          "responseCode": 403,
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Content-Type",
+                "value": "text/plain"
+              }
+            ]
+          }
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        672,
+        640
+      ],
+      "id": "ed984c73-0ac5-44c6-8dba-106c84ce47c4",
+      "name": "Responde Erro (Token Inválido)"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "whatsapp-webhook",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        1088,
+        480
+      ],
+      "id": "c664da6d-19f2-4cde-9efe-0a0fb3ae5f2a",
+      "name": "Webhook Candidatos Entrada",
+      "webhookId": "8ea09019-1ffb-413a-a553-9016e0784178",
+      "notes": "Recebe mensagens POST da Meta/WhatsApp"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "phone-number",
+              "name": "candidatePhone",
+              "value": "={{ $json.body.entry[0].changes[0].value.messages[0].from }}",
+              "type": "string"
+            },
+            {
+              "id": "message-text",
+              "name": "candidateMessage",
+              "value": "={{ $json.body.entry[0].changes[0].value.messages[0].text.body }}",
+              "type": "string"
+            },
+            {
+              "id": "message-id",
+              "name": "messageId",
+              "value": "={{ $json.body.entry[0].changes[0].value.messages[0].id }}",
+              "type": "string"
+            },
+            {
+              "id": "contact-name",
+              "name": "candidateName",
+              "value": "={{ $json.body.entry[0].changes[0].value.contacts[0].profile.name }}",
+              "type": "string"
+            },
+            {
+              "id": "30b8fd90-dfac-4e5c-9c1d-302252ed84e1",
+              "name": "sessionId",
+              "value": "={{ $json.body.entry[0].changes[0].value.messages[0].from }}",
+              "type": "string"
+            },
+            {
+              "id": "58647d3f-5f6c-426c-a39c-371b277739b9",
+              "name": "chatInput",
+              "value": "={{ $json.body.entry[0].changes[0].value.messages[0].text.body }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1472,
+        480
+      ],
+      "id": "b80b7384-28e8-44b7-8d08-bb4c502d07f2",
+      "name": "Extrai Dados Candidato"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { \"status\": \"received\" } }}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1472,
+        704
+      ],
+      "id": "c092aafb-cf29-4f5f-9edd-26ca0227cfbd",
+      "name": "Responde 200 OK (Recebido)"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "api-url",
+              "name": "apiUrl",
+              "value": "https://graph.facebook.com/v18.0/828384257022714/messages",
+              "type": "string"
+            },
+            {
+              "id": "response-body",
+              "name": "responseBody",
+              "value": "={{ {\n  \"messaging_product\": \"whatsapp\",\n  \"to\": $('Extrai Dados Candidato').item.json.candidatePhone,\n  \"type\": \"text\",\n  \"text\": {\n    \"body\": $json.output\n  }\n} }}",
+              "type": "object"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2128,
+        480
+      ],
+      "id": "5f8da5bd-f8b1-4e87-919f-ce49d9d6bc69",
+      "name": "Prepara Resposta Candidato"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $json.apiUrl }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer EAAL6TvVyYWYBQIoopDH0QNykwgBL17KOZAOJv0J3cELCRkb6nWYrpnEZBUHr0yLthzQC51jb12utpMOZAW4iuzh9HNFH84PdEksPj8412J2I671J4npqVPvk9vGcuZA8ViMenhREmzZAFcWilEj0KJSXGzL4jLlJZCMB55vFtpUZAmhZCeQY13PBuZCq2B610yi5ybj4odETlja19U9ICGEgSUcQff55uBloVxyasPdmDAmpDgL8KSfMCbgMUmZCKtZAL9ERD4Y0lQq7CJE94jV3yNvELaB"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json.responseBody }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2320,
+        480
+      ],
+      "id": "4bcefc4f-33a2-4253-952e-8921c7a3fc2e",
+      "name": "Envia Resposta para WhatsApp (API Meta)",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "yVoycLgTqiMhSrJV",
+          "name": "Header Auth account 2"
+        },
+        "httpBearerAuth": {
+          "id": "4mnqUYhIwHdOPm52",
+          "name": "Bearer Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {
+          "systemMessage": "Você é um Assessor de Candidato especializado em avaliação e suporte para candidatos políticos, profissionais ou para processos seletivos. Sua função é auxiliar candidatos fornecendo informações, coletando dados de avaliação, agendando entrevistas e consultas, e gerenciando o processo de candidatura.\n\nVocê fala Português do Brasil, com um tom profissional, empático e direto.\n\n---\n\nModelo de mensagem inicial oficial (Esse modelo é o padrão para início de interação com candidatos no whatsapp):\n\nOlá! 👋\nBem-vindo ao Sistema de Assessoria de Candidatos ✨\n\nComo posso ajudá-lo hoje?\n\n📋 Informações sobre processos de candidatura\n📝 Coleta de dados e documentação\n📅 Agendamento de entrevistas e consultas\n📊 Consulta de status de candidatura\n📍 Informações sobre localização e horários\n❓ Dúvidas frequentes sobre o processo\n\n---\n\nTratamento de erros:\n\nSe a(s) ferramenta(s) de \"Catálogo de Candidaturas\" ou \"Catálogo de Serviços de Assessoria\" não estiver disponível para consulta, siga o exemplo de mensagem a seguir:\n\nAssessor (Você): No momento estou com dificuldades para acessar nosso sistema. Por favor, tente novamente em alguns minutos ou entre em contato pelo telefone [TELEFONE].\n\nSe a candidatura não for encontrada:\n\nAssessor (Você): Não encontrei essa candidatura em nossos registros. Pode me dar mais detalhes ou verificar se o nome ou ID está correto?\n\nSe o agendamento não for encontrado:\n\nAssessor (Você): Não encontrei nenhum registro com essas informações. Pode verificar se o nome ou ID está correto?\n\n---\n\nExemplo de atendimento para candidato buscando informações sobre processo de candidatura (Você deve consultar a ferramenta de \"Catálogo de Candidaturas\" fornecida pelo servidor MCP para responder de volta ao candidato com as informações oficiais):\n\nCandidato: quero me candidatar\n\nAssessor (Você): Ótimo! Vou te ajudar com o processo de candidatura! 📋\n\n📌 Processos disponíveis:\n\n  Candidatura Política - Eleições Municipais\n• Tipo: Candidatura a Vereador\n• Requisitos: Maioridade, título de eleitor, filiação partidária\n• Documentos necessários: RG, CPF, Título de Eleitor, Comprovante de Residência\n• Prazo: Até [DATA]\n• Status: Inscrições abertas\n\n  Candidatura Política - Eleições Estaduais\n• Tipo: Candidatura a Deputado Estadual\n• Requisitos: Maioridade, título de eleitor, filiação partidária\n• Documentos necessários: RG, CPF, Título de Eleitor, Comprovante de Residência\n• Prazo: Até [DATA]\n• Status: Inscrições abertas\n\nPara iniciar sua candidatura, preciso saber:\n\n• Nome completo\n• CPF\n• Tipo de candidatura desejada\n• Partido político (se aplicável)\n\nPosso te ajudar com mais alguma coisa? 📝\n\n---\n\nExemplo de resposta padrão para candidato buscando agendamento de entrevista ou consulta (Você deve consultar a ferramenta de \"Catálogo de Serviços de Assessoria\" fornecida pelo servidor MCP):\n\nCandidato: preciso agendar uma entrevista\n\nAssessor (Você): Claro! Vou te ajudar a agendar uma entrevista! 📅\n\n📋 Tipos de atendimento disponíveis:\n\n• Entrevista inicial de candidatura\n• Consulta sobre documentação\n• Reunião de planejamento de campanha\n• Avaliação de perfil do candidato\n\nPara agendar, preciso saber:\n\n• Nome completo\n• Tipo de atendimento desejado\n• Data e horário preferidos\n• Telefone para contato\n\nCandidato: João Silva, entrevista inicial, amanhã às 14h\n\nAssessor (Você): Perfeito João, confirma o agendamento?\n\nCandidato: sim\n\nAssessor (Você): Agendamento confirmado! ✓\n\n📝 Resumo do agendamento:\n\n- ID do agendamento: JS-151225-1400\n- Candidato: João Silva\n- Tipo: Entrevista Inicial\n- Data/Hora: 15/12/2025 às 14:00\n- Status: Agendado\n\n⚠️ Observações:\n\n- Trazer documentação completa (RG, CPF, Título de Eleitor)\n- Chegar com 15 minutos de antecedência\n\n📍 Localização:\n[ENDEREÇO DO GABINETE/ESCRITÓRIO]\n\n🕒 Horário de atendimento:\nSegunda a sexta: 9h às 18h\nSábado: 9h às 13h\n\nTe esperamos! 😊\n\nExemplo de Registro na ferramenta \"Cria Agendamentos\", sempre crie uma nova entrada:\n(Formato CSV com as colunas: ID, Cliente, Serviço, Produto, Descrição, Status, Data, Observações): JS-151225-1400,João Silva,Entrevista Inicial,-,Candidato busca informações sobre processo de candidatura,Agendado,15/12/2025 14:00,Trazer documentação completa\n\n---\n\nExemplo de resposta padrão para candidato consultando status de candidatura. Nesse tipo de atendimento você deve ser direto e objetivo, o candidato quer saber apenas o status do processo. Solicite o nome completo ou o ID da candidatura para localizar o registro. Para consultar, utilize a ferramenta \"Consulta Agendamentos\" do MCP server passando o nome do candidato ou o ID como parâmetro de busca:\n\nCandidato: qual o status da minha candidatura?\n\nAssessor (Você): Para consultar o status, informe seu nome completo ou o ID da candidatura.\n\nCandidato: Maria Santos\n\nAssessor (Você): Localizei seu registro, Maria! ✓\n\n- ID: MS-081225-1000\n- Status: Em análise\n- Tipo: Candidatura a Vereador\n- Data de inscrição: 08/12/2025\n\nAlgo mais em que posso ajudar?\n\n---\n\nExemplo de interação que NUNCA deve acontecer. Você NUNCA deve responder com simpatia ou engajar em interações que não sejam estritamente a respeito do processo de candidatura e assessoria. Esse exemplo serve como modelo de interação para você seguir, nesses casos o seu atendimento deve ser direto e frio:\n\nCandidato: vende coxinha?\n\nAssessor (Você): Não, não trabalhamos com alimentos! \n\nEste canal é exclusivo para assessoria de candidatos. Posso ajudar com:\n\n📋 Informações sobre processos de candidatura\n📝 Coleta de dados e documentação\n📅 Agendamento de entrevistas e consultas\n📊 Consulta de status de candidatura\n📍 Informações sobre localização e horários\n❓ Dúvidas frequentes sobre o processo\n\nComo posso ajudar?\n\n---\n\nExemplo de interação para comportamento inadequado:\n\nCandidato: quero sexo...\n\nAssessor (Você): Este canal é exclusivo para assessoria de candidatos. Comportamentos inadequados resultam no encerramento do atendimento!\n\nCandidato: [comportamento inadequado]\n\nAssessor (Você): Atendimento encerrado.\n\n---\n\nInstruções para uso das ferramentas do MCP server:\n\nIMPORTANTE: As ferramentas \"Cria Agendamentos\" e \"Consulta Agendamentos\" têm funções DISTINTAS e não devem ser confundidas:\n\n1. Ferramenta \"Cria Agendamentos\": \n   - Função: APENAS para criar NOVOS registros de agendamento\n   - Quando usar: Após o candidato CONFIRMAR um novo agendamento\n   - Colunas: ID, Cliente, Serviço, Produto, Descrição, Status, Data, Observações\n   - NUNCA use esta ferramenta para consultar registros existentes\n\n2. Ferramenta \"Consulta Agendamentos\":\n   - Função: APENAS para BUSCAR registros existentes\n   - Quando usar: Quando o candidato quer saber o status de um agendamento ou candidatura\n   - Parâmetro de busca: Nome do candidato OU ID do agendamento\n   - NUNCA use esta ferramenta para criar novos registros\n\n3. Ferramenta \"Pedidos\":\n   - Função: Criar e consultar registros de candidaturas e processos\n   - Formato: CSV para salvar no Google Sheets\n\n4. Ferramenta \"Gmail\":\n   - Função: Enviar email no gmail após confirmação da ferramenta \"Cria Agendamentos\"\n\n5. Ferramenta \"Calendário Agendamentos\":\n   - Função: Criar novo agendamento no Google calendar após confirmação de agendamento\n   - Formato: ISO 8601\n\n---\n\nFormato do ID de pedidos e agendamentos:\n\nO ID deve seguir o padrão: iniciais do nome completo do candidato + data + hora (formato: XXX-DDMMAA-HHMM).\n\nExemplos:\n- João Carlos Silva, 15/12/2025 às 15:00 → JCS-151225-1500\n- Maria Santos, 15/12/2025 às 09:21 → MS-151225-0921\n- Pedro Oliveira, 20/12/2025 às 10:30 → PO-201225-1030\n\n---\n\nVocê fala Português do Brasil, com um tom profissional, empático e direto.\nUse sempre como referência os exemplos de mensagens e interações fornecidos nesse prompt.\nUse sempre as ferramentas fornecidas pelo servidor MCP de acordo com suas funções específicas.\nVocê não faz assunções, você não desvia do seu foco, você não responde nada que não esteja dentro do contexto da assessoria de candidatos, caso alguém pergunte por assuntos fora do contexto e da sua responsabilidade, demonstre comportamento criminoso ou malicioso mantenha-se sempre focado no seu papel e função e aja de forma adequada."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        1808,
+        480
+      ],
+      "id": "0398d10e-ebcc-4868-89bc-b624f66e7335",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "claude-sonnet-4-5-20250929",
+          "cachedResultName": "Claude Sonnet 4.5"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatAnthropic",
+      "typeVersion": 1.3,
+      "position": [
+        1728,
+        720
+      ],
+      "id": "54f4f7b2-7d91-4698-abd9-171ea397b382",
+      "name": "Anthropic Chat Model",
+      "credentials": {
+        "anthropicApi": {
+          "id": "xazFuBiNxpnmjmY4",
+          "name": "Anthropic account 5"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        1872,
+        720
+      ],
+      "id": "6248bb94-eb23-4c93-9a7e-d27b3fac3bef",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "endpointUrl": "https://archtechsystems.app.n8n.cloud/mcp/a6ed8677-00c0-4fa5-abf4-2a1feb1d8ce7",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.mcpClientTool",
+      "typeVersion": 1.2,
+      "position": [
+        2016,
+        720
+      ],
+      "id": "8ff836c6-82dc-4225-9f70-929feec5264f",
+      "name": "MCP Client"
+    },
+    {
+      "parameters": {
+        "path": "a6ed8677-00c0-4fa5-abf4-2a1feb1d8ce7"
+      },
+      "type": "@n8n/n8n-nodes-langchain.mcpTrigger",
+      "typeVersion": 2,
+      "position": [
+        2672,
+        480
+      ],
+      "id": "d0df9d42-132c-4118-9810-44fcb4fc1f46",
+      "name": "MCP Server Trigger",
+      "webhookId": "a6ed8677-00c0-4fa5-abf4-2a1feb1d8ce7"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "13ncXOBJ4wIFjYjjxW9C_LTq8Sx5bAS9turh630vOIUM",
+          "mode": "list",
+          "cachedResultName": "Agente de IA - Automação",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/13ncXOBJ4wIFjYjjxW9C_LTq8Sx5bAS9turh630vOIUM/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 326622113,
+          "mode": "list",
+          "cachedResultName": "catalogo_produtos_completo",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/13ncXOBJ4wIFjYjjxW9C_LTq8Sx5bAS9turh630vOIUM/edit#gid=326622113"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.7,
+      "position": [
+        2576,
+        688
+      ],
+      "id": "1f922e96-c03f-4b4e-bf66-87e6b1fdcc79",
+      "name": "Catálogo de Candidaturas",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "ynJQZ7qrni7mu79b",
+          "name": "Google Sheets account 4"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "13ncXOBJ4wIFjYjjxW9C_LTq8Sx5bAS9turh630vOIUM",
+          "mode": "list",
+          "cachedResultName": "Agente de IA - Automação",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/13ncXOBJ4wIFjYjjxW9C_LTq8Sx5bAS9turh630vOIUM/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 768383232,
+          "mode": "list",
+          "cachedResultName": "catalogo_servicos_completo",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/13ncXOBJ4wIFjYjjxW9C_LTq8Sx5bAS9turh630vOIUM/edit#gid=768383232"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.7,
+      "position": [
+        2704,
+        688
+      ],
+      "id": "81c779d2-034f-41fd-b9ac-87cbb337c20e",
+      "name": "Catálogo de Serviços de Assessoria",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "ynJQZ7qrni7mu79b",
+          "name": "Google Sheets account 4"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "13ncXOBJ4wIFjYjjxW9C_LTq8Sx5bAS9turh630vOIUM",
+          "mode": "list",
+          "cachedResultName": "Agente de IA - Automação",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/13ncXOBJ4wIFjYjjxW9C_LTq8Sx5bAS9turh630vOIUM/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1105811187,
+          "mode": "list",
+          "cachedResultName": "faq_automacao_atendimento",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/13ncXOBJ4wIFjYjjxW9C_LTq8Sx5bAS9turh630vOIUM/edit#gid=1105811187"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.7,
+      "position": [
+        2832,
+        688
+      ],
+      "id": "167e2404-dcf5-4fca-8ebc-c3bb3f0cab10",
+      "name": "FAQ Candidatos",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "ynJQZ7qrni7mu79b",
+          "name": "Google Sheets account 4"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "13ncXOBJ4wIFjYjjxW9C_LTq8Sx5bAS9turh630vOIUM",
+          "mode": "list",
+          "cachedResultName": "Agente de IA - Automação",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/13ncXOBJ4wIFjYjjxW9C_LTq8Sx5bAS9turh630vOIUM/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1254096615,
+          "mode": "list",
+          "cachedResultName": "tabela_descontos",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/13ncXOBJ4wIFjYjjxW9C_LTq8Sx5bAS9turh630vOIUM/edit#gid=1254096615"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.7,
+      "position": [
+        2960,
+        688
+      ],
+      "id": "aa605e54-2ea8-4906-95e0-127e9ea7d729",
+      "name": "Critérios de Avaliação",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "ynJQZ7qrni7mu79b",
+          "name": "Google Sheets account 4"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "13ncXOBJ4wIFjYjjxW9C_LTq8Sx5bAS9turh630vOIUM",
+          "mode": "list",
+          "cachedResultName": "Agente de IA - Automação",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/13ncXOBJ4wIFjYjjxW9C_LTq8Sx5bAS9turh630vOIUM/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1219898324,
+          "mode": "list",
+          "cachedResultName": "pedidos",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/13ncXOBJ4wIFjYjjxW9C_LTq8Sx5bAS9turh630vOIUM/edit#gid=1219898324"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "ID": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('ID', ``, 'string') }}",
+            "Cliente": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Cliente', ``, 'string') }}",
+            "Serviço": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Servi_o', ``, 'string') }}",
+            "Produto": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Produto', ``, 'string') }}",
+            "Descrição": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Descri__o', ``, 'string') }}",
+            "Valor": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Valor', ``, 'string') }}",
+            "Prazo": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Prazo', ``, 'string') }}",
+            "Retira": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Retira', ``, 'string') }}",
+            "Status": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Status', ``, 'string') }}",
+            "Data": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Data', ``, 'string') }}",
+            "Observações": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Observa__es', ``, 'string') }}"
+          },
+          "matchingColumns": [
+            "row_number"
+          ],
+          "schema": [
+            {
+              "id": "ID",
+              "displayName": "ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Cliente",
+              "displayName": "Cliente",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Serviço",
+              "displayName": "Serviço",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Produto",
+              "displayName": "Produto",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Descrição",
+              "displayName": "Descrição",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Valor",
+              "displayName": "Valor",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Prazo",
+              "displayName": "Prazo",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Retira",
+              "displayName": "Retira",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Data",
+              "displayName": "Data",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Observações",
+              "displayName": "Observações",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.7,
+      "position": [
+        3072,
+        688
+      ],
+      "id": "316fca11-ec04-48bc-a5b5-881e0d7b14d1",
+      "name": "Registro de Candidaturas",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "ynJQZ7qrni7mu79b",
+          "name": "Google Sheets account 4"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "13ncXOBJ4wIFjYjjxW9C_LTq8Sx5bAS9turh630vOIUM",
+          "mode": "list",
+          "cachedResultName": "Agente de IA - Automação",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/13ncXOBJ4wIFjYjjxW9C_LTq8Sx5bAS9turh630vOIUM/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1748203712,
+          "mode": "list",
+          "cachedResultName": "agendamentos",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/13ncXOBJ4wIFjYjjxW9C_LTq8Sx5bAS9turh630vOIUM/edit#gid=1748203712"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "ID": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('ID', ``, 'string') }}",
+            "Cliente": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Cliente', ``, 'string') }}",
+            "Serviço": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Servi_o', ``, 'string') }}",
+            "Produto": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Produto', ``, 'string') }}",
+            "Status": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Status', ``, 'string') }}",
+            "Observações": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Observa__es', ``, 'string') }}",
+            "Data": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Data', ``, 'string') }}"
+          },
+          "matchingColumns": [
+            "row_number"
+          ],
+          "schema": [
+            {
+              "id": "ID",
+              "displayName": "ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Cliente",
+              "displayName": "Cliente",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Serviço",
+              "displayName": "Serviço",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Produto",
+              "displayName": "Produto",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Descrição",
+              "displayName": "Descrição",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Data",
+              "displayName": "Data",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Observações",
+              "displayName": "Observações",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.7,
+      "position": [
+        2576,
+        864
+      ],
+      "id": "fe849dfa-12bc-4857-a704-d003549cff0c",
+      "name": "Cria Agendamentos",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "ynJQZ7qrni7mu79b",
+          "name": "Google Sheets account 4"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "13ncXOBJ4wIFjYjjxW9C_LTq8Sx5bAS9turh630vOIUM",
+          "mode": "list",
+          "cachedResultName": "Agente de IA - Automação",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/13ncXOBJ4wIFjYjjxW9C_LTq8Sx5bAS9turh630vOIUM/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1748203712,
+          "mode": "list",
+          "cachedResultName": "agendamentos",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/13ncXOBJ4wIFjYjjxW9C_LTq8Sx5bAS9turh630vOIUM/edit#gid=1748203712"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.7,
+      "position": [
+        2704,
+        864
+      ],
+      "id": "d8b4d769-853c-4ab0-b3b9-28ac21dc80b5",
+      "name": "Consulta Agendamentos",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "ynJQZ7qrni7mu79b",
+          "name": "Google Sheets account 4"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "romulo.fantomaz@gmail.com",
+        "subject": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Subject', ``, 'string') }}",
+        "emailType": "text",
+        "message": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Message', ``, 'string') }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmailTool",
+      "typeVersion": 2.1,
+      "position": [
+        2832,
+        864
+      ],
+      "id": "b551e506-02a6-4aae-a466-48c7421f580e",
+      "name": "Gmail",
+      "webhookId": "235dff67-e86e-45cf-a703-02d7cfcb0d13",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "YAHIbo1KCSoWfV7D",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "calendar": {
+          "__rl": true,
+          "value": "299edd68247cbd3513ef576528cafde510725704c1916a395b3649fa151931f6@group.calendar.google.com",
+          "mode": "list",
+          "cachedResultName": "Teste Atendimentos"
+        },
+        "start": "={{ ('Start', 'Data e hora de início no formato ISO 8601 com timezone de São Paulo. Exemplo: 2025-12-20T15:00:00-03:00', 'string') }}",
+        "end": "={{('End', 'Data e hora de término no formato ISO 8601 com timezone de São Paulo, 1 hora após o início. Exemplo: 2025-12-20T16:00:00-03:00', 'string')}}",
+        "additionalFields": {
+          "description": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Description', ``, 'string') }}",
+          "summary": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Summary', ``, 'string') }}"
+        }
+      },
+      "type": "n8n-nodes-base.googleCalendarTool",
+      "typeVersion": 1.3,
+      "position": [
+        2960,
+        864
+      ],
+      "id": "ebf8d86a-1833-4aa6-bbc1-2af54d0ff8e5",
+      "name": "Calendário Agendamentos",
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "aIvOdsz2Ywlr7ezp",
+          "name": "Google Calendar account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "path": "admin-candidaturas",
+        "authentication": "basicAuth",
+        "responseMode": "responseNode",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "*"
+              },
+              {
+                "name": "Access-Control-Allow-Methods",
+                "value": "GET, OPTIONS"
+              },
+              {
+                "name": "Access-Control-Allow-Headers",
+                "value": "Authorization, Content-Type"
+              }
+            ]
+          }
+        }
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ],
+      "id": "a15e9129-4109-40ff-a77b-ed3a4664f7b3",
+      "name": "Webhook Candidaturas",
+      "webhookId": "admin-candidaturas",
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "iCF29eCFJuRjP4XK",
+          "name": "Unnamed credential"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "path": "admin-agendamentos",
+        "authentication": "basicAuth",
+        "responseMode": "responseNode",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "*"
+              },
+              {
+                "name": "Access-Control-Allow-Methods",
+                "value": "GET, OPTIONS"
+              },
+              {
+                "name": "Access-Control-Allow-Headers",
+                "value": "Authorization, Content-Type"
+              }
+            ]
+          }
+        }
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        224
+      ],
+      "id": "c5ae6cfc-acd3-483b-9503-dc33bd3a1936",
+      "name": "Webhook Agendamentos",
+      "webhookId": "admin-agendamentos",
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "iCF29eCFJuRjP4XK",
+          "name": "Unnamed credential"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "13ncXOBJ4wIFjYjjxW9C_LTq8Sx5bAS9turh630vOIUM",
+          "mode": "list",
+          "cachedResultName": "Agente de IA - Automação"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1219898324,
+          "mode": "list",
+          "cachedResultName": "pedidos"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        224,
+        0
+      ],
+      "id": "236dca4a-3815-4abc-9d6e-563f1079d547",
+      "name": "Ler Candidaturas",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "ynJQZ7qrni7mu79b",
+          "name": "Google Sheets account 4"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "13ncXOBJ4wIFjYjjxW9C_LTq8Sx5bAS9turh630vOIUM",
+          "mode": "list",
+          "cachedResultName": "Agente de IA - Automação",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/13ncXOBJ4wIFjYjjxW9C_LTq8Sx5bAS9turh630vOIUM/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1748203712,
+          "mode": "list",
+          "cachedResultName": "agendamentos",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/13ncXOBJ4wIFjYjjxW9C_LTq8Sx5bAS9turh630vOIUM/edit#gid=1748203712"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        224,
+        224
+      ],
+      "id": "bb49a692-fcd4-4019-9421-83790277586b",
+      "name": "Ler Agendamentos",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "ynJQZ7qrni7mu79b",
+          "name": "Google Sheets account 4"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get all items from the input\nconst items = $input.all();\n\n// Extract just the JSON data from each item\nconst data = items.map(item => item.json);\n\n// Return as a single item with the array\nreturn [{ json: { data } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        448,
+        0
+      ],
+      "id": "50149128-9f2c-4815-9a92-5333515d7041",
+      "name": "Formatar Candidaturas"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get all items from the input\nconst items = $input.all();\n\n// Extract just the JSON data from each item\nconst data = items.map(item => item.json);\n\n// Return as a single item with the array\nreturn [{ json: { data } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        448,
+        224
+      ],
+      "id": "cdf52408-c505-4231-9f69-609cc90401eb",
+      "name": "Formatar Agendamentos"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json.data }}",
+        "options": {
+          "responseCode": 200,
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "*"
+              }
+            ]
+          }
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        672,
+        0
+      ],
+      "id": "9a4f97ec-2adf-4c60-8bfd-3f4bc69d9fb0",
+      "name": "Responder Candidaturas"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json.data }}",
+        "options": {
+          "responseCode": 200,
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "*"
+              }
+            ]
+          }
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        672,
+        224
+      ],
+      "id": "e763e574-cd0c-461d-926a-4d2eaec140a7",
+      "name": "Responder Agendamentos"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "É Mensagem de Candidato?": {
+      "main": [
+        [
+          {
+            "node": "Extrai Dados Candidato",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Responde 200 OK (Recebido)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook Validação Meta1": {
+      "main": [
+        [
+          {
+            "node": "Valida Token Meta",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Valida Token Meta1": {
+      "main": [
+        [
+          {
+            "node": "Responde Challenge (Sucesso)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Responde Erro (Token Inválido)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook WhatsApp Entrada1": {
+      "main": [
+        [
+          {
+            "node": "É Mensagem de Candidato?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extrai Dados WhatsApp1": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepara Resposta WhatsApp1": {
+      "main": [
+        [
+          {
+            "node": "Envia Resposta para WhatsApp (API Meta)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Prepara Resposta Candidato",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Anthropic Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "MCP Client": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Catálogo de Produtos": {
+      "ai_tool": [
+        [
+          {
+            "node": "MCP Server Trigger",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Catálogo de Serviços": {
+      "ai_tool": [
+        [
+          {
+            "node": "MCP Server Trigger",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "FAQ": {
+      "ai_tool": [
+        [
+          {
+            "node": "MCP Server Trigger",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Descontos": {
+      "ai_tool": [
+        [
+          {
+            "node": "MCP Server Trigger",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pedidos": {
+      "ai_tool": [
+        [
+          {
+            "node": "MCP Server Trigger",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Cria Agendamentos": {
+      "ai_tool": [
+        [
+          {
+            "node": "MCP Server Trigger",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Consulta Agendamentos": {
+      "ai_tool": [
+        [
+          {
+            "node": "MCP Server Trigger",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gmail": {
+      "ai_tool": [
+        [
+          {
+            "node": "MCP Server Trigger",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calendário Agendamentos": {
+      "ai_tool": [
+        [
+          {
+            "node": "MCP Server Trigger",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook Pedidos": {
+      "main": [
+        [
+          {
+            "node": "Ler Candidaturas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook Agendamentos": {
+      "main": [
+        [
+          {
+            "node": "Ler Agendamentos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ler Pedidos": {
+      "main": [
+        [
+          {
+            "node": "Formatar Candidaturas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ler Agendamentos": {
+      "main": [
+        [
+          {
+            "node": "Formatar Agendamentos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Formatar Candidaturas": {
+      "main": [
+        [
+          {
+            "node": "Responder Candidaturas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Formatar Agendamentos": {
+      "main": [
+        [
+          {
+            "node": "Responder Agendamentos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "92a3c9eb-6c8e-43a0-8ccc-daec07d8b80c",
+  "meta": {
+    "instanceId": "38d72daace6c2ae7736a909dec088d48bbd578f9ce790ccc259d7516ee40e64b"
+  },
+  "id": "QVJ2DOwhnlea1we9",
+  "tags": []
+}

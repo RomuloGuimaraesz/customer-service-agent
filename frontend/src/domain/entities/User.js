@@ -11,7 +11,7 @@
  * User entity class
  * 
  * @class
- * @classdesc Represents a user in the Rapidy system with authentication credentials
+ * @classdesc Represents a user in the Avecta AI system with authentication credentials
  * and profile information
  */
 export class User {

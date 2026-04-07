@@ -10,9 +10,15 @@ export const GlobalStyles = createGlobalStyle`
     box-sizing: border-box;
   }
 
+  html {
+    background-color: ${theme.colors.background.primary};
+  }
+
   body {
-    margin: 0;
+    margin: 0 auto;
     padding: 0;
+    max-width: 1200px;
+    background-color: inherit;
     font-family: ${theme.fontFamily.primary};
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;

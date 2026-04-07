@@ -8,28 +8,24 @@ import {
 
 /**
  * Custom hook to calculate dashboard statistics
- * 
+ *
  * @param {Array} pedidos - Array of pedidos (orders)
  * @param {Array} agendamentos - Array of agendamentos (appointments)
+ * @param {Array} atendimentos - Array of atendimentos
  * @returns {Object} Object containing statsValues and stats array
  */
-export const useDashboardStats = (pedidos = [], agendamentos = []) => {
+export const useDashboardStats = (pedidos = [], agendamentos = [], atendimentos = []) => {
   // Calculate stats values
   const statsValues = useMemo(() => {
-    const today = new Date().toLocaleDateString('pt-BR');
-    
     return {
       totalPedidos: pedidos.length,
       pedidosPendentes: pedidos.filter(p =>
-        p.Status?.toLowerCase().includes('aguardando') ||
-        p.Status?.toLowerCase().includes('produção')
+        p.Status?.toLowerCase().includes('em andamento')
       ).length,
       totalAgendamentos: agendamentos.length,
-      agendamentosHoje: agendamentos.filter(a =>
-        a.Data?.includes(today)
-      ).length,
+      totalAtendimentos: atendimentos.length,
     };
-  }, [pedidos, agendamentos]);
+  }, [pedidos, agendamentos, atendimentos]);
 
   // Prepare stats array for StatsGrid
   const stats = useMemo(() => [
@@ -50,8 +46,8 @@ export const useDashboardStats = (pedidos = [], agendamentos = []) => {
     },
     {
       iconSvg: MESSAGE_ICON,
-      label: 'Hoje',
-      value: statsValues.agendamentosHoje,
+      label: 'Atendimentos',
+      value: statsValues.totalAtendimentos,
     },
   ], [statsValues]);
 

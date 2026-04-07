@@ -4,14 +4,12 @@ import { useAuth } from '../contexts/AuthContext';
 import { useAdmin } from '../contexts/AdminContext';
 import { useDashboardStats } from '../hooks/useDashboardStats';
 import { PROFILE_ICON } from '../config/icons';
-import { DASHBOARD_TABS } from '../config/dashboardTabs';
-import { getDashboardRoute, ROUTES } from '../config/routes';
+import { ROUTES } from '../config/routes';
 import { DASHBOARD_MESSAGES } from '../config/dashboardConfig';
 import { CONFIG } from '../config/constants';
 import { supabase } from '../infrastructure/supabase/config';
-import { StatsGrid } from './StatsGrid';
+import { StatsGrid, SurfaceSectionHeading } from './StatsGrid';
 import { Toast } from './Toast';
-import { Tabs } from './Tabs';
 import { 
   Header, 
   Logo,
@@ -43,6 +41,8 @@ const StyledMainContent = styled.main`
   margin: 0 auto;
   overflow-x: hidden;
   width: 100%;
+  display: flex;
+  flex-direction: column;
 `;
 
 /**
@@ -55,28 +55,6 @@ export const Dashboard = () => {
   const [toastVisible, setToastVisible] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [showProfileEdit, setShowProfileEdit] = useState(false);
-
-  // Use activeTab from AdminContext instead of deriving from URL
-  const currentTab = adminContext.activeTab;
-
-  // Handle tab navigation
-  const handleTabClick = (tabId) => {
-    adminContext.navigateTab(tabId);
-  };
-
-  // Prepare tabs data with dynamic counts
-  const tabs = DASHBOARD_TABS.map(tab => {
-    if (tab.id === 'agendamentos') {
-      return { ...tab, count: adminContext.agendamentos.length };
-    }
-    if (tab.id === 'atendimentos') {
-      return { ...tab, count: adminContext.atendimentos.length };
-    }
-    if (tab.id === 'pedidos') {
-      return { ...tab, count: adminContext.pedidos.length };
-    }
-    return { ...tab, count: null };
-  });
 
   // Handle logout with navigation
   const handleLogout = async () => {
@@ -138,6 +116,10 @@ export const Dashboard = () => {
 
       {/* Main Content */}
       <StyledMainContent className="dashboard__main">
+        <SurfaceSectionHeading className="dashboard__main-heading">
+          Dashboard
+        </SurfaceSectionHeading>
+
         {/* Profile Edit Modal */}
         <ProfileEditModal
           isOpen={showProfileEdit}
@@ -146,13 +128,6 @@ export const Dashboard = () => {
             // Handle profile save if needed
             console.log('Profile saved:', profileData);
           }}
-        />
-
-        {/* Tabs */}
-        <Tabs
-          tabs={tabs}
-          activeTab={currentTab}
-          onTabClick={handleTabClick}
         />
 
         {/* Toast Notification */}

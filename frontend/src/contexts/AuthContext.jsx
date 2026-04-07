@@ -22,6 +22,8 @@ export const AuthProvider = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [credentials, setCredentials] = useState({ username: '', password: '' });
   const [isLoading, setIsLoading] = useState(true);
+  const [role, setRole] = useState(null);
+  const [userId, setUserId] = useState(null);
 
   // Initialize use cases with repository
   const userRepository = new UserSupabaseRepository(supabase);
@@ -36,11 +38,25 @@ export const AuthProvider = ({ children }) => {
         const parsed = JSON.parse(saved);
         setCredentials(parsed);
         setIsAuthenticated(true);
+
+        // Fetch role and userId from user metadata - must complete before loading
+        // so analytics and other consumers have userId/role when dashboard mounts
+        supabase.auth
+          .getUser()
+          .then(({ data }) => {
+            setRole(data?.user?.user_metadata?.role || null);
+            setUserId(data?.user?.id || null);
+          })
+          .finally(() => {
+            setIsLoading(false);
+          });
       } catch (e) {
         sessionStorage.removeItem(CONFIG.AUTH_STORAGE_KEY);
+        setIsLoading(false);
       }
+    } else {
+      setIsLoading(false);
     }
-    setIsLoading(false);
   }, []);
 
   const login = useCallback(async (username, password) => {
@@ -68,6 +84,12 @@ export const AuthProvider = ({ children }) => {
         setCredentials(creds);
         setIsAuthenticated(true);
         sessionStorage.setItem(CONFIG.AUTH_STORAGE_KEY, JSON.stringify(creds));
+
+        // Fetch role and userId from user metadata
+        const { data: { user } } = await supabase.auth.getUser();
+        setRole(user?.user_metadata?.role || null);
+        setUserId(user?.id || null);
+
         return { success: true };
       } else {
         return {
@@ -93,6 +115,8 @@ export const AuthProvider = ({ children }) => {
     
     setCredentials({ username: '', password: '' });
     setIsAuthenticated(false);
+    setRole(null);
+    setUserId(null);
     sessionStorage.removeItem(CONFIG.AUTH_STORAGE_KEY);
   }, []);
 
@@ -109,7 +133,6 @@ export const AuthProvider = ({ children }) => {
       }
 
       // After signup, user must confirm email before being authenticated
-      // Do NOT set isAuthenticated to true here - user needs to confirm email first
       // Then they can login which will set isAuthenticated properly
       return {
         success: true,
@@ -135,6 +158,8 @@ export const AuthProvider = ({ children }) => {
     isAuthenticated,
     isLoading,
     credentials,
+    role,
+    userId,
     login,
     logout,
     signup,

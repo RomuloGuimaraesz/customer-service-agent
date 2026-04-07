@@ -1,30 +1,29 @@
 /**
  * Pedido Domain Entity
  * Represents an order/pedido
+ * Structure from Avecta AI - Pedidos.csv
  */
 export class Pedido {
   constructor({
     ID,
-    Cliente,
-    Serviço,
-    Produto,
-    Descrição,
-    Valor,
-    Retira,
     Status,
     Data,
-    Observações
+    Hora,
+    Nome,
+    WhatsApp,
+    Prioridade,
+    Assunto,
+    'Descricao Completa': DescricaoCompleta
   }) {
     this.ID = ID;
-    this.Cliente = Cliente;
-    this.Serviço = Serviço;
-    this.Produto = Produto;
-    this.Descrição = Descrição;
-    this.Valor = Valor;
-    this.Retira = Retira;
     this.Status = Status;
     this.Data = Data;
-    this.Observações = Observações;
+    this.Hora = Hora;
+    this.Nome = Nome;
+    this.WhatsApp = WhatsApp;
+    this.Prioridade = Prioridade;
+    this.Assunto = Assunto;
+    this['Descricao Completa'] = DescricaoCompleta;
 
     this.validate();
   }
@@ -36,8 +35,8 @@ export class Pedido {
     if (!this.ID) {
       throw new Error('Pedido: ID is required');
     }
-    if (!this.Cliente) {
-      throw new Error('Pedido: Cliente is required');
+    if (!this.Nome) {
+      throw new Error('Pedido: Nome is required');
     }
     if (!this.Status) {
       throw new Error('Pedido: Status is required');
@@ -53,27 +52,11 @@ export class Pedido {
   }
 
   /**
-   * Gets the client name
-   * @returns {string} Client name
+   * Gets the client/contact name
+   * @returns {string} Name
    */
   getClientName() {
-    return this.Cliente;
-  }
-
-  /**
-   * Gets the service type
-   * @returns {string} Service type
-   */
-  getServiceType() {
-    return this.Serviço || this.Produto || 'N/A';
-  }
-
-  /**
-   * Gets the order value
-   * @returns {string} Order value
-   */
-  getValue() {
-    return this.Valor;
+    return this.Nome;
   }
 
   /**
@@ -89,7 +72,7 @@ export class Pedido {
    * @returns {boolean} True if completed
    */
   isCompleted() {
-    return this.Status === 'Pronto' || this.Status === 'Enviado';
+    return this.Status === 'Concluído';
   }
 
   /**
@@ -97,7 +80,7 @@ export class Pedido {
    * @returns {boolean} True if pending
    */
   isPending() {
-    return this.Status === 'Confirmado' || this.Status === 'Em produção' || this.Status === 'Aguardando';
+    return this.Status === 'Em andamento';
   }
 
   /**
@@ -107,33 +90,14 @@ export class Pedido {
   clone() {
     return new Pedido({
       ID: this.ID,
-      Cliente: this.Cliente,
-      Serviço: this.Serviço,
-      Produto: this.Produto,
-      Descrição: this.Descrição,
-      Valor: this.Valor,
-      Retira: this.Retira,
       Status: this.Status,
       Data: this.Data,
-      Observações: this.Observações
+      Hora: this.Hora,
+      Nome: this.Nome,
+      WhatsApp: this.WhatsApp,
+      Prioridade: this.Prioridade,
+      Assunto: this.Assunto,
+      'Descricao Completa': this['Descricao Completa']
     });
   }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

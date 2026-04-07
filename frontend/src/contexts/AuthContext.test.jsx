@@ -9,6 +9,7 @@ vi.mock('../infrastructure/supabase/config', () => ({
     auth: {
       signInWithPassword: vi.fn(),
       signOut: vi.fn(),
+      getUser: vi.fn(),
     },
   },
 }))
@@ -22,6 +23,7 @@ describe('AuthContext', () => {
     // Reset Supabase mocks
     supabase.auth.signInWithPassword.mockReset()
     supabase.auth.signOut.mockReset()
+    supabase.auth.getUser?.mockReset?.()
   })
 
   describe('useAuth hook', () => {
@@ -51,6 +53,10 @@ describe('AuthContext', () => {
       const savedCreds = { username: 'testuser', password: 'testpass' }
       sessionStorage.setItem(CONFIG.AUTH_STORAGE_KEY, JSON.stringify(savedCreds))
 
+      supabase.auth.getUser.mockResolvedValue({
+        data: { user: { id: 'user-123', user_metadata: { role: 'admin' } } },
+      })
+
       const { result } = renderHook(() => useAuth(), {
         wrapper: AuthProvider,
       })
@@ -61,6 +67,8 @@ describe('AuthContext', () => {
 
       expect(result.current.isAuthenticated).toBe(true)
       expect(result.current.credentials).toEqual(savedCreds)
+      expect(result.current.userId).toBe('user-123')
+      expect(result.current.role).toBe('admin')
     })
 
     it('should handle corrupted sessionStorage data', async () => {
@@ -83,10 +91,23 @@ describe('AuthContext', () => {
     it('should login successfully with valid email credentials', async () => {
       supabase.auth.signInWithPassword.mockResolvedValueOnce({
         data: {
-          user: { email: 'test@example.com' },
+          user: {
+            id: 'user-123',
+            email: 'test@example.com',
+            user_metadata: { username: 'test@example.com', role: 'admin' },
+          },
           session: { access_token: 'mock-token' }
         },
         error: null,
+      })
+
+      supabase.auth.getUser.mockResolvedValueOnce({
+        data: {
+          user: {
+            id: 'user-123',
+            user_metadata: { role: 'admin' },
+          },
+        },
       })
 
       const { result } = renderHook(() => useAuth(), {

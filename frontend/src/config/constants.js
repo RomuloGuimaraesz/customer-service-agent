@@ -4,14 +4,11 @@
 export const CONFIG = {
   // Your n8n webhook URLs (update after importing workflow)
   API_ENDPOINTS: {
-    pedidos: 'https://archtechsystems.app.n8n.cloud/webhook/admin-pedidos',
-    agendamentos: 'https://archtechsystems.app.n8n.cloud/webhook/admin-agendamentos',
-    conversations: 'https://archtechsystems.app.n8n.cloud/webhook/admin-conversations',
-    messages: 'https://archtechsystems.app.n8n.cloud/webhook/admin-messages',
-    sendMessage: 'https://archtechsystems.app.n8n.cloud/webhook/admin-send-message',
+    contatos: 'https://archtechsystems.app.n8n.cloud/webhook/admin-contatos',
+    contatosPost: 'https://archtechsystems.app.n8n.cloud/webhook/admin-contatos-post',
+    categorias: 'https://archtechsystems.app.n8n.cloud/webhook/admin-categorias',
+
   },
   // Session storage key
-  AUTH_STORAGE_KEY: 'rapidy_admin_auth',
+  AUTH_STORAGE_KEY: 'avecta_admin_auth',
 };
-
-

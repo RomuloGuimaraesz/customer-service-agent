@@ -1,32 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { Header, Logo } from './Header';
 import { Toast } from './Toast';
 import { FieldContainer, FieldInput, FieldLabel, FormSubmitButton } from './form';
+import {
+  AuthScreenRoot,
+  AuthBrandPanel,
+  AuthFormColumn,
+} from './AuthScreenLayout';
 import styled from 'styled-components';
-
-/**
- * Login Screen Container - BEM: login-screen
- */
-const StyledLoginScreen = styled.div`
-  min-height: 100vh;
-  background-color: ${props => props.theme.colors.background.primary};
-  display: flex;
-  flex-direction: column;
-  font-family: ${props => props.theme.fontFamily.primary};
-  padding: ${props => props.theme.spacing.xl};
-`;
-
-/**
- * Login Card Wrapper - BEM: login-screen__card-wrapper
- */
-const StyledLoginCardWrapper = styled.div`
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-`;
 
 /**
  * Login Card - BEM: login-screen__card
@@ -34,10 +16,11 @@ const StyledLoginCardWrapper = styled.div`
 const StyledLoginCard = styled.div`
   width: 100%;
   max-width: 420px;
+  box-sizing: border-box;
   background-color: ${props => props.theme.colors.background.secondary};
-  border-radius: ${props => props.theme.borderRadius['2xl']};
   border: none;
-  padding: ${props => props.theme.spacing['4xl']};
+  border-radius: ${props => props.theme.borderRadius['3xl']};
+  padding: ${props => props.theme.spacing['2xl']};
   box-shadow: ${props => props.theme.shadows.sm};
 `;
 
@@ -46,16 +29,17 @@ const StyledLoginCard = styled.div`
  */
 const StyledLoginHeader = styled.div`
   text-align: center;
-  margin-bottom: ${props => props.theme.spacing['3xl']};
+  margin-bottom: ${props => props.theme.spacing['2xl']};
 `;
 
 /**
  * Login Title - BEM: login-screen__title
  */
 const StyledLoginTitle = styled.h1`
-  margin: 0 0 ${props => props.theme.spacing.sm} 0;
-  font-size: ${props => props.theme.fontSize['4xl']};
-  font-weight: ${props => props.theme.fontWeight.bold};
+  margin: 0 0 ${props => props.theme.spacing.xs} 0;
+  font-size: ${props => props.theme.fontSize['3xl']};
+  font-weight: ${props => props.theme.fontWeight.semibold};
+  line-height: 1.25;
   color: ${props => props.theme.colors.text.primary};
 `;
 
@@ -65,6 +49,8 @@ const StyledLoginTitle = styled.h1`
 const StyledLoginSubtitle = styled.p`
   margin: 0;
   font-size: ${props => props.theme.fontSize.base};
+  font-weight: ${props => props.theme.fontWeight.normal};
+  line-height: 1.45;
   color: ${props => props.theme.colors.text.secondary};
 `;
 
@@ -83,7 +69,7 @@ const StyledErrorMessage = styled.div`
   margin-bottom: ${props => props.theme.spacing.xl};
   background-color: ${props => props.theme.colors.status.errorBg};
   border: 1px solid ${props => props.theme.colors.status.error};
-  border-radius: ${props => props.theme.borderRadius.md};
+  border-radius: ${props => props.theme.borderRadius.lg};
   color: ${props => props.theme.colors.status.errorText};
   font-size: ${props => props.theme.fontSize.md};
   display: flex;
@@ -99,7 +85,7 @@ const StyledWarningMessage = styled.div`
   margin-bottom: ${props => props.theme.spacing.xl};
   background-color: ${props => props.theme.colors.status.warningBg};
   border: 1px solid ${props => props.theme.colors.status.warning};
-  border-radius: ${props => props.theme.borderRadius.md};
+  border-radius: ${props => props.theme.borderRadius.lg};
   color: ${props => props.theme.colors.status.warningText};
   font-size: ${props => props.theme.fontSize.md};
   display: flex;
@@ -112,22 +98,25 @@ const StyledWarningMessage = styled.div`
  */
 const StyledLoginFooter = styled.p`
   margin-top: ${props => props.theme.spacing['2xl']};
+  margin-bottom: 0;
   text-align: center;
   font-size: ${props => props.theme.fontSize.sm};
-  color: ${props => props.theme.colors.text.tertiary};
+  color: ${props => props.theme.colors.text.secondary};
+  line-height: 1.45;
 `;
 
 /**
  * Link to SignUp - BEM: login-screen__link
  */
 const StyledLink = styled(Link)`
-  color: ${props => props.theme.colors.text.tertiary};
+  color: ${props => props.theme.colors.status.infoText};
   text-decoration: none;
-  font-weight: ${props => props.theme.fontWeight.bold};
+  font-weight: ${props => props.theme.fontWeight.medium};
+  transition: color ${props => props.theme.transitions.fast} ease;
 
   &:hover {
+    color: ${props => props.theme.colors.status.info};
     text-decoration: underline;
-    color: ${props => props.theme.colors.text.primary};
   }
 `;
 
@@ -196,29 +185,26 @@ export const LoginScreen = () => {
   };
 
   return (
-    <StyledLoginScreen className="login-screen">
-      {/* Header */}
-      <Header
-        left={<Logo />}
-        isAuthenticated={isAuthenticated}
-      />
-      
-      <StyledLoginCardWrapper>
+    <>
+    <AuthScreenRoot className="login-screen">
+      <AuthBrandPanel className="login-screen__brand" />
+
+      <AuthFormColumn className="login-screen__form-column">
         <StyledLoginCard className="login-screen__card">
           {/* Header */}
           <StyledLoginHeader className="login-screen__header">
             <StyledLoginTitle className="login-screen__title">
-              Avecta AI
+              Login de Usuário
             </StyledLoginTitle>
             <StyledLoginSubtitle className="login-screen__subtitle">
-              Boas-vindas a Avecta AI
+              Informe os dados para Logar o seu Usuário
             </StyledLoginSubtitle>
           </StyledLoginHeader>
 
         {/* Form */}
         <form onSubmit={handleSubmit}>
           <StyledFormGroup className="login-screen__form-group">
-            <FieldContainer className="login-screen__field-container">
+            <FieldContainer $borderless className="login-screen__field-container">
               <FieldLabel htmlFor="username" className="login-screen__label">
                 Usuário
               </FieldLabel>
@@ -235,7 +221,7 @@ export const LoginScreen = () => {
           </StyledFormGroup>
 
           <StyledFormGroup className="login-screen__form-group">
-            <FieldContainer className="login-screen__field-container">
+            <FieldContainer $borderless className="login-screen__field-container">
               <FieldLabel htmlFor="password" className="login-screen__label">
                 Senha
               </FieldLabel>
@@ -276,17 +262,17 @@ export const LoginScreen = () => {
           </StyledLink>
         </StyledLoginFooter>
       </StyledLoginCard>
-      </StyledLoginCardWrapper>
+      </AuthFormColumn>
+    </AuthScreenRoot>
 
-      {/* Toast Notification */}
-      <Toast
-        message={error}
-        visible={error && toastVisible}
-        onClose={handleCloseToast}
-        isMobile={isMobile}
-        icon="⚠️"
-        variant="error"
-      />
-    </StyledLoginScreen>
+    <Toast
+      message={error}
+      visible={error && toastVisible}
+      onClose={handleCloseToast}
+      isMobile={isMobile}
+      icon="⚠️"
+      variant="error"
+    />
+    </>
   );
 };
