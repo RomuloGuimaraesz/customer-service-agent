@@ -1,4 +1,4 @@
-import styled from 'styled-components';
+import styled, { css } from 'styled-components';
 import { FieldContainer } from './form';
 
 export const ContatosFieldContainer = styled(FieldContainer)`
@@ -21,6 +21,88 @@ export const ContatosFormCellSpan2 = styled(ContatosFormCell)`
 
 export const ContatosFormCellSpan3 = styled(ContatosFormCell)`
   grid-column: 1 / -1;
+`;
+
+/**
+ * Mobile layout for contatos-form cells inside searchable-layout__column--primary.
+ * Row 1: nome | Row 2: whatsapp + data nascimento | Row 3: cep + idade | … | mais informações full row
+ */
+export const contatosFormMobileGridStyles = css`
+  @media (max-width: 767px) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-rows: none;
+    grid-auto-rows: minmax(70px, auto);
+
+    .contatos-form__cell--nome-completo {
+      grid-row: 1;
+      grid-column: 1 / -1;
+    }
+
+    .contatos-form__cell--whatsapp {
+      grid-row: 2;
+      grid-column: 1;
+    }
+
+    .contatos-form__cell--data-nascimento {
+      grid-row: 2;
+      grid-column: 2;
+    }
+
+    .contatos-form__cell--cep {
+      grid-row: 3;
+      grid-column: 1;
+    }
+
+    .contatos-form__cell--idade {
+      grid-row: 3;
+      grid-column: 2;
+    }
+
+    .contatos-form__cell--endereco {
+      grid-row: 4;
+      grid-column: 1 / -1;
+    }
+
+    .contatos-form__cell--numero {
+      grid-row: 5;
+      grid-column: 1;
+    }
+
+    .contatos-form__cell--endereco-complemento {
+      grid-row: 6;
+      grid-column: 1 / -1;
+    }
+
+    .contatos-form__cell--bairro {
+      grid-row: 7;
+      grid-column: 1;
+    }
+
+    .contatos-form__cell--bairro-complemento {
+      grid-row: 8;
+      grid-column: 1 / -1;
+    }
+
+    .contatos-form__cell--cidade {
+      grid-row: 9;
+      grid-column: 1;
+    }
+
+    .contatos-form__cell--estado {
+      grid-row: 9;
+      grid-column: 2;
+    }
+
+    .contatos-form__cell--mais-informacoes {
+      grid-row: 10;
+      grid-column: 1 / -1;
+    }
+
+    .contatos-form__cell--submit {
+      grid-row: 11;
+      grid-column: 1 / -1;
+    }
+  }
 `;
 
 /**

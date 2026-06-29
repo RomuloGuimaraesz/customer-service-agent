@@ -1,4 +1,4 @@
-import { createBrowserRouter } from "react-router-dom";
+import { createBrowserRouter, Navigate } from "react-router-dom";
 import { RootLayout } from "../components/RootLayout";
 import { AuthLayout } from "../components/AuthLayout";
 import { LoginScreen } from "../components/LoginScreen";
@@ -9,6 +9,9 @@ import { RootRedirect } from "./RootRedirect";
 import { ProtectedRoute } from "./ProtectedRoute";
 import { PublicRoute } from "./PublicRoute";
 import { AdminProvider } from "../contexts/AdminContext";
+import { isWhatsAppIntegrationEnabled } from "../config/featureFlags";
+import { getDashboardRoute } from "../config/routes";
+import { DEFAULT_TAB_ID } from "../config/dashboardTabs";
 import {
   DashboardRoutes,
   PedidosRoute,
@@ -17,6 +20,15 @@ import {
   WhatsAppRoute,
   DashboardDefaultRoute,
 } from "../components/DashboardRoutes";
+
+const whatsAppDashboardRoute = isWhatsAppIntegrationEnabled()
+  ? { path: "whatsapp", element: <WhatsAppRoute /> }
+  : {
+      path: "whatsapp",
+      element: (
+        <Navigate to={getDashboardRoute(DEFAULT_TAB_ID)} replace />
+      ),
+    };
 
 /**
  * Router Configuration - Centralized router setup using createBrowserRouter
@@ -79,10 +91,7 @@ export const router = createBrowserRouter([
                 path: "atendimentos",
                 element: <AtendimentosRoute />,
               },
-              {
-                path: "whatsapp",
-                element: <WhatsAppRoute />,
-              },
+              whatsAppDashboardRoute,
               {
                 path: "",
                 element: <DashboardDefaultRoute />,

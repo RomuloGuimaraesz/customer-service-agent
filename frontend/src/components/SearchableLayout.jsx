@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import styled from 'styled-components';
+import { contatosFormMobileGridStyles } from './ContatosFormPrimitives';
 import { Dropdown } from './Dropdown';
 import { RoundIconFrame } from './RoundIconButton';
 import chevronDownSvg from '../../assets/img/chevron-down.svg?raw';
@@ -210,6 +211,13 @@ const StyledContentContainer = styled.div`
     align-content: stretch;
     min-height: 0;
 
+    @media (max-width: 767px) {
+      grid-template-columns: minmax(0, 1fr);
+      grid-template-rows: auto auto;
+      min-height: auto;
+      overflow-y: auto;
+    }
+
     & > *:only-child {
       grid-column: 1 / -1;
       min-width: 0;
@@ -219,6 +227,12 @@ const StyledContentContainer = styled.div`
       background-color: ${props.theme.colors.background.white};
       min-width: 0;
       min-height: 0;
+    }
+
+    @media (max-width: 767px) {
+      & > *:nth-child(2n) {
+        min-height: auto;
+      }
     }
   `
       : `
@@ -242,6 +256,8 @@ const StyledContentColumnPrimary = styled.div`
   column-gap: ${p => p.theme.spacing.lg};
   row-gap: ${p => p.theme.spacing.sm};
   align-content: start;
+
+  ${contatosFormMobileGridStyles}
 `;
 
 const StyledContentColumnSecondary = styled.div`

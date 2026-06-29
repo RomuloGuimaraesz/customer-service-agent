@@ -1,4 +1,4 @@
-import { useAdmin } from '../contexts/AdminContext';
+import { useAdmin } from './useAdmin.js';
 import { DASHBOARD_TABS } from '../config/dashboardTabs';
 
 /**

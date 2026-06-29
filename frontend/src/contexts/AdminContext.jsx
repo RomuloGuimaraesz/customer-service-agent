@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { AdminContext } from './adminContext.js';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from './AuthContext';
 import { usePedidos, PedidosProvider } from './PedidosContext';
@@ -47,16 +48,6 @@ const deriveSurfaceFromPathname = (pathname) => {
  * It maintains the same public API for backward compatibility while delegating
  * specific functionality to the appropriate focused contexts.
  */
-const AdminContext = createContext(null);
-
-export const useAdmin = () => {
-  const context = useContext(AdminContext);
-  if (!context) {
-    throw new Error('useAdmin must be used within AdminProvider');
-  }
-  return context;
-};
-
 // Internal component that uses the focused contexts
 const AdminContextInner = ({ children }) => {
   const { isAuthenticated, userId, role } = useAuth();

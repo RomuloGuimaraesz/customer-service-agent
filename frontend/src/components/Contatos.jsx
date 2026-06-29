@@ -6,7 +6,7 @@ import React, {
 } from 'react';
 import styled from 'styled-components';
 import { useAuth } from '../contexts/AuthContext';
-import { useAdmin } from '../contexts/AdminContext';
+import { useAdmin } from '../hooks/useAdmin.js';
 import { useDashboardStats } from '../hooks/useDashboardStats';
 import { CONFIG } from '../config/constants';
 import { ROUTES } from '../config/routes';

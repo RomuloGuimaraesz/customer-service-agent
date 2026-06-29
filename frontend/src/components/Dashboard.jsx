@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Outlet } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { useAdmin } from '../contexts/AdminContext';
+import { useAdmin } from '../hooks/useAdmin.js';
 import { useDashboardStats } from '../hooks/useDashboardStats';
 import { PROFILE_ICON } from '../config/icons';
 import { ROUTES } from '../config/routes';
