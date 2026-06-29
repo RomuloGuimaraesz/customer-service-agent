@@ -31,8 +31,9 @@ export function postContatos(payload, authHeader) {
 
 /**
  * Atualiza contato existente (modo Todos) — webhook admin-contatos-put.
+ * O corpo inclui `row_number` (lookup) e `WhatsApp` com o valor novo do formulário.
  *
- * @param {Object} payload - Corpo JSON (ex.: modo, dadosPrincipais, informacoesAdicionais)
+ * @param {Object} payload - Corpo JSON plano (chaves da planilha + row_number)
  * @param {string|null} authHeader - Authorization (Basic), ou null em modo demo
  * @returns {Promise<unknown>} Resposta parseada do servidor
  */

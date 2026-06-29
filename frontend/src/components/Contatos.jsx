@@ -31,6 +31,7 @@ import {
 } from '../services/contatosApi';
 import {
   buildFlatContatoPayload,
+  buildContatoUpdatePayload,
   getContatoRowKey,
   mapContatoRowToDadosPrincipais,
   mapContatoRowToMaisInfoValues,
@@ -384,15 +385,11 @@ export const Contatos = () => {
             });
             return;
           }
-          const body = buildFlatContatoPayload(dadosPrincipais, maisInfoValues);
-          // Backend n8n usa WhatsApp como chave de busca para UPDATE.
-          // Mantemos a chave original da linha selecionada para evitar no-op
-          // quando o usuário altera o campo WhatsApp no formulário.
-          const originalWhatsapp =
-            selectedContatoRow.WhatsApp ?? selectedContatoRow['WhatsApp'];
-          if (originalWhatsapp != null && String(originalWhatsapp).trim() !== '') {
-            body.WhatsApp = String(originalWhatsapp).trim();
-          }
+          const body = buildContatoUpdatePayload(
+            selectedContatoRow,
+            dadosPrincipais,
+            maisInfoValues,
+          );
           await putContatos(body, authHeader);
         }
         setToast({

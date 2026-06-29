@@ -77,6 +77,26 @@ function setIfNonEmpty(out, key, val) {
 }
 
 /**
+ * row_number returned by Google Sheets reads (stable row lookup for PUT).
+ * @param {Record<string, unknown>|null|undefined} row
+ * @returns {string|null}
+ */
+export function getContatoRowNumber(row) {
+  const rn = row?.row_number ?? row?.['row_number'];
+  if (rn == null || String(rn).trim() === '') return null;
+  return String(rn).trim();
+}
+
+/**
+ * WhatsApp value stored on the selected row (lookup key for legacy PUT without row_number).
+ * @param {Record<string, unknown>|null|undefined} row
+ * @returns {string}
+ */
+export function getContatoOriginalWhatsapp(row) {
+  return cell(row, 'WhatsApp', 'whatsapp');
+}
+
+/**
  * Corpo JSON plano para POST em admin-contatos-post (chaves da planilha / n8n).
  *
  * @param {Record<string, string>|null|undefined} dadosPrincipais
@@ -109,4 +129,39 @@ export function buildFlatContatoPayload(dadosPrincipais, informacoesAdicionais) 
   setIfNonEmpty(out, 'Seção Eleitoral', ex.secaoEleitoral);
 
   return out;
+}
+
+/**
+ * Corpo JSON para PUT em admin-contatos-put.
+ *
+ * When `row_number` is present (normal Google Sheets GET rows), n8n matches on
+ * `row_number` and `WhatsApp` carries the new value from the form.
+ *
+ * Without `row_number`, falls back to matching on the original WhatsApp (legacy).
+ * In that case WhatsApp cannot change — other fields still update.
+ *
+ * @param {Record<string, unknown>} selectedRow - Row from GET admin-contatos
+ * @param {Record<string, string>|null|undefined} dadosPrincipais
+ * @param {Record<string, string>|null|undefined} informacoesAdicionais
+ * @returns {Record<string, string>}
+ */
+export function buildContatoUpdatePayload(
+  selectedRow,
+  dadosPrincipais,
+  informacoesAdicionais,
+) {
+  const body = buildFlatContatoPayload(dadosPrincipais, informacoesAdicionais);
+  const rowNumber = getContatoRowNumber(selectedRow);
+
+  if (rowNumber) {
+    body.row_number = rowNumber;
+    return body;
+  }
+
+  const originalWhatsapp = getContatoOriginalWhatsapp(selectedRow);
+  if (originalWhatsapp) {
+    body.WhatsApp = originalWhatsapp;
+  }
+
+  return body;
 }

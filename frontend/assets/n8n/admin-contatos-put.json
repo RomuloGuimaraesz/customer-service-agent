@@ -1,0 +1,106 @@
+{
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "PUT",
+        "path": "admin-contatos-put",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [-896, -2208],
+      "id": "58f9047f-ebbc-44f2-8fc4-7e67584b53e8",
+      "name": "Webhook PUT",
+      "webhookId": "admin-contatos-put"
+    },
+    {
+      "parameters": {
+        "jsCode": "const body = $input.first().json.body;\nreturn [{ json: body }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-672, -2208],
+      "id": "1ab5f69e-2827-41e4-b36f-3d64d97473ff",
+      "name": "Extrair Body PUT"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1sMQ4YRKor6wOOu9U1PLJtn9JzPZaATU97nBdrDoIDx0",
+          "mode": "list",
+          "cachedResultName": "Avecta AI",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1sMQ4YRKor6wOOu9U1PLJtn9JzPZaATU97nBdrDoIDx0/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1446606801,
+          "mode": "list",
+          "cachedResultName": "Contatos",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1sMQ4YRKor6wOOu9U1PLJtn9JzPZaATU97nBdrDoIDx0/edit#gid=1446606801"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": ["row_number"]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [-464, -2208],
+      "id": "1989eba5-3dfe-4273-a99f-d57dd17cc241",
+      "name": "Atualizar Contato",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "ynJQZ7qrni7mu79b",
+          "name": "Google Sheets account 4"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ success: true, message: \"Contato atualizado com sucesso\", data: $json }) }}",
+        "options": {
+          "responseCode": 200,
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "*"
+              }
+            ]
+          }
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [-240, -2208],
+      "id": "885298b4-5815-48de-96c3-dfb71c41eee0",
+      "name": "Responder PUT"
+    }
+  ],
+  "connections": {
+    "Webhook PUT": {
+      "main": [[{ "node": "Extrair Body PUT", "type": "main", "index": 0 }]]
+    },
+    "Extrair Body PUT": {
+      "main": [[{ "node": "Atualizar Contato", "type": "main", "index": 0 }]]
+    },
+    "Atualizar Contato": {
+      "main": [[{ "node": "Responder PUT", "type": "main", "index": 0 }]]
+    }
+  },
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "38d72daace6c2ae7736a909dec088d48bbd578f9ce790ccc259d7516ee40e64b"
+  }
+}
