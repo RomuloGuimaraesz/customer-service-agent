@@ -3,6 +3,7 @@ import React, {
   useMemo,
   useEffect,
   useCallback,
+  useRef,
 } from 'react';
 import styled from 'styled-components';
 import { useAuth } from '../contexts/AuthContext';
@@ -10,6 +11,7 @@ import { useAdmin } from '../hooks/useAdmin.js';
 import { useDashboardStats } from '../hooks/useDashboardStats';
 import { CONFIG } from '../config/constants';
 import { ROUTES } from '../config/routes';
+import { canDeleteContato } from '../config/roleAccess';
 import { supabase } from '../infrastructure/supabase/config';
 import { Header, Logo } from './Header';
 import { MainNavigation } from './MainNavigation';
@@ -30,12 +32,16 @@ import {
   postNovoContato,
 } from '../services/contatosApi';
 import {
-  buildFlatContatoPayload,
+  buildContatoCreatePayload,
   buildContatoDeletePayload,
   buildContatoUpdatePayload,
+  buildFlatContatoPayload,
+  findContatosByNormalizedNome,
   getContatoRowKey,
+  getContatoRowNumber,
   mapContatoRowToDadosPrincipais,
   mapContatoRowToMaisInfoValues,
+  normalizeContatoNome,
 } from '../utils/contatosRowMapper';
 import { Toast } from './Toast';
 import { ContatosContactForm } from './ContatosContactForm';
@@ -283,6 +289,10 @@ export const Contatos = () => {
   const [contatosLoadError, setContatosLoadError] = useState('');
   /** `null` = nenhuma linha selecionada na lista (form vazio em Todos) */
   const [selectedContatoKey, setSelectedContatoKey] = useState(null);
+  const [isSavingContato, setIsSavingContato] = useState(false);
+  const savingContatoRef = useRef(false);
+  /** Incrementado após cadastro bem-sucedido em modo Novo — limpa o formulário. */
+  const [novoFormResetKey, setNovoFormResetKey] = useState(0);
   const { credentials, isAuthenticated, role, userId, getAuthHeader } = useAuth();
   const contatosTabNames = useMemo(
     () => Object.fromEntries(CONTATOS_TABS.map(t => [t.id, t.label])),
@@ -328,12 +338,15 @@ export const Contatos = () => {
     setContatosLoadError('');
     try {
       const data = await getContatos(getAuthHeader());
-      setContatosLista(Array.isArray(data) ? data : []);
+      const lista = Array.isArray(data) ? data : [];
+      setContatosLista(lista);
+      return lista;
     } catch (error) {
       setContatosLoadError(
         error?.message || 'Não foi possível carregar os contatos.',
       );
       setContatosLista([]);
+      return [];
     } finally {
       setContatosLoading(false);
     }
@@ -370,13 +383,81 @@ export const Contatos = () => {
     return mapContatoRowToDadosPrincipais(selectedContatoRow);
   }, [selectedContatoRow]);
 
+  const resetNovoContatoForm = useCallback(() => {
+    setMaisInfoValues(createInitialMaisInfoValues());
+    setNovoFormResetKey(k => k + 1);
+  }, []);
+
   const handleMainFormSave = useCallback(
     async dadosPrincipais => {
+      if (savingContatoRef.current) return;
+
       const authHeader = getAuthHeader();
+      const normalizedNome = normalizeContatoNome(dadosPrincipais.nome);
+
+      savingContatoRef.current = true;
+      setIsSavingContato(true);
+
       try {
+        if (!normalizedNome) {
+          setToast({
+            visible: true,
+            message: 'Informe o nome completo.',
+            variant: 'error',
+          });
+          return;
+        }
+
         if (contatosPillMode === 'novo') {
-          const body = buildFlatContatoPayload(dadosPrincipais, maisInfoValues);
+          if (
+            findContatosByNormalizedNome(contatosLista, dadosPrincipais.nome)
+              .length > 0
+          ) {
+            setToast({
+              visible: true,
+              message: 'Já existe um contato com este nome.',
+              variant: 'error',
+            });
+            return;
+          }
+
+          const body = buildContatoCreatePayload(
+            dadosPrincipais,
+            maisInfoValues,
+            credentials?.username,
+          );
           await postNovoContato(body, authHeader);
+
+          let freshLista = await loadContatos();
+          const duplicates = findContatosByNormalizedNome(
+            freshLista,
+            dadosPrincipais.nome,
+          );
+
+          if (duplicates.length > 1) {
+            const sorted = [...duplicates].sort((a, b) => {
+              const aRn = Number(getContatoRowNumber(a)) || 0;
+              const bRn = Number(getContatoRowNumber(b)) || 0;
+              return aRn - bRn;
+            });
+            for (const row of sorted.slice(1)) {
+              await deleteContato(buildContatoDeletePayload(row), authHeader);
+            }
+            await loadContatos();
+            resetNovoContatoForm();
+            setToast({
+              visible: true,
+              message: 'Contato duplicado removido automaticamente.',
+              variant: 'warning',
+            });
+          } else {
+            resetNovoContatoForm();
+            setToast({
+              visible: true,
+              message: TOAST_MAIN_OK,
+              variant: 'success',
+            });
+          }
         } else {
           if (!selectedContatoRow) {
             setToast({
@@ -386,33 +467,58 @@ export const Contatos = () => {
             });
             return;
           }
+
+          const selectedRn = getContatoRowNumber(selectedContatoRow);
+          const otherDuplicates = findContatosByNormalizedNome(
+            contatosLista,
+            dadosPrincipais.nome,
+          ).filter(row => {
+            if (selectedRn) return getContatoRowNumber(row) !== selectedRn;
+            return row !== selectedContatoRow;
+          });
+
+          if (otherDuplicates.length > 0) {
+            setToast({
+              visible: true,
+              message: 'Já existe um contato com este nome.',
+              variant: 'error',
+            });
+            return;
+          }
+
           const body = buildContatoUpdatePayload(
             selectedContatoRow,
             dadosPrincipais,
             maisInfoValues,
           );
           await putContatos(body, authHeader);
+          setToast({
+            visible: true,
+            message: TOAST_MAIN_OK,
+            variant: 'success',
+          });
+          await loadContatos();
         }
-        setToast({
-          visible: true,
-          message: TOAST_MAIN_OK,
-          variant: 'success',
-        });
-        await loadContatos();
       } catch (err) {
         setToast({
           visible: true,
           message: err?.message || 'Não foi possível salvar o contato.',
           variant: 'error',
         });
+      } finally {
+        savingContatoRef.current = false;
+        setIsSavingContato(false);
       }
     },
     [
       contatosPillMode,
+      contatosLista,
       maisInfoValues,
       selectedContatoRow,
+      credentials?.username,
       getAuthHeader,
       loadContatos,
+      resetNovoContatoForm,
     ],
   );
 
@@ -579,8 +685,10 @@ export const Contatos = () => {
             mode={contatosPillMode}
             prefillKey={selectedContatoKey}
             prefillDadosPrincipais={prefillDadosPrincipais}
+            resetKey={novoFormResetKey}
             onMaisInformacoesClick={() => setMaisInfoOpen(true)}
             onMainFormSave={handleMainFormSave}
+            isSubmitting={isSavingContato}
             showMaisInfoAttention={false}
             maisInfoAttentionHint=""
           />
@@ -631,18 +739,20 @@ export const Contatos = () => {
                             {metaParts.length ? metaParts.join(' · ') : '—'}
                           </ContatosListItemMeta>
                         </ContatosListRowButton>
-                        <ContatosDeleteButton
-                          type="button"
-                          className="contatos__list-delete-button"
-                          aria-label={`Excluir contato: ${nome}`}
-                          title={`Excluir contato: ${nome}`}
-                          onClick={e => {
-                            e.stopPropagation();
-                            handleDeleteContato(row);
-                          }}
-                        >
-                          🗑
-                        </ContatosDeleteButton>
+                        {canDeleteContato(role) && (
+                          <ContatosDeleteButton
+                            type="button"
+                            className="contatos__list-delete-button"
+                            aria-label={`Excluir contato: ${nome}`}
+                            title={`Excluir contato: ${nome}`}
+                            onClick={e => {
+                              e.stopPropagation();
+                              handleDeleteContato(row);
+                            }}
+                          >
+                            🗑
+                          </ContatosDeleteButton>
+                        )}
                       </ContatosListRowActions>
                     </ContatosListItem>
                   );

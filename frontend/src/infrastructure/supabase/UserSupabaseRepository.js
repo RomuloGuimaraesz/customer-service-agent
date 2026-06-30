@@ -31,6 +31,8 @@ export class UserSupabaseRepository extends UserRepository {
         if (!user.email || typeof user.email !== 'string' || user.email.trim().length === 0) {
             throw new Error('Email is required and must be a non-empty string');
         }
+
+        const assignedRole = user.role ?? 'user';
         
         const { data, error } = await supabase.auth.signUp({
             email: user.email.trim(),
@@ -40,7 +42,7 @@ export class UserSupabaseRepository extends UserRepository {
               data: {
                 username: user.username,
                 full_name: user.fullName,
-                role: user.role,
+                role: assignedRole,
               },
             },
         })
@@ -49,14 +51,21 @@ export class UserSupabaseRepository extends UserRepository {
             throw new Error(error.message)
         }
 
-        // If user is created, return User entity
         if (data?.user) {
+            const { error: roleInsertError } = await supabase
+                .from('user_roles')
+                .insert({ user_id: data.user.id, role: assignedRole });
+
+            if (roleInsertError) {
+                throw new Error(roleInsertError.message);
+            }
+
             return new User({
                 id: data.user.id,
                 username: user.username || user.email,
                 email: data.user.email,
                 fullName: user.fullName || data.user.user_metadata?.full_name || null,
-                role: user.role || data.user.user_metadata?.role || 'user',
+                role: assignedRole,
                 isActive: true,
                 createdAt: data.user.created_at ? new Date(data.user.created_at) : new Date(),
             })
@@ -68,7 +77,7 @@ export class UserSupabaseRepository extends UserRepository {
             username: user.username || user.email,
             email: user.email,
             fullName: user.fullName,
-            role: user.role || 'user',
+            role: assignedRole,
             isActive: true,
         })
     }

@@ -4,6 +4,8 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import dashboardIconSvg from '../../assets/img/dashboard-icon.svg?raw';
 import newContactIconSvg from '../../assets/img/new-contact-icon.svg?raw';
 import { ROUTES } from '../config/routes';
+import { useAuth } from '../contexts/AuthContext';
+import { canAccessDashboard } from '../config/roleAccess';
 import { RoundIconButton } from './RoundIconButton';
 
 const Pill = styled.div`
@@ -47,6 +49,11 @@ const toCurrentColorStroke = (svgString) => {
 export const MainNavigation = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { role } = useAuth();
+
+  if (!canAccessDashboard(role)) {
+    return null;
+  }
 
   const isDashboardActive = location.pathname.startsWith(ROUTES.DASHBOARD.BASE);
   const isContatosActive = location.pathname.startsWith(ROUTES.CONTATOS.BASE);

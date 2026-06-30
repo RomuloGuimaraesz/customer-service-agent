@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { getPostAuthRouteForRole } from '../config/roleAccess';
 import { Toast } from './Toast';
 import { FieldContainer, FieldInput, FieldLabel, FormSubmitButton } from './form';
 import {
@@ -125,7 +126,7 @@ const StyledLink = styled(Link)`
  */
 export const LoginScreen = () => {
   const navigate = useNavigate();
-  const { login, isAuthenticated } = useAuth();
+  const { login, isAuthenticated, role, isLoading: isAuthLoading } = useAuth();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -134,12 +135,11 @@ export const LoginScreen = () => {
   const [toastVisible, setToastVisible] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 
-  // Navigate to dashboard after successful authentication
+  // Navigate after authentication once role is available (or legacy null after loading)
   useEffect(() => {
-    if (isAuthenticated) {
-      navigate('/dashboard/pedidos', { replace: true });
-    }
-  }, [isAuthenticated, navigate]);
+    if (!isAuthenticated || isAuthLoading) return;
+    navigate(getPostAuthRouteForRole(role), { replace: true });
+  }, [isAuthenticated, role, isAuthLoading, navigate]);
 
   // Handle mobile responsiveness
   useEffect(() => {

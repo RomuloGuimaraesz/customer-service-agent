@@ -2,6 +2,7 @@ import React from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { Redirecting } from '../components/Redirecting';
+import { getPostAuthRouteForRole } from '../config/roleAccess';
 
 /**
  * Public Route Component - Redirects to dashboard if already authenticated
@@ -11,14 +12,14 @@ import { Redirecting } from '../components/Redirecting';
  * @returns {JSX.Element} Public route or redirect to dashboard
  */
 export const PublicRoute = ({ children }) => {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, role } = useAuth();
 
   if (isLoading) {
     return <Redirecting />;
   }
 
   if (isAuthenticated) {
-    return <Navigate to="/dashboard/pedidos" replace />;
+    return <Navigate to={getPostAuthRouteForRole(role)} replace />;
   }
 
   return children;

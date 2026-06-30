@@ -63,8 +63,9 @@ export function deleteContato(payload, authHeader) {
 
 /**
  * Cria novo contato (modo Novo) — webhook admin-contatos-post, corpo plano com chaves da planilha.
+ * Inclui `Responsável` (email do usuário autenticado) e `Data` (dd/mm/aaaa do cadastro) quando disponíveis.
  *
- * @param {Record<string, string>} body - Ex.: `{ Nome, WhatsApp, ... }`
+ * @param {Record<string, string>} body - Ex.: `{ Nome, WhatsApp, Responsável, Data, ... }`
  * @param {string|null} authHeader
  * @returns {Promise<unknown>}
  */

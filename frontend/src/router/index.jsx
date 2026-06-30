@@ -7,7 +7,10 @@ import { Dashboard } from "../components/Dashboard";
 import { Contatos } from "../components/Contatos";
 import { RootRedirect } from "./RootRedirect";
 import { ProtectedRoute } from "./ProtectedRoute";
+import { RoleRoute } from "./RoleRoute";
 import { PublicRoute } from "./PublicRoute";
+import { canAccessDashboard } from "../config/roleAccess";
+import { ROUTES } from "../config/routes";
 import { AdminProvider } from "../contexts/AdminContext";
 import { isWhatsAppIntegrationEnabled } from "../config/featureFlags";
 import { getDashboardRoute } from "../config/routes";
@@ -70,9 +73,14 @@ export const router = createBrowserRouter([
         path: "dashboard",
         element: (
           <ProtectedRoute>
-            <AdminProvider>
-              <Dashboard />
-            </AdminProvider>
+            <RoleRoute
+              allowedWhen={canAccessDashboard}
+              redirectTo={() => ROUTES.CONTATOS.BASE}
+            >
+              <AdminProvider>
+                <Dashboard />
+              </AdminProvider>
+            </RoleRoute>
           </ProtectedRoute>
         ),
         children: [

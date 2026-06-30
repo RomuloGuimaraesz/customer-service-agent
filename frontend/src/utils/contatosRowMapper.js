@@ -3,7 +3,21 @@
  * para o formato dos campos do formulário principal e do modal "Mais informações".
  */
 
-import { extractBrazilianMobileDigits } from './brazilianPhoneMask.js';
+import {
+  extractBrazilianMobileDigits,
+  formatBrazilianMobilePhone,
+} from './brazilianPhoneMask.js';
+import {
+  extractBrazilianDateDigits,
+  formatBrazilianDate,
+  formatTodayBrazilianDate,
+} from './brazilianDateMask.js';
+import {
+  extractBrazilianCepDigits,
+  formatBrazilianCep,
+  formatBrazilianCepForPayload,
+  normalizeBrazilianCepDigits,
+} from './brazilianCepMask.js';
 
 function cell(row, ...keys) {
   for (const k of keys) {
@@ -30,9 +44,11 @@ export function mapContatoRowToDadosPrincipais(row) {
   return {
     nome: cell(row, 'Nome', 'nome'),
     whatsapp: extractBrazilianMobileDigits(cell(row, 'WhatsApp', 'whatsapp')),
-    dataNascimento: cell(row, 'Data de Nascimento', 'Data de nascimento'),
+    dataNascimento: extractBrazilianDateDigits(
+      cell(row, 'Data de Nascimento', 'Data de nascimento'),
+    ),
     idade: cell(row, 'Idade', 'idade'),
-    cep: cell(row, 'CEP', 'cep'),
+    cep: normalizeBrazilianCepDigits(cell(row, 'CEP', 'cep')),
     cidade: cell(row, 'Cidade', 'cidade'),
     estado: cell(row, 'Estado', 'estado'),
     endereco: cell(row, 'Endereço', 'Endereco', 'endereco'),
@@ -99,6 +115,40 @@ export function getContatoOriginalWhatsapp(row) {
 }
 
 /**
+ * Normaliza nome para comparação de duplicatas (trim, espaços, case-insensitive).
+ * @param {string|null|undefined} nome
+ * @returns {string}
+ */
+export function normalizeContatoNome(nome) {
+  return String(nome ?? '')
+    .trim()
+    .replace(/\s+/g, ' ')
+    .toLocaleLowerCase('pt-BR');
+}
+
+/**
+ * @param {Record<string, unknown>} row
+ * @returns {string}
+ */
+export function getContatoNomeFromRow(row) {
+  return cell(row, 'Nome', 'nome');
+}
+
+/**
+ * Linhas com o mesmo nome normalizado.
+ * @param {Array<Record<string, unknown>>} contatosLista
+ * @param {string|null|undefined} nome
+ * @returns {Array<Record<string, unknown>>}
+ */
+export function findContatosByNormalizedNome(contatosLista, nome) {
+  const target = normalizeContatoNome(nome);
+  if (!target) return [];
+  return contatosLista.filter(
+    row => normalizeContatoNome(getContatoNomeFromRow(row)) === target,
+  );
+}
+
+/**
  * Corpo JSON plano para POST em admin-contatos-post (chaves da planilha / n8n).
  *
  * @param {Record<string, string>|null|undefined} dadosPrincipais
@@ -111,10 +161,18 @@ export function buildFlatContatoPayload(dadosPrincipais, informacoesAdicionais) 
   const out = {};
 
   setIfNonEmpty(out, 'Nome', dp.nome);
-  setIfNonEmpty(out, 'WhatsApp', extractBrazilianMobileDigits(dp.whatsapp));
-  setIfNonEmpty(out, 'Data de Nascimento', dp.dataNascimento);
+  setIfNonEmpty(
+    out,
+    'WhatsApp',
+    formatBrazilianMobilePhone(dp.whatsapp),
+  );
+  setIfNonEmpty(
+    out,
+    'Data de Nascimento',
+    formatBrazilianDate(dp.dataNascimento),
+  );
   setIfNonEmpty(out, 'Idade', dp.idade);
-  setIfNonEmpty(out, 'CEP', dp.cep);
+  setIfNonEmpty(out, 'CEP', formatBrazilianCepForPayload(dp.cep));
   setIfNonEmpty(out, 'Cidade', dp.cidade);
   setIfNonEmpty(out, 'Estado', dp.estado);
   setIfNonEmpty(out, 'Endereço', dp.endereco);
@@ -131,6 +189,28 @@ export function buildFlatContatoPayload(dadosPrincipais, informacoesAdicionais) 
   setIfNonEmpty(out, 'Seção Eleitoral', ex.secaoEleitoral);
 
   return out;
+}
+
+/**
+ * Corpo JSON para POST em admin-contatos-post (novo contato).
+ * Inclui `Responsável` com o email do usuário autenticado e `Data` (dd/mm/aaaa) do cadastro.
+ *
+ * @param {Record<string, string>|null|undefined} dadosPrincipais
+ * @param {Record<string, string>|null|undefined} informacoesAdicionais
+ * @param {string|null|undefined} responsavelEmail - Email do assessor (login Supabase)
+ * @param {Date} [cadastroDate=new Date()] - Data do cadastro (coluna Data)
+ * @returns {Record<string, string>}
+ */
+export function buildContatoCreatePayload(
+  dadosPrincipais,
+  informacoesAdicionais,
+  responsavelEmail,
+  cadastroDate = new Date(),
+) {
+  const body = buildFlatContatoPayload(dadosPrincipais, informacoesAdicionais);
+  setIfNonEmpty(body, 'Responsável', responsavelEmail);
+  body.Data = formatTodayBrazilianDate(cadastroDate);
+  return body;
 }
 
 /**

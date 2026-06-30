@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import styled from 'styled-components';
 import { FieldInput, FieldLabel, FormSubmitButton } from './form';
 import attentionIconUrl from '../../assets/img/attention-icon.svg?url';
@@ -12,6 +12,16 @@ import {
   extractBrazilianMobileDigits,
   formatBrazilianMobilePhone,
 } from '../utils/brazilianPhoneMask';
+import {
+  extractBrazilianDateDigits,
+  formatBrazilianDate,
+} from '../utils/brazilianDateMask';
+import {
+  extractBrazilianCepDigits,
+  formatBrazilianCep,
+  normalizeBrazilianCepDigits,
+} from '../utils/brazilianCepMask';
+import { fetchAddressByCep } from '../utils/viacepService';
 
 const FormRoot = styled.form`
   display: contents;
@@ -97,6 +107,8 @@ const initialValues = () => ({
  * @param {string|null} [props.prefillKey] — muda ao selecionar uma linha na lista; com prefillDadosPrincipais preenche o formulário
  * @param {Record<string, string>|null} [props.prefillDadosPrincipais] — valores vindos da API (modo Todos)
  * @param {(values: Record<string, string>) => void} [props.onValuesChange] — valores atuais (ex.: POST novo contato + modal)
+ * @param {boolean} [props.isSubmitting] — desabilita envio enquanto o pai persiste
+ * @param {number} [props.resetKey] — incrementado pelo pai após cadastro em modo Novo; limpa os campos
  */
 export const ContatosContactForm = ({
   mode = 'todos',
@@ -107,8 +119,11 @@ export const ContatosContactForm = ({
   prefillKey = null,
   prefillDadosPrincipais = null,
   onValuesChange,
+  isSubmitting = false,
+  resetKey = 0,
 }) => {
   const [values, setValues] = useState(initialValues);
+  const cepLookupAbortRef = useRef(null);
 
   const emitValues = useCallback(
     next => {
@@ -131,11 +146,15 @@ export const ContatosContactForm = ({
         ...initialValues(),
         ...prefillDadosPrincipais,
         whatsapp: extractBrazilianMobileDigits(prefillDadosPrincipais.whatsapp),
+        dataNascimento: extractBrazilianDateDigits(
+          prefillDadosPrincipais.dataNascimento,
+        ),
+        cep: normalizeBrazilianCepDigits(prefillDadosPrincipais.cep),
       });
       return;
     }
     setValues(initialValues());
-  }, [mode, prefillKey, prefillDadosPrincipais]);
+  }, [mode, prefillKey, prefillDadosPrincipais, resetKey]);
 
   const set =
     field =>
@@ -148,6 +167,51 @@ export const ContatosContactForm = ({
     const digits = extractBrazilianMobileDigits(e.target.value);
     setValues(s => ({ ...s, whatsapp: digits }));
   };
+
+  const handleDataNascimentoChange = e => {
+    const digits = extractBrazilianDateDigits(e.target.value);
+    setValues(s => ({ ...s, dataNascimento: digits }));
+  };
+
+  const lookupAddressByCep = useCallback(async digits => {
+    cepLookupAbortRef.current?.abort();
+    const controller = new AbortController();
+    cepLookupAbortRef.current = controller;
+
+    try {
+      const address = await fetchAddressByCep(digits, {
+        signal: controller.signal,
+      });
+      if (!address || controller.signal.aborted) return;
+
+      setValues(s =>
+        s.cep === digits
+          ? {
+              ...s,
+              ...address,
+            }
+          : s,
+      );
+    } catch (err) {
+      if (err?.name === 'AbortError') return;
+      console.error('Erro ao consultar CEP no ViaCEP:', err);
+    }
+  }, []);
+
+  const handleCepChange = e => {
+    const digits = extractBrazilianCepDigits(e.target.value);
+    setValues(s => ({ ...s, cep: digits }));
+    if (digits.length === 8) {
+      lookupAddressByCep(digits);
+    }
+  };
+
+  useEffect(
+    () => () => {
+      cepLookupAbortRef.current?.abort();
+    },
+    [],
+  );
 
   const handleSubmit = async e => {
     e.preventDefault();
@@ -206,9 +270,10 @@ export const ContatosContactForm = ({
             id="contato-data-nascimento"
             name="dataNascimento"
             autoComplete="bday"
+            inputMode="numeric"
             placeholder="dd/mm/aaaa"
-            value={values.dataNascimento}
-            onChange={set('dataNascimento')}
+            value={formatBrazilianDate(values.dataNascimento)}
+            onChange={handleDataNascimentoChange}
             className="contatos-form__input"
           />
         </ContatosFieldContainer>
@@ -240,9 +305,9 @@ export const ContatosContactForm = ({
             name="cep"
             autoComplete="postal-code"
             inputMode="numeric"
-            placeholder="Digite o CEP"
-            value={values.cep}
-            onChange={set('cep')}
+            placeholder="00000-000"
+            value={formatBrazilianCep(values.cep)}
+            onChange={handleCepChange}
             className="contatos-form__input"
           />
         </ContatosFieldContainer>
@@ -387,8 +452,18 @@ export const ContatosContactForm = ({
       </MaisInformacoesCell>
 
       <CellSpan3 className="contatos-form__cell contatos-form__cell--submit">
-        <FormSubmitButton type="submit" className="contatos-form__submit-button">
-          {isTodos ? 'Salvar alterações' : 'Cadastrar contato'}
+        <FormSubmitButton
+          type="submit"
+          className="contatos-form__submit-button"
+          disabled={isSubmitting}
+        >
+          {isSubmitting
+            ? isTodos
+              ? 'Salvando...'
+              : 'Cadastrando...'
+            : isTodos
+              ? 'Salvar alterações'
+              : 'Cadastrar contato'}
         </FormSubmitButton>
       </CellSpan3>
     </FormRoot>
