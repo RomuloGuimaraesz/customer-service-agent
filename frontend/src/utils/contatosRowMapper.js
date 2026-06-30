@@ -3,6 +3,8 @@
  * para o formato dos campos do formulário principal e do modal "Mais informações".
  */
 
+import { extractBrazilianMobileDigits } from './brazilianPhoneMask.js';
+
 function cell(row, ...keys) {
   for (const k of keys) {
     const v = row[k];
@@ -27,7 +29,7 @@ export function getContatoRowKey(row, listIndex) {
 export function mapContatoRowToDadosPrincipais(row) {
   return {
     nome: cell(row, 'Nome', 'nome'),
-    whatsapp: cell(row, 'WhatsApp', 'whatsapp'),
+    whatsapp: extractBrazilianMobileDigits(cell(row, 'WhatsApp', 'whatsapp')),
     dataNascimento: cell(row, 'Data de Nascimento', 'Data de nascimento'),
     idade: cell(row, 'Idade', 'idade'),
     cep: cell(row, 'CEP', 'cep'),
@@ -109,7 +111,7 @@ export function buildFlatContatoPayload(dadosPrincipais, informacoesAdicionais) 
   const out = {};
 
   setIfNonEmpty(out, 'Nome', dp.nome);
-  setIfNonEmpty(out, 'WhatsApp', dp.whatsapp);
+  setIfNonEmpty(out, 'WhatsApp', extractBrazilianMobileDigits(dp.whatsapp));
   setIfNonEmpty(out, 'Data de Nascimento', dp.dataNascimento);
   setIfNonEmpty(out, 'Idade', dp.idade);
   setIfNonEmpty(out, 'CEP', dp.cep);
@@ -164,4 +166,30 @@ export function buildContatoUpdatePayload(
   }
 
   return body;
+}
+
+/**
+ * Corpo JSON para DELETE em admin-contatos-delete.
+ *
+ * When `row_number` is present (normal Google Sheets GET rows), n8n deletes by
+ * `row_number` directly — no WhatsApp lookup required.
+ *
+ * Without `row_number`, falls back to `{ WhatsApp }` for legacy n8n lookup flows.
+ *
+ * @param {Record<string, unknown>} selectedRow - Row from GET admin-contatos
+ * @returns {Record<string, string>}
+ */
+export function buildContatoDeletePayload(selectedRow) {
+  const rowNumber = getContatoRowNumber(selectedRow);
+
+  if (rowNumber) {
+    return { row_number: rowNumber };
+  }
+
+  const originalWhatsapp = getContatoOriginalWhatsapp(selectedRow);
+  if (originalWhatsapp) {
+    return { WhatsApp: originalWhatsapp };
+  }
+
+  return {};
 }

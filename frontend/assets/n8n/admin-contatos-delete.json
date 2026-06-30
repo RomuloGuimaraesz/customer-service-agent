@@ -1,0 +1,101 @@
+{
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "DELETE",
+        "path": "admin-contatos-delete",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [-896, -1984],
+      "id": "d16ee00e-b9d3-47ba-96a6-f343a23059f0",
+      "name": "Webhook DELETE",
+      "webhookId": "admin-contatos-delete"
+    },
+    {
+      "parameters": {
+        "jsCode": "const body = $input.first().json.body;\nreturn [{ json: body }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-672, -1984],
+      "id": "01250628-5189-4dd3-95b7-b724179fab82",
+      "name": "Extrair Body DELETE"
+    },
+    {
+      "parameters": {
+        "operation": "delete",
+        "documentId": {
+          "__rl": true,
+          "value": "1sMQ4YRKor6wOOu9U1PLJtn9JzPZaATU97nBdrDoIDx0",
+          "mode": "list",
+          "cachedResultName": "Avecta AI",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1sMQ4YRKor6wOOu9U1PLJtn9JzPZaATU97nBdrDoIDx0/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1446606801,
+          "mode": "list",
+          "cachedResultName": "Contatos",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1sMQ4YRKor6wOOu9U1PLJtn9JzPZaATU97nBdrDoIDx0/edit#gid=1446606801"
+        },
+        "startIndex": "={{ $json.row_number }}"
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [-464, -1984],
+      "id": "099f16ca-98e3-4bc7-9a00-57b842dd2bf2",
+      "name": "Deletar Contato",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "ynJQZ7qrni7mu79b",
+          "name": "Google Sheets account 4"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ success: true, message: \"Contato deletado com sucesso\" }) }}",
+        "options": {
+          "responseCode": 200,
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "*"
+              }
+            ]
+          }
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [-240, -1984],
+      "id": "9c2a26e5-da28-4ee6-8a8c-95e34ac6c1b4",
+      "name": "Responder DELETE"
+    }
+  ],
+  "connections": {
+    "Webhook DELETE": {
+      "main": [[{ "node": "Extrair Body DELETE", "type": "main", "index": 0 }]]
+    },
+    "Extrair Body DELETE": {
+      "main": [[{ "node": "Deletar Contato", "type": "main", "index": 0 }]]
+    },
+    "Deletar Contato": {
+      "main": [[{ "node": "Responder DELETE", "type": "main", "index": 0 }]]
+    }
+  },
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "38d72daace6c2ae7736a909dec088d48bbd578f9ce790ccc259d7516ee40e64b"
+  }
+}

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  buildContatoDeletePayload,
   buildContatoUpdatePayload,
   buildFlatContatoPayload,
   getContatoOriginalWhatsapp,
@@ -116,5 +117,26 @@ describe('buildContatoUpdatePayload', () => {
       Nome: 'Só Nome',
       WhatsApp: '11999998888',
     });
+  });
+});
+
+describe('buildContatoDeletePayload', () => {
+  it('sends row_number when present (no WhatsApp required)', () => {
+    expect(
+      buildContatoDeletePayload({
+        row_number: 8,
+        Nome: 'Só Nome',
+      }),
+    ).toEqual({ row_number: '8' });
+  });
+
+  it('falls back to WhatsApp when row_number is missing', () => {
+    expect(
+      buildContatoDeletePayload({ WhatsApp: '11999998888', Nome: 'Legacy' }),
+    ).toEqual({ WhatsApp: '11999998888' });
+  });
+
+  it('returns empty object when no identifier is available', () => {
+    expect(buildContatoDeletePayload({ Nome: 'Sem chave' })).toEqual({});
   });
 });

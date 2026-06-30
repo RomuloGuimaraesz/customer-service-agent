@@ -47,8 +47,9 @@ export function putContatos(payload, authHeader) {
 
 /**
  * Remove contato — webhook admin-contatos-delete.
+ * O corpo inclui `row_number` (preferencial) ou `WhatsApp` (legado / lookup n8n).
  *
- * @param {Object} payload - Corpo JSON com chave de identificação (ex.: `{ WhatsApp }`)
+ * @param {Object} payload - Corpo JSON (ex.: `{ row_number }` ou `{ WhatsApp }`)
  * @param {string|null} authHeader
  * @returns {Promise<unknown>}
  */

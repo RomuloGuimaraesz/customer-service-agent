@@ -8,6 +8,10 @@ import {
   ContatosFormCellSpan2 as CellSpan2,
   ContatosFormCellSpan3 as CellSpan3,
 } from './ContatosFormPrimitives';
+import {
+  extractBrazilianMobileDigits,
+  formatBrazilianMobilePhone,
+} from '../utils/brazilianPhoneMask';
 
 const FormRoot = styled.form`
   display: contents;
@@ -123,7 +127,11 @@ export const ContatosContactForm = ({
       return;
     }
     if (prefillKey != null && prefillDadosPrincipais) {
-      setValues({ ...initialValues(), ...prefillDadosPrincipais });
+      setValues({
+        ...initialValues(),
+        ...prefillDadosPrincipais,
+        whatsapp: extractBrazilianMobileDigits(prefillDadosPrincipais.whatsapp),
+      });
       return;
     }
     setValues(initialValues());
@@ -135,6 +143,11 @@ export const ContatosContactForm = ({
       const v = e.target.value;
       setValues(s => ({ ...s, [field]: v }));
     };
+
+  const handleWhatsappChange = e => {
+    const digits = extractBrazilianMobileDigits(e.target.value);
+    setValues(s => ({ ...s, whatsapp: digits }));
+  };
 
   const handleSubmit = async e => {
     e.preventDefault();
@@ -176,9 +189,10 @@ export const ContatosContactForm = ({
             name="whatsapp"
             type="tel"
             autoComplete="tel"
-            placeholder="Digite o WhatsApp"
-            value={values.whatsapp}
-            onChange={set('whatsapp')}
+            inputMode="numeric"
+            placeholder="(11) 99999-9999"
+            value={formatBrazilianMobilePhone(values.whatsapp)}
+            onChange={handleWhatsappChange}
             className="contatos-form__input"
           />
         </ContatosFieldContainer>

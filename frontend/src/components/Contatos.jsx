@@ -31,6 +31,7 @@ import {
 } from '../services/contatosApi';
 import {
   buildFlatContatoPayload,
+  buildContatoDeletePayload,
   buildContatoUpdatePayload,
   getContatoRowKey,
   mapContatoRowToDadosPrincipais,
@@ -468,18 +469,18 @@ export const Contatos = () => {
     async row => {
       const authHeader = getAuthHeader();
       const targetRow = row;
-      const whatsapp = targetRow?.WhatsApp ?? targetRow?.['WhatsApp'];
-      const key = whatsapp != null ? String(whatsapp).trim() : '';
-      if (!key) {
+      const body = buildContatoDeletePayload(targetRow);
+      if (!body.row_number && !body.WhatsApp) {
         setToast({
           visible: true,
-          message: 'Não foi possível excluir: WhatsApp do contato ausente.',
+          message:
+            'Não foi possível excluir: identificador do contato ausente.',
           variant: 'error',
         });
         return;
       }
       try {
-        await deleteContato({ WhatsApp: key }, authHeader);
+        await deleteContato(body, authHeader);
         if (
           selectedContatoRow &&
           getContatoRowKey(selectedContatoRow, 0) === getContatoRowKey(targetRow, 0)
