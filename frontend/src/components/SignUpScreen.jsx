@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { Toast } from './Toast';
@@ -156,6 +156,7 @@ export const SignUpScreen = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [toastVisible, setToastVisible] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const isSubmittingRef = useRef(false);
 
   // Note: After signup, user should NOT be authenticated until email is confirmed
   // So we don't redirect to dashboard here - user will be redirected to login instead
@@ -204,6 +205,9 @@ export const SignUpScreen = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (isSubmittingRef.current) return;
+    isSubmittingRef.current = true;
+
     setError('');
     setSuccessMessage('');
     setRedirectingMessage('');
@@ -214,6 +218,7 @@ export const SignUpScreen = () => {
     if (password !== confirmPassword) {
       setError('As senhas não coincidem');
       setIsLoading(false);
+      isSubmittingRef.current = false;
       return;
     }
 
@@ -226,11 +231,12 @@ export const SignUpScreen = () => {
     if (!result.success) {
       setError(result.error);
       setIsLoading(false);
+      isSubmittingRef.current = false;
     } else {
       // Show success message with email confirmation instructions
       const message = result.warning || 'Conta criada com sucesso! Por favor, verifique seu email para confirmar sua conta.';
       setSuccessMessage(message);
-      setIsLoading(false);
+      // Keep locked/disabled until redirect so the user cannot trigger another signUp
     }
   };
 

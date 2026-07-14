@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { getPostAuthRouteForRole } from '../config/roleAccess';
@@ -134,6 +134,7 @@ export const LoginScreen = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [toastVisible, setToastVisible] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const isSubmittingRef = useRef(false);
 
   // Navigate after authentication once role is available (or legacy null after loading)
   useEffect(() => {
@@ -163,6 +164,9 @@ export const LoginScreen = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (isSubmittingRef.current) return;
+    isSubmittingRef.current = true;
+
     setError('');
     setWarning('');
     setToastVisible(false);
@@ -175,12 +179,13 @@ export const LoginScreen = () => {
       setUsername('');
       setPassword('');
       setIsLoading(false);
+      isSubmittingRef.current = false;
     } else {
       if (result.warning) {
         setWarning(result.warning);
       }
-      // Navigation will happen via useEffect when isAuthenticated becomes true
-      setIsLoading(false);
+      // Navigation will happen via useEffect when isAuthenticated becomes true.
+      // Keep locked/disabled so a second submit cannot fire before redirect.
     }
   };
 
