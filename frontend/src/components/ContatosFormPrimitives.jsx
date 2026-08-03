@@ -25,7 +25,8 @@ export const ContatosFormCellSpan3 = styled(ContatosFormCell)`
 
 /**
  * Mobile layout for contatos-form cells inside searchable-layout__column--primary.
- * Row 1: nome | Row 2: whatsapp + data nascimento | Row 3: cep + idade | … | mais informações full row
+ * Row 1: nome | Row 2: whatsapp + data nascimento | Row 3: idade + nome mae |
+ * Row 4: cep + bairro | … | mais informações full row
  */
 export const contatosFormMobileGridStyles = css`
   @media (max-width: 767px) {
@@ -48,34 +49,39 @@ export const contatosFormMobileGridStyles = css`
       grid-column: 2;
     }
 
-    .contatos-form__cell--cep {
+    .contatos-form__cell--idade {
       grid-row: 3;
       grid-column: 1;
     }
 
-    .contatos-form__cell--idade {
+    .contatos-form__cell--nome-mae {
       grid-row: 3;
       grid-column: 2;
     }
 
-    .contatos-form__cell--endereco {
+    .contatos-form__cell--cep {
       grid-row: 4;
+      grid-column: 1;
+    }
+
+    .contatos-form__cell--bairro {
+      grid-row: 4;
+      grid-column: 2 / 3;
+    }
+
+    .contatos-form__cell--endereco {
+      grid-row: 5;
       grid-column: 1 / -1;
     }
 
     .contatos-form__cell--numero {
-      grid-row: 5;
+      grid-row: 6;
       grid-column: 1;
     }
 
     .contatos-form__cell--endereco-complemento {
-      grid-row: 6;
-      grid-column: 1 / -1;
-    }
-
-    .contatos-form__cell--bairro {
       grid-row: 7;
-      grid-column: 1;
+      grid-column: 1 / -1;
     }
 
     .contatos-form__cell--bairro-complemento {

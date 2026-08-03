@@ -48,6 +48,7 @@ export function mapContatoRowToDadosPrincipais(row) {
       cell(row, 'Data de Nascimento', 'Data de nascimento'),
     ),
     idade: cell(row, 'Idade', 'idade'),
+    nomeMae: cell(row, 'Nome da Mãe', 'nomeMae'),
     cep: normalizeBrazilianCepDigits(cell(row, 'CEP', 'cep')),
     cidade: cell(row, 'Cidade', 'cidade'),
     estado: cell(row, 'Estado', 'estado'),
@@ -172,6 +173,7 @@ export function buildFlatContatoPayload(dadosPrincipais, informacoesAdicionais) 
     formatBrazilianDate(dp.dataNascimento),
   );
   setIfNonEmpty(out, 'Idade', dp.idade);
+  setIfNonEmpty(out, 'Nome da Mãe', dp.nomeMae);
   setIfNonEmpty(out, 'CEP', formatBrazilianCepForPayload(dp.cep));
   setIfNonEmpty(out, 'Cidade', dp.cidade);
   setIfNonEmpty(out, 'Estado', dp.estado);

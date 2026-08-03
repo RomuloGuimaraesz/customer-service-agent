@@ -7,6 +7,7 @@ import {
   findContatosByNormalizedNome,
   getContatoOriginalWhatsapp,
   getContatoRowNumber,
+  mapContatoRowToDadosPrincipais,
   normalizeContatoNome,
 } from './contatosRowMapper.js';
 
@@ -102,6 +103,46 @@ describe('buildFlatContatoPayload', () => {
   it('omits empty strings', () => {
     expect(buildFlatContatoPayload({ nome: '  ', whatsapp: '' }, {})).toEqual(
       {},
+    );
+  });
+
+  it('maps Nome da Mãe from form field nomeMae', () => {
+    expect(
+      buildFlatContatoPayload(
+        { nome: 'João Teste', nomeMae: 'Maria Silva' },
+        {},
+      ),
+    ).toEqual({
+      Nome: 'João Teste',
+      'Nome da Mãe': 'Maria Silva',
+    });
+  });
+
+  it('omits Nome da Mãe when nomeMae is blank', () => {
+    expect(
+      buildFlatContatoPayload({ nome: 'João Teste', nomeMae: '  ' }, {}),
+    ).toEqual({
+      Nome: 'João Teste',
+    });
+  });
+});
+
+describe('mapContatoRowToDadosPrincipais', () => {
+  it('maps Nome da Mãe spreadsheet column to nomeMae', () => {
+    expect(
+      mapContatoRowToDadosPrincipais({
+        Nome: 'João Teste',
+        'Nome da Mãe': 'Maria Silva',
+      }),
+    ).toMatchObject({
+      nome: 'João Teste',
+      nomeMae: 'Maria Silva',
+    });
+  });
+
+  it('returns empty nomeMae when column is missing', () => {
+    expect(mapContatoRowToDadosPrincipais({ Nome: 'João Teste' }).nomeMae).toBe(
+      '',
     );
   });
 });

@@ -86,6 +86,7 @@ const initialValues = () => ({
   whatsapp: '',
   dataNascimento: '',
   idade: '',
+  nomeMae: '',
   cep: '',
   cidade: '',
   estado: '',
@@ -295,6 +296,22 @@ export const ContatosContactForm = ({
           />
         </ContatosFieldContainer>
       </Cell>
+      <Cell className="contatos-form__cell contatos-form__cell--nome-mae">
+        <ContatosFieldContainer $borderless className="contatos-form__field-container">
+          <FieldLabel htmlFor="contato-nome-mae" className="contatos-form__label">
+            Nome da Mãe
+          </FieldLabel>
+          <FieldInput
+            id="contato-nome-mae"
+            name="nomeMae"
+            autoComplete="off"
+            placeholder="Digite o Nome completo da Mãe"
+            value={values.nomeMae}
+            onChange={set('nomeMae')}
+            className="contatos-form__input"
+          />
+        </ContatosFieldContainer>
+      </Cell>
       <Cell className="contatos-form__cell contatos-form__cell--cep">
         <ContatosFieldContainer $borderless className="contatos-form__field-container">
           <FieldLabel htmlFor="contato-cep" className="contatos-form__label">
@@ -312,6 +329,22 @@ export const ContatosContactForm = ({
           />
         </ContatosFieldContainer>
       </Cell>
+      <CellSpan2 className="contatos-form__cell contatos-form__cell--bairro">
+        <ContatosFieldContainer $borderless className="contatos-form__field-container">
+          <FieldLabel htmlFor="contato-bairro" className="contatos-form__label">
+            Bairro
+          </FieldLabel>
+          <FieldInput
+            id="contato-bairro"
+            name="bairro"
+            autoComplete="address-level3"
+            placeholder="Digite o Bairro"
+            value={values.bairro}
+            onChange={set('bairro')}
+            className="contatos-form__input"
+          />
+        </ContatosFieldContainer>
+      </CellSpan2>
       <CellSpan2 className="contatos-form__cell contatos-form__cell--endereco">
         <ContatosFieldContainer $borderless className="contatos-form__field-container">
           <FieldLabel htmlFor="contato-endereco" className="contatos-form__label">
@@ -360,23 +393,7 @@ export const ContatosContactForm = ({
           />
         </ContatosFieldContainer>
       </CellSpan3>
-      <Cell className="contatos-form__cell contatos-form__cell--bairro">
-        <ContatosFieldContainer $borderless className="contatos-form__field-container">
-          <FieldLabel htmlFor="contato-bairro" className="contatos-form__label">
-            Bairro
-          </FieldLabel>
-          <FieldInput
-            id="contato-bairro"
-            name="bairro"
-            autoComplete="address-level3"
-            placeholder="Digite o Bairro"
-            value={values.bairro}
-            onChange={set('bairro')}
-            className="contatos-form__input"
-          />
-        </ContatosFieldContainer>
-      </Cell>
-      <CellSpan2 className="contatos-form__cell contatos-form__cell--bairro-complemento">
+      <CellSpan3 className="contatos-form__cell contatos-form__cell--bairro-complemento">
         <ContatosFieldContainer $borderless className="contatos-form__field-container">
           <FieldLabel htmlFor="contato-bairro-complemento" className="contatos-form__label">
             Bairro/Complemento
@@ -391,7 +408,7 @@ export const ContatosContactForm = ({
             className="contatos-form__input"
           />
         </ContatosFieldContainer>
-      </CellSpan2>
+      </CellSpan3>
       <Cell className="contatos-form__cell contatos-form__cell--cidade">
         <ContatosFieldContainer $borderless className="contatos-form__field-container">
           <FieldLabel htmlFor="contato-cidade" className="contatos-form__label">
