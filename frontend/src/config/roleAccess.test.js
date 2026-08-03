@@ -4,6 +4,7 @@ import {
   canAccessContatos,
   canAccessStatistics,
   canDeleteContato,
+  canEditContatoCategoria,
   getHomeRouteForRole,
   getPostAuthRouteForRole,
 } from './roleAccess';
@@ -53,6 +54,16 @@ describe('roleAccess', () => {
       expect(canDeleteContato('admin')).toBe(true);
       expect(canDeleteContato('architect')).toBe(true);
       expect(canDeleteContato(null)).toBe(true);
+    });
+  });
+
+  describe('canEditContatoCategoria', () => {
+    it('allows only admin and architect', () => {
+      expect(canEditContatoCategoria('admin')).toBe(true);
+      expect(canEditContatoCategoria('architect')).toBe(true);
+      expect(canEditContatoCategoria('user')).toBe(false);
+      expect(canEditContatoCategoria(null)).toBe(false);
+      expect(canEditContatoCategoria(undefined)).toBe(false);
     });
   });
 

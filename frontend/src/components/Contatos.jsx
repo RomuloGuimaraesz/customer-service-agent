@@ -11,7 +11,7 @@ import { useAdmin } from '../hooks/useAdmin.js';
 import { useDashboardStats } from '../hooks/useDashboardStats';
 import { CONFIG } from '../config/constants';
 import { ROUTES } from '../config/routes';
-import { canDeleteContato } from '../config/roleAccess';
+import { canDeleteContato, canEditContatoCategoria } from '../config/roleAccess';
 import { supabase } from '../infrastructure/supabase/config';
 import { Header, Logo } from './Header';
 import { MainNavigation } from './MainNavigation';
@@ -768,6 +768,7 @@ export const Contatos = () => {
           onMaisInfoChange={handleMaisInfoChange}
           onSaveInformacoesAdicionais={handleSaveInformacoesAdicionais}
           getAuthHeader={getAuthHeader}
+          canEditCategoria={canEditContatoCategoria(role)}
         />
         <Toast
           message={toast.message}

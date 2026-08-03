@@ -124,6 +124,7 @@ export const createInitialMaisInfoValues = () => ({
  * @param {(field: string, value: string) => void} props.onMaisInfoChange
  * @param {() => void} props.onSaveInformacoesAdicionais - ação local (fecha/conclui); persistência ocorre no submit principal
  * @param {() => string | null} props.getAuthHeader — Authorization para GET em CONFIG.API_ENDPOINTS.categorias
+ * @param {boolean} [props.canEditCategoria=false] — exibe/carrega Categoria (Admin/Architect)
  */
 export const ContatosMaisInformacoesModal = ({
   isOpen,
@@ -132,13 +133,14 @@ export const ContatosMaisInformacoesModal = ({
   onMaisInfoChange,
   onSaveInformacoesAdicionais,
   getAuthHeader,
+  canEditCategoria = false,
 }) => {
   const [categoriaOptions, setCategoriaOptions] = useState([]);
   const [categoriasLoading, setCategoriasLoading] = useState(false);
   const [categoriasError, setCategoriasError] = useState('');
 
   useEffect(() => {
-    if (!isOpen || !getAuthHeader) return undefined;
+    if (!isOpen || !canEditCategoria || !getAuthHeader) return undefined;
     let cancelled = false;
     setCategoriasLoading(true);
     setCategoriasError('');
@@ -160,7 +162,7 @@ export const ContatosMaisInformacoesModal = ({
     return () => {
       cancelled = true;
     };
-  }, [isOpen, getAuthHeader]);
+  }, [isOpen, canEditCategoria, getAuthHeader]);
 
   const selectCategoriaValue = useMemo(
     () => resolveCategoriaOptionValue(values.categoria, categoriaOptions),
@@ -248,35 +250,37 @@ export const ContatosMaisInformacoesModal = ({
                 />
               </ContatosFieldContainer>
             </ContatosFormCellSpan2>
-            <ContatosFormCell className="contatos-form__cell contatos-form__cell--categoria">
-              <ContatosFieldContainer $borderless className="contatos-form__field-container">
-                <FieldLabel htmlFor="mais-info-categoria" className="contatos-form__label">
-                  Categoria
-                </FieldLabel>
-                <FieldSelect
-                  id="mais-info-categoria"
-                  name="categoria"
-                  value={selectCategoriaValue}
-                  disabled={categoriasLoading}
-                  onChange={e => onMaisInfoChange('categoria', e.target.value)}
-                  className={`contatos-form__select${selectCategoriaValue ? '' : ' contatos-form__select--placeholder'}`}
-                  aria-label="Categoria"
-                  aria-busy={categoriasLoading}
-                >
-                  <option value="">
-                    {categoriasLoading ? 'Carregando...' : 'Selecione a categoria'}
-                  </option>
-                  {optionsForSelect.map(({ value, label }) => (
-                    <option key={value} value={value}>
-                      {label}
+            {canEditCategoria ? (
+              <ContatosFormCell className="contatos-form__cell contatos-form__cell--categoria">
+                <ContatosFieldContainer $borderless className="contatos-form__field-container">
+                  <FieldLabel htmlFor="mais-info-categoria" className="contatos-form__label">
+                    Categoria
+                  </FieldLabel>
+                  <FieldSelect
+                    id="mais-info-categoria"
+                    name="categoria"
+                    value={selectCategoriaValue}
+                    disabled={categoriasLoading}
+                    onChange={e => onMaisInfoChange('categoria', e.target.value)}
+                    className={`contatos-form__select${selectCategoriaValue ? '' : ' contatos-form__select--placeholder'}`}
+                    aria-label="Categoria"
+                    aria-busy={categoriasLoading}
+                  >
+                    <option value="">
+                      {categoriasLoading ? 'Carregando...' : 'Selecione a categoria'}
                     </option>
-                  ))}
-                </FieldSelect>
-                {categoriasError ? (
-                  <CategoriaError role="alert">{categoriasError}</CategoriaError>
-                ) : null}
-              </ContatosFieldContainer>
-            </ContatosFormCell>
+                    {optionsForSelect.map(({ value, label }) => (
+                      <option key={value} value={value}>
+                        {label}
+                      </option>
+                    ))}
+                  </FieldSelect>
+                  {categoriasError ? (
+                    <CategoriaError role="alert">{categoriasError}</CategoriaError>
+                  ) : null}
+                </ContatosFieldContainer>
+              </ContatosFormCell>
+            ) : null}
             <ContatosFormCell className="contatos-form__cell contatos-form__cell--cpf">
               <ContatosFieldContainer $borderless className="contatos-form__field-container">
                 <FieldLabel htmlFor="mais-info-cpf" className="contatos-form__label">
