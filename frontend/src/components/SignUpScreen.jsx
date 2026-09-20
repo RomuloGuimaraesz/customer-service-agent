@@ -10,9 +10,36 @@ import {
 } from './AuthScreenLayout';
 import styled from 'styled-components';
 
-/**
- * SignUp Card - BEM: signup-screen__card
- */
+// ============================================================================
+// CONFIGURATION - Easy to find and change
+// ============================================================================
+const CONFIG = {
+  title: 'Cadastro de Usuário ',
+  subtitle: 'Informe seus dados para Cadastrar o seu Usuário',
+  fullNameLabel: 'Nome Completo',
+  fullNamePlaceholder: 'Informe seu nome completo',
+  emailLabel: 'Email',
+  emailPlaceholder: 'Informe seu email',
+  passwordLabel: 'Senha',
+  passwordPlaceholder: 'Crie uma senha (mínimo 6 caracteres)',
+  confirmPasswordLabel: 'Confirmar Senha',
+  confirmPasswordPlaceholder: 'Confirme sua senha',
+  passwordMismatchError: 'As senhas não coincidem',
+  successMessageDefault:
+    'Conta criada com sucesso! Por favor, verifique seu email para confirmar sua conta.',
+  redirectingMessage: 'Redirecionando...',
+  closeMessageAriaLabel: 'Fechar mensagem',
+  submitLabel: 'Criar Conta',
+  submitLoadingLabel: 'Criando conta...',
+  footerPrompt: 'Já tem uma conta?',
+  loginLinkLabel: 'Fazer login',
+};
+
+// ============================================================================
+// STYLED COMPONENTS - Grouped by section
+// ============================================================================
+
+// Layout
 const StyledSignUpCard = styled.div`
   width: 100%;
   max-width: 420px;
@@ -24,17 +51,11 @@ const StyledSignUpCard = styled.div`
   box-shadow: ${props => props.theme.shadows.sm};
 `;
 
-/**
- * SignUp Header - BEM: signup-screen__header
- */
 const StyledSignUpHeader = styled.div`
   text-align: center;
   margin-bottom: ${props => props.theme.spacing['2xl']};
 `;
 
-/**
- * SignUp Title - BEM: signup-screen__title
- */
 const StyledSignUpTitle = styled.h1`
   margin: 0 0 ${props => props.theme.spacing.xs} 0;
   font-size: ${props => props.theme.fontSize['3xl']};
@@ -43,9 +64,6 @@ const StyledSignUpTitle = styled.h1`
   color: ${props => props.theme.colors.text.primary};
 `;
 
-/**
- * SignUp Subtitle - BEM: signup-screen__subtitle
- */
 const StyledSignUpSubtitle = styled.p`
   margin: 0;
   font-size: ${props => props.theme.fontSize.base};
@@ -54,16 +72,12 @@ const StyledSignUpSubtitle = styled.p`
   color: ${props => props.theme.colors.text.secondary};
 `;
 
-/**
- * Form Group - BEM: signup-screen__form-group
- */
+// Form
 const StyledFormGroup = styled.div`
   margin-bottom: ${props => props.theme.spacing.xl};
 `;
 
-/**
- * Error Message - BEM: signup-screen__error
- */
+// Messages
 const StyledErrorMessage = styled.div`
   padding: ${props => props.theme.spacing.md} ${props => props.theme.spacing.lg};
   margin-bottom: ${props => props.theme.spacing.xl};
@@ -77,9 +91,6 @@ const StyledErrorMessage = styled.div`
   gap: ${props => props.theme.spacing.sm};
 `;
 
-/**
- * Success Message - BEM: signup-screen__success
- */
 const StyledSuccessMessage = styled.div`
   padding: ${props => props.theme.spacing.md} ${props => props.theme.spacing.lg};
   margin-bottom: ${props => props.theme.spacing.xl};
@@ -94,9 +105,6 @@ const StyledSuccessMessage = styled.div`
   gap: ${props => props.theme.spacing.sm};
 `;
 
-/**
- * Close Button for Messages - BEM: signup-screen__close-button
- */
 const StyledCloseButton = styled.button`
   background: none;
   border: none;
@@ -113,9 +121,7 @@ const StyledCloseButton = styled.button`
   }
 `;
 
-/**
- * SignUp Footer - BEM: signup-screen__footer
- */
+// Footer
 const StyledSignUpFooter = styled.p`
   margin-top: ${props => props.theme.spacing['2xl']};
   margin-bottom: 0;
@@ -125,9 +131,6 @@ const StyledSignUpFooter = styled.p`
   line-height: 1.45;
 `;
 
-/**
- * Link to Login - BEM: signup-screen__link
- */
 const StyledLink = styled(Link)`
   color: ${props => props.theme.colors.status.infoText};
   text-decoration: none;
@@ -140,8 +143,15 @@ const StyledLink = styled(Link)`
   }
 `;
 
+// ============================================================================
+// COMPONENTS
+// ============================================================================
+
 /**
- * SignUp Screen Component
+ * SignUpScreen Component
+ * Registration form for new users. Visible copy defaults live in CONFIG.
+ *
+ * Has no props; uses AuthContext.signup and redirects to login after success.
  */
 export const SignUpScreen = () => {
   const navigate = useNavigate();
@@ -184,7 +194,7 @@ export const SignUpScreen = () => {
       const successTimer = setTimeout(() => {
         setToastVisible(false);
         setSuccessMessage('');
-        setRedirectingMessage('Redirecionando...');
+        setRedirectingMessage(CONFIG.redirectingMessage);
       }, 4000);
 
       return () => clearTimeout(successTimer);
@@ -216,7 +226,7 @@ export const SignUpScreen = () => {
 
     // Validate passwords match
     if (password !== confirmPassword) {
-      setError('As senhas não coincidem');
+      setError(CONFIG.passwordMismatchError);
       setIsLoading(false);
       isSubmittingRef.current = false;
       return;
@@ -234,7 +244,7 @@ export const SignUpScreen = () => {
       isSubmittingRef.current = false;
     } else {
       // Show success message with email confirmation instructions
-      const message = result.warning || 'Conta criada com sucesso! Por favor, verifique seu email para confirmar sua conta.';
+      const message = result.warning || CONFIG.successMessageDefault;
       setSuccessMessage(message);
       // Keep locked/disabled until redirect so the user cannot trigger another signUp
     }
@@ -244,7 +254,7 @@ export const SignUpScreen = () => {
     setToastVisible(false);
     setSuccessMessage('');
     if (!redirectingMessage) {
-      setRedirectingMessage('Redirecionando...');
+      setRedirectingMessage(CONFIG.redirectingMessage);
     }
   };
 
@@ -263,10 +273,10 @@ export const SignUpScreen = () => {
           {/* Header */}
           <StyledSignUpHeader className="signup-screen__header">
             <StyledSignUpTitle className="signup-screen__title">
-              Cadastro de Usuário 
+              {CONFIG.title}
             </StyledSignUpTitle>
             <StyledSignUpSubtitle className="signup-screen__subtitle">
-              Informe seus dados para Cadastrar o seu Usuário
+              {CONFIG.subtitle}
             </StyledSignUpSubtitle>
           </StyledSignUpHeader>
 
@@ -275,14 +285,14 @@ export const SignUpScreen = () => {
           <StyledFormGroup className="signup-screen__form-group">
             <FieldContainer $borderless className="signup-screen__field-container">
               <FieldLabel htmlFor="fullName" className="signup-screen__label">
-                Nome Completo
+                {CONFIG.fullNameLabel}
               </FieldLabel>
               <FieldInput
                 id="fullName"
                 type="text"
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
-                placeholder="Informe seu nome completo"
+                placeholder={CONFIG.fullNamePlaceholder}
                 className="signup-screen__input"
               />
             </FieldContainer>
@@ -291,14 +301,14 @@ export const SignUpScreen = () => {
           <StyledFormGroup className="signup-screen__form-group">
             <FieldContainer $borderless className="signup-screen__field-container">
               <FieldLabel htmlFor="email" className="signup-screen__label">
-                Email
+                {CONFIG.emailLabel}
               </FieldLabel>
               <FieldInput
                 id="email"
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="Informe seu email"
+                placeholder={CONFIG.emailPlaceholder}
                 required
                 className="signup-screen__input"
               />
@@ -308,14 +318,14 @@ export const SignUpScreen = () => {
           <StyledFormGroup className="signup-screen__form-group">
             <FieldContainer $borderless className="signup-screen__field-container">
               <FieldLabel htmlFor="password" className="signup-screen__label">
-                Senha
+                {CONFIG.passwordLabel}
               </FieldLabel>
               <FieldInput
                 id="password"
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="Crie uma senha (mínimo 6 caracteres)"
+                placeholder={CONFIG.passwordPlaceholder}
                 required
                 minLength={6}
                 className="signup-screen__input"
@@ -326,14 +336,14 @@ export const SignUpScreen = () => {
           <StyledFormGroup className="signup-screen__form-group">
             <FieldContainer $borderless className="signup-screen__field-container">
               <FieldLabel htmlFor="confirmPassword" className="signup-screen__label">
-                Confirmar Senha
+                {CONFIG.confirmPasswordLabel}
               </FieldLabel>
               <FieldInput
                 id="confirmPassword"
                 type="password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                placeholder="Confirme sua senha"
+                placeholder={CONFIG.confirmPasswordPlaceholder}
                 required
                 minLength={6}
                 className="signup-screen__input"
@@ -357,7 +367,7 @@ export const SignUpScreen = () => {
               <StyledCloseButton
                 onClick={handleCloseRedirecting}
                 className="signup-screen__close-button"
-                aria-label="Fechar mensagem"
+                aria-label={CONFIG.closeMessageAriaLabel}
               >
                 ×
               </StyledCloseButton>
@@ -370,15 +380,15 @@ export const SignUpScreen = () => {
             disabled={isLoading}
             className="signup-screen__submit-button"
           >
-            {isLoading ? 'Criando conta...' : 'Criar Conta'}
+            {isLoading ? CONFIG.submitLoadingLabel : CONFIG.submitLabel}
           </FormSubmitButton>
         </form>
 
         {/* Footer */}
         <StyledSignUpFooter className="signup-screen__footer">
-          Já tem uma conta?{' '}
+          {CONFIG.footerPrompt}{' '}
           <StyledLink to="/auth/login" className="signup-screen__link">
-            Fazer login
+            {CONFIG.loginLinkLabel}
           </StyledLink>
         </StyledSignUpFooter>
       </StyledSignUpCard>
@@ -396,4 +406,3 @@ export const SignUpScreen = () => {
     </>
   );
 };
-

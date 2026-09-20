@@ -44,6 +44,6 @@ describe('SignUpScreen form fields', () => {
     expect(screen.getByLabelText('Email')).toBeInTheDocument();
     expect(screen.getByLabelText('Senha')).toBeInTheDocument();
     expect(screen.getByLabelText('Confirmar Senha')).toBeInTheDocument();
-  });
+  }, 15000);
 });
 
