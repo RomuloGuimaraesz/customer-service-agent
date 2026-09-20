@@ -11,9 +11,27 @@ import {
 } from './AuthScreenLayout';
 import styled from 'styled-components';
 
-/**
- * Login Card - BEM: login-screen__card
- */
+// ============================================================================
+// CONFIGURATION - Easy to find and change
+// ============================================================================
+const CONFIG = {
+  title: 'Login de Usuário',
+  subtitle: 'Informe os dados para Logar o seu Usuário',
+  usernameLabel: 'Usuário',
+  usernamePlaceholder: 'Informe seu Usuário de acesso',
+  passwordLabel: 'Senha',
+  passwordPlaceholder: 'Informe a sua Senha de acesso',
+  submitLabel: 'Entrar',
+  submitLoadingLabel: 'Entrando...',
+  footerPrompt: 'Não tem uma conta?',
+  signUpLinkLabel: 'Criar conta',
+};
+
+// ============================================================================
+// STYLED COMPONENTS - Grouped by section
+// ============================================================================
+
+// Layout
 const StyledLoginCard = styled.div`
   width: 100%;
   max-width: 420px;
@@ -25,17 +43,11 @@ const StyledLoginCard = styled.div`
   box-shadow: ${props => props.theme.shadows.sm};
 `;
 
-/**
- * Login Header - BEM: login-screen__header
- */
 const StyledLoginHeader = styled.div`
   text-align: center;
   margin-bottom: ${props => props.theme.spacing['2xl']};
 `;
 
-/**
- * Login Title - BEM: login-screen__title
- */
 const StyledLoginTitle = styled.h1`
   margin: 0 0 ${props => props.theme.spacing.xs} 0;
   font-size: ${props => props.theme.fontSize['3xl']};
@@ -44,9 +56,6 @@ const StyledLoginTitle = styled.h1`
   color: ${props => props.theme.colors.text.primary};
 `;
 
-/**
- * Login Subtitle - BEM: login-screen__subtitle
- */
 const StyledLoginSubtitle = styled.p`
   margin: 0;
   font-size: ${props => props.theme.fontSize.base};
@@ -55,16 +64,12 @@ const StyledLoginSubtitle = styled.p`
   color: ${props => props.theme.colors.text.secondary};
 `;
 
-/**
- * Form Group - BEM: login-screen__form-group
- */
+// Form
 const StyledFormGroup = styled.div`
   margin-bottom: ${props => props.theme.spacing.xl};
 `;
 
-/**
- * Error Message - BEM: login-screen__error
- */
+// Messages
 const StyledErrorMessage = styled.div`
   padding: ${props => props.theme.spacing.md} ${props => props.theme.spacing.lg};
   margin-bottom: ${props => props.theme.spacing.xl};
@@ -78,9 +83,6 @@ const StyledErrorMessage = styled.div`
   gap: ${props => props.theme.spacing.sm};
 `;
 
-/**
- * Warning Message - BEM: login-screen__warning
- */
 const StyledWarningMessage = styled.div`
   padding: ${props => props.theme.spacing.md} ${props => props.theme.spacing.lg};
   margin-bottom: ${props => props.theme.spacing.xl};
@@ -94,9 +96,7 @@ const StyledWarningMessage = styled.div`
   gap: ${props => props.theme.spacing.sm};
 `;
 
-/**
- * Login Footer - BEM: login-screen__footer
- */
+// Footer
 const StyledLoginFooter = styled.p`
   margin-top: ${props => props.theme.spacing['2xl']};
   margin-bottom: 0;
@@ -106,9 +106,6 @@ const StyledLoginFooter = styled.p`
   line-height: 1.45;
 `;
 
-/**
- * Link to SignUp - BEM: login-screen__link
- */
 const StyledLink = styled(Link)`
   color: ${props => props.theme.colors.status.infoText};
   text-decoration: none;
@@ -121,8 +118,15 @@ const StyledLink = styled(Link)`
   }
 `;
 
+// ============================================================================
+// COMPONENTS
+// ============================================================================
+
 /**
- * Login Screen Component
+ * LoginScreen Component
+ * Sign-in form for existing users. Visible copy defaults live in CONFIG.
+ *
+ * Has no props; uses AuthContext.login and redirects after authentication.
  */
 export const LoginScreen = () => {
   const navigate = useNavigate();
@@ -199,10 +203,10 @@ export const LoginScreen = () => {
           {/* Header */}
           <StyledLoginHeader className="login-screen__header">
             <StyledLoginTitle className="login-screen__title">
-              Login de Usuário
+              {CONFIG.title}
             </StyledLoginTitle>
             <StyledLoginSubtitle className="login-screen__subtitle">
-              Informe os dados para Logar o seu Usuário
+              {CONFIG.subtitle}
             </StyledLoginSubtitle>
           </StyledLoginHeader>
 
@@ -211,14 +215,14 @@ export const LoginScreen = () => {
           <StyledFormGroup className="login-screen__form-group">
             <FieldContainer $borderless className="login-screen__field-container">
               <FieldLabel htmlFor="username" className="login-screen__label">
-                Usuário
+                {CONFIG.usernameLabel}
               </FieldLabel>
               <FieldInput
                 id="username"
                 type="text"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                placeholder="Informe seu Usuário de acesso"
+                placeholder={CONFIG.usernamePlaceholder}
                 required
                 className="login-screen__input"
               />
@@ -228,14 +232,14 @@ export const LoginScreen = () => {
           <StyledFormGroup className="login-screen__form-group">
             <FieldContainer $borderless className="login-screen__field-container">
               <FieldLabel htmlFor="password" className="login-screen__label">
-                Senha
+                {CONFIG.passwordLabel}
               </FieldLabel>
               <FieldInput
                 id="password"
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="Informe a sua Senha de acesso"
+                placeholder={CONFIG.passwordPlaceholder}
                 required
                 className="login-screen__input"
               />
@@ -255,15 +259,15 @@ export const LoginScreen = () => {
             disabled={isLoading}
             className="login-screen__submit-button"
           >
-            {isLoading ? 'Entrando...' : 'Entrar'}
+            {isLoading ? CONFIG.submitLoadingLabel : CONFIG.submitLabel}
           </FormSubmitButton>
         </form>
 
         {/* Footer */}
         <StyledLoginFooter className="login-screen__footer">
-          Não tem uma conta?{' '}
+          {CONFIG.footerPrompt}{' '}
           <StyledLink to="/auth/signup" className="login-screen__link">
-            Criar conta
+            {CONFIG.signUpLinkLabel}
           </StyledLink>
         </StyledLoginFooter>
       </StyledLoginCard>
