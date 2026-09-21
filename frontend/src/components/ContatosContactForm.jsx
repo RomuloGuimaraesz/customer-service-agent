@@ -23,11 +23,55 @@ import {
 } from '../utils/brazilianCepMask';
 import { fetchAddressByCep } from '../utils/viacepService';
 
+// ============================================================================
+// CONFIGURATION - Easy to find and change
+// ============================================================================
+const CONFIG = {
+  formAriaLabelTodos: 'Formulário de contato existente',
+  formAriaLabelNovo: 'Formulário de novo contato',
+  nomeLabel: 'Nome Completo',
+  nomePlaceholder: 'Digite o Nome Completo',
+  whatsappLabel: 'WhatsApp',
+  whatsappPlaceholder: '(11) 99999-9999',
+  dataNascimentoLabel: 'Data de Nascimento',
+  dataNascimentoPlaceholder: 'dd/mm/aaaa',
+  idadeLabel: 'Idade',
+  idadePlaceholder: 'Digite a Idade',
+  nomeMaeLabel: 'Nome da Mãe',
+  nomeMaePlaceholder: 'Digite o Nome completo da Mãe',
+  cepLabel: 'CEP',
+  cepPlaceholder: '00000-000',
+  bairroLabel: 'Bairro',
+  bairroPlaceholder: 'Digite o Bairro',
+  enderecoLabel: 'Endereço',
+  enderecoPlaceholder: 'Digite o Endereço',
+  numeroLabel: 'Número',
+  numeroPlaceholder: 'Digite o Número',
+  complementoLabel: 'Endereço/Complemento',
+  complementoPlaceholder: 'Digite informações extras sobre o Endereço',
+  bairroComplementoLabel: 'Bairro/Complemento',
+  bairroComplementoPlaceholder: 'Digite informações extras sobre o Bairro',
+  cidadeLabel: 'Cidade',
+  cidadePlaceholder: 'Digite a cidade',
+  estadoLabel: 'Estado',
+  estadoPlaceholder: 'Digite o Estado',
+  maisInformacoesLabel: 'Mais informações',
+  submitSaveLabel: 'Salvar alterações',
+  submitSaveLoadingLabel: 'Salvando...',
+  submitCreateLabel: 'Cadastrar contato',
+  submitCreateLoadingLabel: 'Cadastrando...',
+};
+
+// ============================================================================
+// STYLED COMPONENTS - Grouped by section
+// ============================================================================
+
+// Layout
 const FormRoot = styled.form`
   display: contents;
 `;
 
-/** Centered row: optional attention icon + Mais informações (BEM: contatos-form__cell--mais-informacoes). */
+// Mais informações
 const MaisInformacoesCell = styled(Cell)`
   justify-content: center;
   position: relative;
@@ -97,19 +141,27 @@ const initialValues = () => ({
   bairroComplemento: '',
 });
 
+// ============================================================================
+// COMPONENTS
+// ============================================================================
+
 /**
- * Formulário de contato na coluna esquerda. Busca fica no searchable-layout__search-input.
- * Todos vs Novo: mesmos campos; texto do envio e reset ao trocar modo diferem.
- * BEM: contatos-form
- * @param {() => void} [props.onMaisInformacoesClick] — abre o modal de campos complementares
- * @param {(dadosPrincipais: Record<string, string>) => void | Promise<void>} [props.onMainFormSave] — envio principal; recebe os valores do formulário
- * @param {boolean} [props.showMaisInfoAttention] — exibe ícone de atenção (dados adicionais não salvos)
- * @param {string} [props.maisInfoAttentionHint] — texto para title e aria-describedby
- * @param {string|null} [props.prefillKey] — muda ao selecionar uma linha na lista; com prefillDadosPrincipais preenche o formulário
- * @param {Record<string, string>|null} [props.prefillDadosPrincipais] — valores vindos da API (modo Todos)
- * @param {(values: Record<string, string>) => void} [props.onValuesChange] — valores atuais (ex.: POST novo contato + modal)
- * @param {boolean} [props.isSubmitting] — desabilita envio enquanto o pai persiste
- * @param {number} [props.resetKey] — incrementado pelo pai após cadastro em modo Novo; limpa os campos
+ * ContatosContactForm Component
+ * Left-column contact form. Search lives in searchable-layout__search-input.
+ * Todos vs Novo: same fields; submit copy and reset-on-mode-change differ.
+ * Visible copy defaults live in CONFIG. BEM: contatos-form
+ *
+ * @param {Object} props
+ * @param {'todos'|'novo'} [props.mode='todos'] - List-edit vs new-contact mode
+ * @param {() => void} [props.onMaisInformacoesClick] - Opens complementary-fields modal
+ * @param {(dadosPrincipais: Record<string, string>) => void | Promise<void>} [props.onMainFormSave] - Main submit; receives current form values
+ * @param {boolean} [props.showMaisInfoAttention=false] - Attention icon when extra data is unsaved
+ * @param {string} [props.maisInfoAttentionHint=''] - Text for title and aria-describedby
+ * @param {string|null} [props.prefillKey=null] - Changes when a list row is selected; with prefillDadosPrincipais fills the form
+ * @param {Record<string, string>|null} [props.prefillDadosPrincipais=null] - API values (Todos mode)
+ * @param {(values: Record<string, string>) => void} [props.onValuesChange] - Current values (e.g. new-contact POST + modal)
+ * @param {boolean} [props.isSubmitting=false] - Disables submit while parent persists
+ * @param {number} [props.resetKey=0] - Incremented by parent after Novo save; clears fields
  */
 export const ContatosContactForm = ({
   mode = 'todos',
@@ -226,18 +278,18 @@ export const ContatosContactForm = ({
       className="contatos-form"
       onSubmit={handleSubmit}
       noValidate
-      aria-label={isTodos ? 'Formulário de contato existente' : 'Formulário de novo contato'}
+      aria-label={isTodos ? CONFIG.formAriaLabelTodos : CONFIG.formAriaLabelNovo}
     >
       <CellSpan2 className="contatos-form__cell contatos-form__cell--nome-completo">
         <ContatosFieldContainer $borderless className="contatos-form__field-container">
           <FieldLabel htmlFor="contato-nome" className="contatos-form__label">
-            Nome Completo
+            {CONFIG.nomeLabel}
           </FieldLabel>
           <FieldInput
             id="contato-nome"
             name="nome"
             autoComplete="name"
-            placeholder="Digite o Nome Completo"
+            placeholder={CONFIG.nomePlaceholder}
             value={values.nome}
             onChange={set('nome')}
             className="contatos-form__input"
@@ -247,7 +299,7 @@ export const ContatosContactForm = ({
       <Cell className="contatos-form__cell contatos-form__cell--whatsapp">
         <ContatosFieldContainer $borderless className="contatos-form__field-container">
           <FieldLabel htmlFor="contato-whatsapp" className="contatos-form__label">
-            WhatsApp
+            {CONFIG.whatsappLabel}
           </FieldLabel>
           <FieldInput
             id="contato-whatsapp"
@@ -255,7 +307,7 @@ export const ContatosContactForm = ({
             type="tel"
             autoComplete="tel"
             inputMode="numeric"
-            placeholder="(11) 99999-9999"
+            placeholder={CONFIG.whatsappPlaceholder}
             value={formatBrazilianMobilePhone(values.whatsapp)}
             onChange={handleWhatsappChange}
             className="contatos-form__input"
@@ -265,14 +317,14 @@ export const ContatosContactForm = ({
       <Cell className="contatos-form__cell contatos-form__cell--data-nascimento">
         <ContatosFieldContainer $borderless className="contatos-form__field-container">
           <FieldLabel htmlFor="contato-data-nascimento" className="contatos-form__label">
-            Data de Nascimento
+            {CONFIG.dataNascimentoLabel}
           </FieldLabel>
           <FieldInput
             id="contato-data-nascimento"
             name="dataNascimento"
             autoComplete="bday"
             inputMode="numeric"
-            placeholder="dd/mm/aaaa"
+            placeholder={CONFIG.dataNascimentoPlaceholder}
             value={formatBrazilianDate(values.dataNascimento)}
             onChange={handleDataNascimentoChange}
             className="contatos-form__input"
@@ -282,14 +334,14 @@ export const ContatosContactForm = ({
       <Cell className="contatos-form__cell contatos-form__cell--idade">
         <ContatosFieldContainer $borderless className="contatos-form__field-container">
           <FieldLabel htmlFor="contato-idade" className="contatos-form__label">
-            Idade
+            {CONFIG.idadeLabel}
           </FieldLabel>
           <FieldInput
             id="contato-idade"
             name="idade"
             autoComplete="off"
             inputMode="numeric"
-            placeholder="Digite a Idade"
+            placeholder={CONFIG.idadePlaceholder}
             value={values.idade}
             onChange={set('idade')}
             className="contatos-form__input"
@@ -299,13 +351,13 @@ export const ContatosContactForm = ({
       <Cell className="contatos-form__cell contatos-form__cell--nome-mae">
         <ContatosFieldContainer $borderless className="contatos-form__field-container">
           <FieldLabel htmlFor="contato-nome-mae" className="contatos-form__label">
-            Nome da Mãe
+            {CONFIG.nomeMaeLabel}
           </FieldLabel>
           <FieldInput
             id="contato-nome-mae"
             name="nomeMae"
             autoComplete="off"
-            placeholder="Digite o Nome completo da Mãe"
+            placeholder={CONFIG.nomeMaePlaceholder}
             value={values.nomeMae}
             onChange={set('nomeMae')}
             className="contatos-form__input"
@@ -315,14 +367,14 @@ export const ContatosContactForm = ({
       <Cell className="contatos-form__cell contatos-form__cell--cep">
         <ContatosFieldContainer $borderless className="contatos-form__field-container">
           <FieldLabel htmlFor="contato-cep" className="contatos-form__label">
-            CEP
+            {CONFIG.cepLabel}
           </FieldLabel>
           <FieldInput
             id="contato-cep"
             name="cep"
             autoComplete="postal-code"
             inputMode="numeric"
-            placeholder="00000-000"
+            placeholder={CONFIG.cepPlaceholder}
             value={formatBrazilianCep(values.cep)}
             onChange={handleCepChange}
             className="contatos-form__input"
@@ -332,13 +384,13 @@ export const ContatosContactForm = ({
       <CellSpan2 className="contatos-form__cell contatos-form__cell--bairro">
         <ContatosFieldContainer $borderless className="contatos-form__field-container">
           <FieldLabel htmlFor="contato-bairro" className="contatos-form__label">
-            Bairro
+            {CONFIG.bairroLabel}
           </FieldLabel>
           <FieldInput
             id="contato-bairro"
             name="bairro"
             autoComplete="address-level3"
-            placeholder="Digite o Bairro"
+            placeholder={CONFIG.bairroPlaceholder}
             value={values.bairro}
             onChange={set('bairro')}
             className="contatos-form__input"
@@ -348,13 +400,13 @@ export const ContatosContactForm = ({
       <CellSpan2 className="contatos-form__cell contatos-form__cell--endereco">
         <ContatosFieldContainer $borderless className="contatos-form__field-container">
           <FieldLabel htmlFor="contato-endereco" className="contatos-form__label">
-            Endereço
+            {CONFIG.enderecoLabel}
           </FieldLabel>
           <FieldInput
             id="contato-endereco"
             name="endereco"
             autoComplete="address-line1"
-            placeholder="Digite o Endereço"
+            placeholder={CONFIG.enderecoPlaceholder}
             value={values.endereco}
             onChange={set('endereco')}
             className="contatos-form__input"
@@ -364,13 +416,13 @@ export const ContatosContactForm = ({
       <Cell className="contatos-form__cell contatos-form__cell--numero">
         <ContatosFieldContainer $borderless className="contatos-form__field-container">
           <FieldLabel htmlFor="contato-numero" className="contatos-form__label">
-            Número
+            {CONFIG.numeroLabel}
           </FieldLabel>
           <FieldInput
             id="contato-numero"
             name="numero"
             autoComplete="off"
-            placeholder="Digite o Número"
+            placeholder={CONFIG.numeroPlaceholder}
             value={values.numero}
             onChange={set('numero')}
             className="contatos-form__input"
@@ -380,13 +432,13 @@ export const ContatosContactForm = ({
       <CellSpan3 className="contatos-form__cell contatos-form__cell--endereco-complemento">
         <ContatosFieldContainer $borderless className="contatos-form__field-container">
           <FieldLabel htmlFor="contato-endereco-complemento" className="contatos-form__label">
-            Endereço/Complemento
+            {CONFIG.complementoLabel}
           </FieldLabel>
           <FieldInput
             id="contato-endereco-complemento"
             name="complemento"
             autoComplete="address-line2"
-            placeholder="Digite informações extras sobre o Endereço"
+            placeholder={CONFIG.complementoPlaceholder}
             value={values.complemento}
             onChange={set('complemento')}
             className="contatos-form__input"
@@ -396,13 +448,13 @@ export const ContatosContactForm = ({
       <CellSpan3 className="contatos-form__cell contatos-form__cell--bairro-complemento">
         <ContatosFieldContainer $borderless className="contatos-form__field-container">
           <FieldLabel htmlFor="contato-bairro-complemento" className="contatos-form__label">
-            Bairro/Complemento
+            {CONFIG.bairroComplementoLabel}
           </FieldLabel>
           <FieldInput
             id="contato-bairro-complemento"
             name="bairroComplemento"
             autoComplete="off"
-            placeholder="Digite informações extras sobre o Bairro"
+            placeholder={CONFIG.bairroComplementoPlaceholder}
             value={values.bairroComplemento}
             onChange={set('bairroComplemento')}
             className="contatos-form__input"
@@ -412,13 +464,13 @@ export const ContatosContactForm = ({
       <Cell className="contatos-form__cell contatos-form__cell--cidade">
         <ContatosFieldContainer $borderless className="contatos-form__field-container">
           <FieldLabel htmlFor="contato-cidade" className="contatos-form__label">
-            Cidade
+            {CONFIG.cidadeLabel}
           </FieldLabel>
           <FieldInput
             id="contato-cidade"
             name="cidade"
             autoComplete="address-level2"
-            placeholder="Digite a cidade"
+            placeholder={CONFIG.cidadePlaceholder}
             value={values.cidade}
             onChange={set('cidade')}
             className="contatos-form__input"
@@ -428,13 +480,13 @@ export const ContatosContactForm = ({
       <Cell className="contatos-form__cell contatos-form__cell--estado">
         <ContatosFieldContainer $borderless className="contatos-form__field-container">
           <FieldLabel htmlFor="contato-estado" className="contatos-form__label">
-            Estado
+            {CONFIG.estadoLabel}
           </FieldLabel>
           <FieldInput
             id="contato-estado"
             name="estado"
             autoComplete="address-level1"
-            placeholder="Digite o Estado"
+            placeholder={CONFIG.estadoPlaceholder}
             value={values.estado}
             onChange={set('estado')}
             className="contatos-form__input"
@@ -464,7 +516,7 @@ export const ContatosContactForm = ({
           }
           title={showMaisInfoAttention ? maisInfoAttentionHint : undefined}
         >
-          Mais informações
+          {CONFIG.maisInformacoesLabel}
         </MaisInformacoesButton>
       </MaisInformacoesCell>
 
@@ -476,11 +528,11 @@ export const ContatosContactForm = ({
         >
           {isSubmitting
             ? isTodos
-              ? 'Salvando...'
-              : 'Cadastrando...'
+              ? CONFIG.submitSaveLoadingLabel
+              : CONFIG.submitCreateLoadingLabel
             : isTodos
-              ? 'Salvar alterações'
-              : 'Cadastrar contato'}
+              ? CONFIG.submitSaveLabel
+              : CONFIG.submitCreateLabel}
         </FormSubmitButton>
       </CellSpan3>
     </FormRoot>
