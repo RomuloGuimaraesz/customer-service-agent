@@ -100,18 +100,6 @@ export class User {
   }
 
   /**
-   * Generates Basic Auth header for API requests
-   * 
-   * @returns {string|null} Basic auth header string or null if password not available
-   */
-  getAuthHeader() {
-    if (!this.username || !this._password) {
-      return null;
-    }
-    return `Basic ${btoa(`${this.username}:${this._password}`)}`;
-  }
-
-  /**
    * Clears sensitive password data from memory
    * Should be called after authentication
    * 

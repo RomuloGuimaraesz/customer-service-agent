@@ -3,12 +3,14 @@ import { CONFIG } from '../config/constants';
 import { SignUp } from '../domain/useCases/SignUp.js';
 import { Login } from '../domain/useCases/Login.js';
 import { UserSupabaseRepository } from '../infrastructure/supabase/UserSupabaseRepository.js';
-import { supabase } from '../infrastructure/supabase/config.js';
+import { clearStoredAuthSession, supabase } from '../infrastructure/supabase/config.js';
 
 /**
  * Authentication Context
  */
 const AuthContext = createContext(null);
+
+const emptyCredentials = { username: '' };
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
@@ -20,7 +22,8 @@ export const useAuth = () => {
 
 export const AuthProvider = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [credentials, setCredentials] = useState({ username: '', password: '' });
+  const [credentials, setCredentials] = useState(emptyCredentials);
+  const [accessToken, setAccessToken] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [role, setRole] = useState(null);
   const [userId, setUserId] = useState(null);
@@ -30,26 +33,55 @@ export const AuthProvider = ({ children }) => {
   const signUpUseCase = new SignUp({ userRepository });
   const loginUseCase = new Login({ userRepository });
 
-  // Check for saved session on mount
-  useEffect(() => {
-    const saved = sessionStorage.getItem(CONFIG.AUTH_STORAGE_KEY);
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        setCredentials(parsed);
-        setIsAuthenticated(true);
-
-        // Fetch role and userId from user metadata
-        supabase.auth.getUser().then(({ data }) => {
-          setRole(data?.user?.user_metadata?.role || null);
-          setUserId(data?.user?.id || null);
-        });
-      } catch (e) {
-        sessionStorage.removeItem(CONFIG.AUTH_STORAGE_KEY);
-      }
+  const applySession = useCallback((session) => {
+    if (!session?.access_token) {
+      setAccessToken(null);
+      setCredentials(emptyCredentials);
+      setIsAuthenticated(false);
+      setRole(null);
+      setUserId(null);
+      return;
     }
-    setIsLoading(false);
+
+    const user = session.user;
+    setAccessToken(session.access_token);
+    setCredentials({
+      username: user?.email || user?.user_metadata?.username || '',
+    });
+    setIsAuthenticated(true);
+    setRole(user?.user_metadata?.role || null);
+    setUserId(user?.id || null);
   }, []);
+
+  // Restore the Supabase session for this tab. Drop any legacy password blob.
+  useEffect(() => {
+    sessionStorage.removeItem(CONFIG.AUTH_STORAGE_KEY);
+    let active = true;
+
+    supabase.auth.getSession()
+      .then(({ data }) => {
+        if (!active) return;
+        applySession(data?.session ?? null);
+      })
+      .catch(() => {
+        if (!active) return;
+        applySession(null);
+      })
+      .finally(() => {
+        if (active) setIsLoading(false);
+      });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!active) return;
+      applySession(session);
+      setIsLoading(false);
+    });
+
+    return () => {
+      active = false;
+      subscription.unsubscribe();
+    };
+  }, [applySession]);
 
   const login = useCallback(async (username, password) => {
     // Authenticate with Supabase
@@ -64,23 +96,25 @@ export const AuthProvider = ({ children }) => {
     }
 
     try {
-      // Authenticate with Supabase
+      // Password is sent only to Supabase for this sign-in, then dropped.
       const result = await loginUseCase.execute({
         email: username,
         password: password,
       });
 
       if (result.success && result.data) {
-        // Supabase authentication successful
-        const creds = { username: result.data.username || username, password };
-        setCredentials(creds);
-        setIsAuthenticated(true);
-        sessionStorage.setItem(CONFIG.AUTH_STORAGE_KEY, JSON.stringify(creds));
-
-        // Fetch role and userId from user metadata
-        const { data: { user } } = await supabase.auth.getUser();
-        setRole(user?.user_metadata?.role || null);
-        setUserId(user?.id || null);
+        const { data } = await supabase.auth.getSession();
+        const session = data?.session;
+        if (session?.access_token) {
+          applySession(session);
+        } else {
+          setAccessToken(null);
+          setCredentials({ username: result.data.username || result.data.email || username });
+          setIsAuthenticated(true);
+          setRole(result.data.role || null);
+          setUserId(result.data.id || null);
+        }
+        sessionStorage.removeItem(CONFIG.AUTH_STORAGE_KEY);
 
         return { success: true };
       } else {
@@ -95,7 +129,7 @@ export const AuthProvider = ({ children }) => {
         error: err.message || 'Erro ao fazer login',
       };
     }
-  }, [loginUseCase]);
+  }, [loginUseCase, applySession]);
 
   const logout = useCallback(async () => {
     // Sign out from Supabase if there's an active session
@@ -104,13 +138,10 @@ export const AuthProvider = ({ children }) => {
     } catch (err) {
       // Ignore errors during logout
     }
-    
-    setCredentials({ username: '', password: '' });
-    setIsAuthenticated(false);
-    setRole(null);
-    setUserId(null);
-    sessionStorage.removeItem(CONFIG.AUTH_STORAGE_KEY);
-  }, []);
+
+    applySession(null);
+    clearStoredAuthSession();
+  }, [applySession]);
 
   const signup = useCallback(async (userData) => {
     try {
@@ -141,11 +172,9 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const getAuthHeader = useCallback(() => {
-    if (credentials.username && credentials.password) {
-      return `Basic ${btoa(`${credentials.username}:${credentials.password}`)}`;
-    }
-    return null;
-  }, [credentials]);
+    if (!accessToken) return null;
+    return `Bearer ${accessToken}`;
+  }, [accessToken]);
 
   const value = {
     isAuthenticated,

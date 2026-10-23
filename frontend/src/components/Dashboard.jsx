@@ -4,10 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useAdmin } from '../hooks/useAdmin.js';
 import { useDashboardStats } from '../hooks/useDashboardStats';
 import { PROFILE_ICON } from '../config/icons';
-import { ROUTES } from '../config/routes';
 import { DASHBOARD_MESSAGES } from '../config/dashboardConfig';
-import { CONFIG } from '../config/constants';
-import { supabase } from '../infrastructure/supabase/config';
 import { StatsGrid, SurfaceSectionHeading } from './StatsGrid';
 import { Toast } from './Toast';
 import { 
@@ -49,7 +46,7 @@ const StyledMainContent = styled.main`
  * Dashboard Component
  */
 export const Dashboard = () => {
-  const { credentials, isAuthenticated, role } = useAuth();
+  const { credentials, isAuthenticated, role, logout } = useAuth();
   const adminContext = useAdmin();
 
   const [toastVisible, setToastVisible] = useState(false);
@@ -57,18 +54,8 @@ export const Dashboard = () => {
   const [showProfileEdit, setShowProfileEdit] = useState(false);
 
   // Handle logout with navigation
-  const handleLogout = async () => {
-    // Clear session storage immediately to prevent any state from persisting
-    sessionStorage.removeItem(CONFIG.AUTH_STORAGE_KEY);
-
-    // Sign out from Supabase (fire and forget - don't wait)
-    supabase.auth.signOut().catch(() => {
-      // Ignore errors during logout
-    });
-
-    // Use hard navigation to immediately redirect, bypassing React's render cycle
-    // This prevents any intermediate renders showing empty dashboard state
-    window.location.replace(ROUTES.AUTH.LOGIN);
+  const handleLogout = () => {
+    logout();
   };
 
   useEffect(() => {

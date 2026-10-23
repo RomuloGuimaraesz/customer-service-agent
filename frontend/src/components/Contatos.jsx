@@ -9,10 +9,7 @@ import styled from 'styled-components';
 import { useAuth } from '../contexts/AuthContext';
 import { useAdmin } from '../hooks/useAdmin.js';
 import { useDashboardStats } from '../hooks/useDashboardStats';
-import { CONFIG } from '../config/constants';
-import { ROUTES } from '../config/routes';
 import { canDeleteContato, canEditContatoCategoria } from '../config/roleAccess';
-import { supabase } from '../infrastructure/supabase/config';
 import { Header, Logo } from './Header';
 import { MainNavigation } from './MainNavigation';
 import { StatsGrid, SurfaceSectionHeading } from './StatsGrid';
@@ -293,7 +290,7 @@ export const Contatos = () => {
   const savingContatoRef = useRef(false);
   /** Incrementado após cadastro bem-sucedido em modo Novo — limpa o formulário. */
   const [novoFormResetKey, setNovoFormResetKey] = useState(0);
-  const { credentials, isAuthenticated, role, userId, getAuthHeader } = useAuth();
+  const { credentials, isAuthenticated, role, userId, getAuthHeader, logout } = useAuth();
   const contatosTabNames = useMemo(
     () => Object.fromEntries(CONTATOS_TABS.map(t => [t.id, t.label])),
     [],
@@ -611,10 +608,8 @@ export const Contatos = () => {
     [getAuthHeader, loadContatos, selectedContatoRow],
   );
 
-  const handleLogout = async () => {
-    sessionStorage.removeItem(CONFIG.AUTH_STORAGE_KEY);
-    supabase.auth.signOut().catch(() => {});
-    window.location.replace(ROUTES.AUTH.LOGIN);
+  const handleLogout = () => {
+    logout();
   };
 
   return (

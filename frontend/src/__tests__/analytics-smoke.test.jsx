@@ -1,9 +1,9 @@
 /**
  * Smoke test: Analytics tracking with session restore
  *
- * Verifies that when a user's session is restored from sessionStorage,
- * userId and role are available before the dashboard mounts, so
- * useTabAnalytics receives valid values and tracking works.
+ * Verifies that when a user's Supabase session is restored, userId and role
+ * are available before the dashboard mounts, so useTabAnalytics receives
+ * valid values and tracking works. A legacy password in sessionStorage is discarded.
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { renderHook, waitFor } from '@testing-library/react'
@@ -31,13 +31,15 @@ vi.mock('../services/analytics', () => ({
   endSurfaceSession: vi.fn().mockResolvedValue(null),
 }))
 
-// Mock Supabase - must include getUser for session restore
+// Mock Supabase - session restore comes from the auth listener, not a stored password
 vi.mock('../infrastructure/supabase/config', () => ({
   supabase: {
     auth: {
       signInWithPassword: vi.fn(),
       signOut: vi.fn(),
       getUser: vi.fn(),
+      getSession: vi.fn(),
+      onAuthStateChange: vi.fn(),
     },
   },
 }))
@@ -61,6 +63,12 @@ describe('Analytics smoke test - session restore flow', () => {
 
     supabase.auth.getUser.mockReset()
     supabase.auth.signInWithPassword.mockReset()
+    supabase.auth.getSession.mockReset()
+    supabase.auth.onAuthStateChange.mockReset()
+    supabase.auth.getSession.mockResolvedValue({ data: { session: null } })
+    supabase.auth.onAuthStateChange.mockImplementation(() => ({
+      data: { subscription: { unsubscribe: vi.fn() } },
+    }))
   })
 
   it('should have userId and role available when session is restored, and analytics should track', async () => {
@@ -72,13 +80,19 @@ describe('Analytics smoke test - session restore flow', () => {
       JSON.stringify({ username: 'test@example.com', password: 'testpass' })
     )
 
-    supabase.auth.getUser.mockResolvedValue({
-      data: {
-        user: {
-          id: expectedUserId,
-          user_metadata: { role: expectedRole },
-        },
+    const session = {
+      access_token: 'analytics-token',
+      user: {
+        id: expectedUserId,
+        email: 'test@example.com',
+        user_metadata: { role: expectedRole },
       },
+    }
+
+    supabase.auth.getSession.mockResolvedValue({ data: { session } })
+    supabase.auth.onAuthStateChange.mockImplementation((callback) => {
+      callback('INITIAL_SESSION', session)
+      return { data: { subscription: { unsubscribe: vi.fn() } } }
     })
 
     const { result } = renderHook(
@@ -94,12 +108,13 @@ describe('Analytics smoke test - session restore flow', () => {
       }
     )
 
-    // 1. Verify AuthContext waits for getUser: userId and role are set before loading completes
     await waitFor(
       () => {
         expect(result.current.auth.isLoading).toBe(false)
         expect(result.current.auth.userId).toBe(expectedUserId)
         expect(result.current.auth.role).toBe(expectedRole)
+        expect(result.current.auth.credentials.password).toBeUndefined()
+        expect(sessionStorage.getItem(CONFIG.AUTH_STORAGE_KEY)).toBeNull()
       },
       { timeout: 3000 }
     )

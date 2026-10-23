@@ -5,7 +5,6 @@ import { AdminProvider } from './AdminContext'
 import { useAdmin } from '../hooks/useAdmin.js'
 import { AuthProvider, useAuth } from './AuthContext'
 import { CONFIG } from '../config/constants'
-import { MOCK_DATA } from '../data/mockData'
 import { RepositoryFactory } from '../infrastructure/repositoryFactory.js'
 import { TestPedidoRepository, TestAgendamentoRepository, TestWhatsAppConversationRepository } from '../infrastructure/test/TestRepository.js'
 import { ROUTES } from '../config/routes'
@@ -16,6 +15,10 @@ vi.mock('../infrastructure/supabase/config', () => ({
     auth: {
       signInWithPassword: vi.fn(),
       signOut: vi.fn(),
+      getSession: vi.fn().mockResolvedValue({ data: { session: null } }),
+      onAuthStateChange: vi.fn(() => ({
+        data: { subscription: { unsubscribe: vi.fn() } },
+      })),
     },
   },
 }))
@@ -68,6 +71,17 @@ describe('AdminContext', () => {
       },
       error: null,
     })
+    // First getSession is the mount (logged out). Later calls follow sign-in.
+    supabase.auth.getSession.mockReset()
+    supabase.auth.getSession.mockResolvedValue({
+      data: {
+        session: {
+          access_token: 'mock-token',
+          user: { email: 'user@example.com' },
+        },
+      },
+    })
+    supabase.auth.getSession.mockResolvedValueOnce({ data: { session: null } })
   })
 
   afterEach(() => {
@@ -192,7 +206,7 @@ describe('AdminContext', () => {
       }, { timeout: 2000 })
 
       expect(result.current.admin.error.pedidos).toBe('Failed to fetch pedidos: Não autorizado - verifique suas credenciais')
-      expect(result.current.admin.pedidos).toEqual(MOCK_DATA.pedidos)
+      expect(result.current.admin.pedidos).toEqual([])
     })
 
     it('should handle network errors and use mock data', async () => {
@@ -227,7 +241,7 @@ describe('AdminContext', () => {
       }, { timeout: 2000 })
 
       expect(result.current.admin.error.pedidos).toBe('Failed to fetch pedidos: Network error')
-      expect(result.current.admin.pedidos).toEqual(MOCK_DATA.pedidos)
+      expect(result.current.admin.pedidos).toEqual([])
     })
 
     it('should handle non-array response data', async () => {
@@ -260,8 +274,8 @@ describe('AdminContext', () => {
         expect(result.current.admin.loading.pedidos).toBe(false)
       }, { timeout: 2000 })
 
-      // Should fall back to mock data when validation fails
-      expect(result.current.admin.pedidos).toEqual(MOCK_DATA.pedidos)
+      // Validation failure keeps the error and does not substitute mock rows
+      expect(result.current.admin.pedidos).toEqual([])
       expect(result.current.admin.error.pedidos).toBeTruthy()
     })
   })

@@ -5,7 +5,6 @@ import { AgendamentosProvider } from '../contexts/AgendamentosContext'
 import { AuthProvider, useAuth } from '../contexts/AuthContext'
 import { RepositoryFactory } from '../infrastructure/repositoryFactory.js'
 import { TestAgendamentoRepository } from '../infrastructure/test/TestRepository.js'
-import { MOCK_DATA } from '../data/mockData'
 
 // Mock Supabase
 vi.mock('../infrastructure/supabase/config', () => ({
@@ -13,6 +12,10 @@ vi.mock('../infrastructure/supabase/config', () => ({
     auth: {
       signInWithPassword: vi.fn(),
       signOut: vi.fn(),
+      getSession: vi.fn().mockResolvedValue({ data: { session: null } }),
+      onAuthStateChange: vi.fn(() => ({
+        data: { subscription: { unsubscribe: vi.fn() } },
+      })),
     },
   },
 }))
@@ -57,6 +60,17 @@ describe('useAgendamentos', () => {
       },
       error: null,
     })
+    // First getSession is the mount (logged out). Later calls follow sign-in.
+    supabase.auth.getSession.mockReset()
+    supabase.auth.getSession.mockResolvedValue({
+      data: {
+        session: {
+          access_token: 'mock-token',
+          user: { email: 'user@example.com' },
+        },
+      },
+    })
+    supabase.auth.getSession.mockResolvedValueOnce({ data: { session: null } })
   })
 
   afterEach(() => {
@@ -152,8 +166,7 @@ describe('useAgendamentos', () => {
         expect(result.current.agendamentos.loading).toBe(false)
       }, { timeout: 2000 })
 
-      expect(result.current.agendamentos.agendamentos).toEqual(MOCK_DATA.agendamentos)
-      // AgendamentosContext clears error after loading mock data (unlike PedidosContext which preserves it)
+      expect(result.current.agendamentos.agendamentos).toEqual([])
       expect(result.current.agendamentos.error).toBeNull()
     })
   })

@@ -10,20 +10,38 @@ vi.mock('../infrastructure/supabase/config', () => ({
       signInWithPassword: vi.fn(),
       signOut: vi.fn(),
       getUser: vi.fn(),
+      getSession: vi.fn(),
+      onAuthStateChange: vi.fn(),
     },
   },
+  clearStoredAuthSession: vi.fn(),
 }))
 
 import { supabase } from '../infrastructure/supabase/config'
+
+const signedInSession = (overrides = {}) => ({
+  access_token: 'mock-token',
+  user: {
+    id: 'user-123',
+    email: 'test@example.com',
+    user_metadata: { username: 'test@example.com', role: 'admin' },
+    ...overrides,
+  },
+})
 
 describe('AuthContext', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     sessionStorage.clear()
-    // Reset Supabase mocks
     supabase.auth.signInWithPassword.mockReset()
     supabase.auth.signOut.mockReset()
-    supabase.auth.getUser?.mockReset?.()
+    supabase.auth.getUser.mockReset()
+    supabase.auth.getSession.mockReset()
+    supabase.auth.onAuthStateChange.mockReset()
+    supabase.auth.getSession.mockResolvedValue({ data: { session: null } })
+    supabase.auth.onAuthStateChange.mockImplementation(() => ({
+      data: { subscription: { unsubscribe: vi.fn() } },
+    }))
   })
 
   describe('useAuth hook', () => {
@@ -40,21 +58,30 @@ describe('AuthContext', () => {
         wrapper: AuthProvider,
       })
 
-      // Initially loading should be true, then false after effect runs
       expect(result.current.isAuthenticated).toBe(false)
-      expect(result.current.credentials).toEqual({ username: '', password: '' })
+      expect(result.current.credentials).toEqual({ username: '' })
+      expect(result.current.credentials.password).toBeUndefined()
 
       await waitFor(() => {
         expect(result.current.isLoading).toBe(false)
       })
     })
 
-    it('should restore session from sessionStorage', async () => {
-      const savedCreds = { username: 'testuser', password: 'testpass' }
-      sessionStorage.setItem(CONFIG.AUTH_STORAGE_KEY, JSON.stringify(savedCreds))
+    it('should restore session from the Supabase auth listener and drop a stored password', async () => {
+      sessionStorage.setItem(
+        CONFIG.AUTH_STORAGE_KEY,
+        JSON.stringify({ username: 'testuser', password: 'testpass' })
+      )
 
-      supabase.auth.getUser.mockResolvedValue({
-        data: { user: { id: 'user-123', user_metadata: { role: 'admin' } } },
+      const session = signedInSession({
+        id: 'user-123',
+        email: 'testuser@example.com',
+      })
+
+      supabase.auth.getSession.mockResolvedValue({ data: { session } })
+      supabase.auth.onAuthStateChange.mockImplementation((callback) => {
+        callback('INITIAL_SESSION', session)
+        return { data: { subscription: { unsubscribe: vi.fn() } } }
       })
 
       const { result } = renderHook(() => useAuth(), {
@@ -66,12 +93,15 @@ describe('AuthContext', () => {
       })
 
       expect(result.current.isAuthenticated).toBe(true)
-      expect(result.current.credentials).toEqual(savedCreds)
+      expect(result.current.credentials).toEqual({ username: 'testuser@example.com' })
+      expect(result.current.credentials.password).toBeUndefined()
       expect(result.current.userId).toBe('user-123')
       expect(result.current.role).toBe('admin')
+      expect(result.current.getAuthHeader()).toBe('Bearer mock-token')
+      expect(sessionStorage.getItem(CONFIG.AUTH_STORAGE_KEY)).toBeNull()
     })
 
-    it('should handle corrupted sessionStorage data', async () => {
+    it('should wipe legacy sessionStorage without authenticating when there is no Supabase session', async () => {
       sessionStorage.setItem(CONFIG.AUTH_STORAGE_KEY, 'invalid-json')
 
       const { result } = renderHook(() => useAuth(), {
@@ -88,7 +118,7 @@ describe('AuthContext', () => {
   })
 
   describe('login', () => {
-    it('should login successfully with valid email credentials', async () => {
+    it('should login successfully with valid email credentials without storing the password', async () => {
       supabase.auth.signInWithPassword.mockResolvedValueOnce({
         data: {
           user: {
@@ -101,21 +131,16 @@ describe('AuthContext', () => {
         error: null,
       })
 
-      supabase.auth.getUser.mockResolvedValueOnce({
-        data: {
-          user: {
-            id: 'user-123',
-            user_metadata: { role: 'admin' },
-          },
-        },
-      })
-
       const { result } = renderHook(() => useAuth(), {
         wrapper: AuthProvider,
       })
 
       await waitFor(() => {
         expect(result.current.isLoading).toBe(false)
+      })
+
+      supabase.auth.getSession.mockResolvedValueOnce({
+        data: { session: signedInSession() },
       })
 
       let loginResult
@@ -125,10 +150,9 @@ describe('AuthContext', () => {
 
       expect(loginResult.success).toBe(true)
       expect(result.current.isAuthenticated).toBe(true)
-      expect(result.current.credentials).toEqual({
-        username: 'test@example.com',
-        password: 'testpass',
-      })
+      expect(result.current.credentials).toEqual({ username: 'test@example.com' })
+      expect(result.current.credentials.password).toBeUndefined()
+      expect(sessionStorage.getItem(CONFIG.AUTH_STORAGE_KEY)).toBeNull()
       expect(supabase.auth.signInWithPassword).toHaveBeenCalledWith({
         email: 'test@example.com',
         password: 'testpass',
@@ -220,14 +244,16 @@ describe('AuthContext', () => {
         expect(result.current.isLoading).toBe(false)
       })
 
-      // Login first
+      supabase.auth.getSession.mockResolvedValueOnce({
+        data: { session: signedInSession() },
+      })
+
       await act(async () => {
         await result.current.login('test@example.com', 'testpass')
       })
 
       expect(result.current.isAuthenticated).toBe(true)
 
-      // Mock signOut
       supabase.auth.signOut.mockResolvedValueOnce({ error: null })
 
       await act(async () => {
@@ -235,7 +261,8 @@ describe('AuthContext', () => {
       })
 
       expect(result.current.isAuthenticated).toBe(false)
-      expect(result.current.credentials).toEqual({ username: '', password: '' })
+      expect(result.current.credentials).toEqual({ username: '' })
+      expect(result.current.getAuthHeader()).toBeNull()
       expect(sessionStorage.getItem(CONFIG.AUTH_STORAGE_KEY)).toBeNull()
       expect(supabase.auth.signOut).toHaveBeenCalled()
     })
@@ -250,7 +277,7 @@ describe('AuthContext', () => {
       expect(result.current.getAuthHeader()).toBeNull()
     })
 
-    it('should return Basic auth header when authenticated', async () => {
+    it('should return a Bearer token when authenticated', async () => {
       supabase.auth.signInWithPassword.mockResolvedValueOnce({
         data: {
           user: { email: 'user@example.com' },
@@ -267,41 +294,18 @@ describe('AuthContext', () => {
         expect(result.current.isLoading).toBe(false)
       })
 
+      supabase.auth.getSession.mockResolvedValueOnce({
+        data: {
+          session: signedInSession({ email: 'user@example.com' }),
+        },
+      })
+
       await act(async () => {
         await result.current.login('user@example.com', 'pass')
       })
 
-      const header = result.current.getAuthHeader()
-      expect(header).toMatch(/^Basic /)
-      expect(header).toBeTruthy()
-    })
-
-    it('should generate correct Basic auth header', async () => {
-      supabase.auth.signInWithPassword.mockResolvedValueOnce({
-        data: {
-          user: { email: 'testuser@example.com' },
-          session: { access_token: 'mock-token' }
-        },
-        error: null,
-      })
-
-      const { result } = renderHook(() => useAuth(), {
-        wrapper: AuthProvider,
-      })
-
-      await waitFor(() => {
-        expect(result.current.isLoading).toBe(false)
-      })
-
-      await act(async () => {
-        await result.current.login('testuser@example.com', 'testpass')
-      })
-
-      const header = result.current.getAuthHeader()
-      const base64 = header.replace('Basic ', '')
-      const decoded = atob(base64)
-      expect(decoded).toBe('testuser@example.com:testpass')
+      expect(result.current.getAuthHeader()).toBe('Bearer mock-token')
+      expect(sessionStorage.getItem(CONFIG.AUTH_STORAGE_KEY)).toBeNull()
     })
   })
 })
-

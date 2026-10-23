@@ -7,14 +7,10 @@ import { CONFIG } from '../config/constants.js';
 import { fetchApi } from '../services/apiService.js';
 
 /**
- * Get authentication header for n8n webhooks
- * n8n webhooks use basicAuth - format: "Basic base64(username:password)"
- * For now, using empty auth (can be configured later)
+ * Authentication header for n8n webhooks.
+ * This loader is not wired to the signed-in session, so it sends no Authorization header.
  */
 function getAuthHeader() {
-  // TODO: Get from environment or user config
-  // For basic auth: const credentials = btoa(`${username}:${password}`);
-  // return `Basic ${credentials}`;
   return null;
 }
 

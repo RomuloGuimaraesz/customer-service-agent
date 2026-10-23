@@ -66,7 +66,7 @@ O modal usa uma largura máxima calculada para ficar **alinhada à ideia** da co
 
 ## Integração com o webhook (n8n)
 
-A URL está em **`CONFIG.API_ENDPOINTS.contatos`** ([`frontend/src/config/constants.js`](../frontend/src/config/constants.js)). O envio usa **`POST`** com JSON e o header **`Authorization`** quando o usuário tem sessão (mesmo padrão Basic dos outros webhooks do app).
+A URL está em **`CONFIG.API_ENDPOINTS.contatos`** ([`frontend/src/config/constants.js`](../frontend/src/config/constants.js)). O envio usa **`POST`** com JSON e o header **`Authorization: Bearer`** com o access token da sessão Supabase quando o usuário está autenticado (o mesmo padrão dos outros webhooks do app).
 
 Serviço: [`frontend/src/services/contatosApi.js`](../frontend/src/services/contatosApi.js) (`postContatos`).
 
