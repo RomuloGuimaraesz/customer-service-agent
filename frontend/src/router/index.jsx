@@ -5,6 +5,7 @@ import { LoginScreen } from "../components/LoginScreen";
 import { SignUpScreen } from "../components/SignUpScreen";
 import { Dashboard } from "../components/Dashboard";
 import { Contatos } from "../components/Contatos";
+import { Demanda } from "../components/Demanda";
 import { RootRedirect } from "./RootRedirect";
 import { ProtectedRoute } from "./ProtectedRoute";
 import { RoleRoute } from "./RoleRoute";
@@ -123,5 +124,10 @@ export const router = createBrowserRouter([
         ),
       },
     ],
+  },
+  // Protótipo local: fora do RootLayout para não montar AuthProvider (Supabase).
+  {
+    path: "/demanda",
+    element: <Demanda />,
   },
 ]);
