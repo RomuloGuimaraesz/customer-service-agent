@@ -45,7 +45,12 @@ export function clearStoredAuthSession() {
 
 // Supabase defaults to localStorage, which keeps a session after the tab closes.
 // Only the legacy localStorage copy is removed here; the tab session stays.
-removeSupabaseAuthKeys(window.localStorage)
+// Accessing localStorage throws when the browser blocks site storage.
+try {
+  removeSupabaseAuthKeys(window.localStorage)
+} catch {
+  // nothing to clean up
+}
 
 // Create a single supabase client for interacting with your database.
 // The session lasts for this tab only (including refresh), same as the previous login gate.
